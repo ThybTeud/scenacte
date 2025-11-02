@@ -1,6 +1,3 @@
-# scenacte
-Un éditeur de pièce de théâtre simple et direct.
-
 # Scenacte Backend
 
 Backend API pour Scenacte - Éditeur de textes théâtraux avec versionning intelligent et export PDF.
@@ -26,7 +23,7 @@ Scenacte est un outil d'écriture dramaturgique permettant aux auteurs de :
 - **Runtime** : Node.js (≥ 18.0.0)
 - **Framework** : Express.js
 - **Base de données** : PostgreSQL 16
-- **ORM** : Prisma
+- **Driver DB** : pg (driver PostgreSQL natif)
 - **Authentification** : JWT + bcrypt
 - **Jobs asynchrones** : node-cron
 - **Emails** : Nodemailer
@@ -38,7 +35,7 @@ Scenacte est un outil d'écriture dramaturgique permettant aux auteurs de :
 {
   "dependencies": {
     "express": "Serveur HTTP",
-    "@prisma/client": "Client base de données",
+    "pg": "Driver PostgreSQL natif",
     "bcrypt": "Hashing mot de passe",
     "jsonwebtoken": "Authentification JWT",
     "nodemailer": "Envoi d'emails",

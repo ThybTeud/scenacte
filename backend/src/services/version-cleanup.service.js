@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { pool } from '../config/database.js';
 
 /**
  * Service de nettoyage des anciennes versions
@@ -13,86 +11,66 @@ export async function cleanupOldVersions() {
   const startTime = Date.now();
   console.log('[CLEANUP] Début du nettoyage des versions', new Date().toISOString());
 
+  const client = await pool.connect();
+
   try {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // 1. Marquer toutes les versions manuelles comme préservées
-    const manualUpdated = await prisma.playVersion.updateMany({
-      where: {
-        versionType: 'manual',
-        preservedReason: null
-      },
-      data: {
-        preservedReason: 'manual'
-      }
-    });
+    await client.query('BEGIN');
 
-    console.log('[CLEANUP] Versions manuelles marquées comme préservées:', manualUpdated.count);
+    // 1. Marquer toutes les versions manuelles comme préservées
+    const manualUpdateQuery = `
+      UPDATE play_versions
+      SET preserved_reason = 'manual'
+      WHERE version_type = 'manual' AND preserved_reason IS NULL
+    `;
+    const manualResult = await client.query(manualUpdateQuery);
+    console.log('[CLEANUP] Versions manuelles marquées comme préservées:', manualResult.rowCount);
 
     // 2. Marquer toutes les auto-saves récentes (< 7 jours) comme préservées
-    const recentUpdated = await prisma.playVersion.updateMany({
-      where: {
-        versionType: 'auto',
-        createdAt: {
-          gte: sevenDaysAgo
-        },
-        preservedReason: null
-      },
-      data: {
-        preservedReason: 'recent'
-      }
-    });
-
-    console.log('[CLEANUP] Auto-saves récentes marquées comme préservées:', recentUpdated.count);
+    const recentUpdateQuery = `
+      UPDATE play_versions
+      SET preserved_reason = 'recent'
+      WHERE version_type = 'auto' 
+        AND created_at >= $1 
+        AND preserved_reason IS NULL
+    `;
+    const recentResult = await client.query(recentUpdateQuery, [sevenDaysAgo]);
+    console.log('[CLEANUP] Auto-saves récentes marquées comme préservées:', recentResult.rowCount);
 
     // 3. Traiter les auto-saves anciennes (> 7 jours)
     // Récupérer toutes les pièces qui ont des auto-saves anciennes
-    const playsWithOldVersions = await prisma.play.findMany({
-      where: {
-        versions: {
-          some: {
-            versionType: 'auto',
-            createdAt: {
-              lt: sevenDaysAgo
-            }
-          }
-        }
-      },
-      select: {
-        id: true
-      }
-    });
-
-    console.log('[CLEANUP] Pièces avec anciennes auto-saves:', playsWithOldVersions.length);
+    const playsQuery = `
+      SELECT DISTINCT play_id
+      FROM play_versions
+      WHERE version_type = 'auto' AND created_at < $1
+    `;
+    const playsResult = await client.query(playsQuery, [sevenDaysAgo]);
+    console.log('[CLEANUP] Pièces avec anciennes auto-saves:', playsResult.rows.length);
 
     let dailySnapshotsMarked = 0;
 
     // Pour chaque pièce, identifier les snapshots quotidiens à conserver
-    for (const play of playsWithOldVersions) {
+    for (const row of playsResult.rows) {
+      const playId = row.play_id;
+
       // Récupérer toutes les anciennes auto-saves pour cette pièce, groupées par jour
-      const oldVersions = await prisma.playVersion.findMany({
-        where: {
-          playId: play.id,
-          versionType: 'auto',
-          createdAt: {
-            lt: sevenDaysAgo
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        select: {
-          id: true,
-          createdAt: true
-        }
-      });
+      const oldVersionsQuery = `
+        SELECT id, created_at
+        FROM play_versions
+        WHERE play_id = $1
+          AND version_type = 'auto'
+          AND created_at < $2
+        ORDER BY created_at DESC
+      `;
+      const oldVersionsResult = await client.query(oldVersionsQuery, [playId, sevenDaysAgo]);
 
       // Grouper par jour et garder la dernière version de chaque jour
       const versionsByDay = new Map();
 
-      for (const version of oldVersions) {
-        const dateKey = version.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      for (const version of oldVersionsResult.rows) {
+        const dateKey = version.created_at.toISOString().split('T')[0]; // YYYY-MM-DD
         
         if (!versionsByDay.has(dateKey)) {
           versionsByDay.set(dateKey, version.id);
@@ -103,65 +81,61 @@ export async function cleanupOldVersions() {
       const snapshotIds = Array.from(versionsByDay.values());
 
       if (snapshotIds.length > 0) {
-        const updated = await prisma.playVersion.updateMany({
-          where: {
-            id: {
-              in: snapshotIds
-            },
-            preservedReason: null
-          },
-          data: {
-            preservedReason: 'daily_snapshot'
-          }
-        });
-
-        dailySnapshotsMarked += updated.count;
+        const updateSnapshotsQuery = `
+          UPDATE play_versions
+          SET preserved_reason = 'daily_snapshot'
+          WHERE id = ANY($1) AND preserved_reason IS NULL
+        `;
+        const snapshotsResult = await client.query(updateSnapshotsQuery, [snapshotIds]);
+        dailySnapshotsMarked += snapshotsResult.rowCount;
       }
     }
 
     console.log('[CLEANUP] Snapshots quotidiens marqués comme préservés:', dailySnapshotsMarked);
 
     // 4. Supprimer toutes les versions auto anciennes sans preserved_reason
-    const deleted = await prisma.playVersion.deleteMany({
-      where: {
-        versionType: 'auto',
-        createdAt: {
-          lt: sevenDaysAgo
-        },
-        preservedReason: null
-      }
-    });
+    const deleteQuery = `
+      DELETE FROM play_versions
+      WHERE version_type = 'auto'
+        AND created_at < $1
+        AND preserved_reason IS NULL
+    `;
+    const deleteResult = await client.query(deleteQuery, [sevenDaysAgo]);
+    console.log('[CLEANUP] Anciennes auto-saves supprimées:', deleteResult.rowCount);
 
-    console.log('[CLEANUP] Anciennes auto-saves supprimées:', deleted.count);
+    // 5. Supprimer les statistiques orphelines
+    // (normalement géré par CASCADE, mais vérification supplémentaire)
+    const deleteOrphanStatsQuery = `
+      DELETE FROM version_statistics
+      WHERE version_id NOT IN (SELECT id FROM play_versions)
+    `;
+    const statsResult = await client.query(deleteOrphanStatsQuery);
+    console.log('[CLEANUP] Statistiques orphelines supprimées:', statsResult.rowCount);
 
-    // 5. Supprimer les statistiques orphelines (dont la version a été supprimée)
-    const deletedStats = await prisma.versionStatistics.deleteMany({
-      where: {
-        version: null
-      }
-    });
-
-    console.log('[CLEANUP] Statistiques orphelines supprimées:', deletedStats.count);
+    await client.query('COMMIT');
 
     const duration = Date.now() - startTime;
     console.log(`[CLEANUP] Nettoyage terminé en ${duration}ms`);
 
     return {
       success: true,
-      manualPreserved: manualUpdated.count,
-      recentPreserved: recentUpdated.count,
+      manualPreserved: manualResult.rowCount,
+      recentPreserved: recentResult.rowCount,
       dailySnapshotsPreserved: dailySnapshotsMarked,
-      versionsDeleted: deleted.count,
-      statsDeleted: deletedStats.count,
+      versionsDeleted: deleteResult.rowCount,
+      statsDeleted: statsResult.rowCount,
       duration
     };
 
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('[CLEANUP] Erreur lors du nettoyage:', error);
     return {
       success: false,
       error: error.message
     };
+  } finally {
+    client.release();
   }
 }
 
@@ -171,40 +145,56 @@ export async function cleanupOldVersions() {
  */
 export async function getRetentionStats() {
   try {
-    const total = await prisma.playVersion.count();
-    
-    const byType = await prisma.playVersion.groupBy({
-      by: ['versionType'],
-      _count: true
+    // Total
+    const totalQuery = `SELECT COUNT(*) as count FROM play_versions`;
+    const totalResult = await pool.query(totalQuery);
+    const total = parseInt(totalResult.rows[0].count, 10);
+
+    // Par type
+    const byTypeQuery = `
+      SELECT version_type, COUNT(*) as count
+      FROM play_versions
+      GROUP BY version_type
+    `;
+    const byTypeResult = await pool.query(byTypeQuery);
+    const byType = {};
+    byTypeResult.rows.forEach(row => {
+      byType[row.version_type] = parseInt(row.count, 10);
     });
 
-    const byReason = await prisma.playVersion.groupBy({
-      by: ['preservedReason'],
-      _count: true
+    // Par raison de préservation
+    const byReasonQuery = `
+      SELECT 
+        COALESCE(preserved_reason, 'none') as reason, 
+        COUNT(*) as count
+      FROM play_versions
+      GROUP BY preserved_reason
+    `;
+    const byReasonResult = await pool.query(byReasonQuery);
+    const byReason = {};
+    byReasonResult.rows.forEach(row => {
+      byReason[row.reason] = parseInt(row.count, 10);
     });
 
+    // Éligibles pour suppression
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const oldWithoutReason = await prisma.playVersion.count({
-      where: {
-        versionType: 'auto',
-        createdAt: {
-          lt: sevenDaysAgo
-        },
-        preservedReason: null
-      }
-    });
+    const eligibleQuery = `
+      SELECT COUNT(*) as count
+      FROM play_versions
+      WHERE version_type = 'auto'
+        AND created_at < $1
+        AND preserved_reason IS NULL
+    `;
+    const eligibleResult = await pool.query(eligibleQuery, [sevenDaysAgo]);
+    const eligibleForDeletion = parseInt(eligibleResult.rows[0].count, 10);
 
     return {
       total,
-      byType: Object.fromEntries(
-        byType.map(item => [item.versionType, item._count])
-      ),
-      byReason: Object.fromEntries(
-        byReason.map(item => [item.preservedReason || 'none', item._count])
-      ),
-      eligibleForDeletion: oldWithoutReason
+      byType,
+      byReason,
+      eligibleForDeletion
     };
   } catch (error) {
     console.error('[CLEANUP] Erreur lors du calcul des stats:', error);

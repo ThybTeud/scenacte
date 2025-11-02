@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { pool } from '../config/database.js';
 import { 
   validateTitle, 
   validateContent, 
@@ -14,8 +14,6 @@ import {
   ValidationError 
 } from '../middleware/errorHandler.js';
 import { config } from '../config/env.js';
-
-const prisma = new PrismaClient();
 
 /**
  * GET /api/plays
@@ -36,52 +34,68 @@ export async function listPlays(req, res, next) {
     const validatedLimit = paginationValidation.limit;
 
     // Construction du filtre
-    const where = { userId };
-    
+    let whereClause = 'WHERE p.user_id = $1';
+    const queryParams = [userId];
+    let paramIndex = 2;
+
     if (status) {
       const statusValidation = validatePlayStatus(status);
       if (!statusValidation.valid) {
         throw new ValidationError(statusValidation.message);
       }
-      where.status = status;
+      whereClause += ` AND p.status = $${paramIndex}`;
+      queryParams.push(status);
+      paramIndex++;
     }
 
-    // Récupération des pièces avec pagination
-    const [plays, total] = await Promise.all([
-      prisma.play.findMany({
-        where,
-        select: {
-          id: true,
-          title: true,
-          subtitle: true,
-          status: true,
-          contentVersion: true,
-          createdAt: true,
-          updatedAt: true,
-          lastEditedAt: true,
-          statistics: {
-            select: {
-              wordCount: true,
-              totalActs: true,
-              totalScenes: true,
-              totalCharacters: true,
-              totalLines: true,
-              estimatedDurationMinutes: true
-            }
-          }
-        },
-        orderBy: { lastEditedAt: 'desc' },
-        skip: (validatedPage - 1) * validatedLimit,
-        take: validatedLimit
-      }),
-      prisma.play.count({ where })
+    // Requête pour récupérer les pièces avec stats
+    const playsQuery = `
+      SELECT 
+        p.id, p.title, p.subtitle, p.status, p.content_version,
+        p.created_at, p.updated_at, p.last_edited_at,
+        s.word_count, s.total_acts, s.total_scenes, s.total_characters,
+        s.total_lines, s.estimated_duration_minutes
+      FROM plays p
+      LEFT JOIN play_statistics s ON s.play_id = p.id
+      ${whereClause}
+      ORDER BY p.last_edited_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    queryParams.push(validatedLimit, (validatedPage - 1) * validatedLimit);
+
+    // Requête pour le total
+    const countQuery = `SELECT COUNT(*) FROM plays p ${whereClause}`;
+    const countParams = queryParams.slice(0, status ? 2 : 1);
+
+    const [playsResult, countResult] = await Promise.all([
+      pool.query(playsQuery, queryParams),
+      pool.query(countQuery, countParams)
     ]);
 
+    const plays = playsResult.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      status: row.status,
+      contentVersion: row.content_version,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      lastEditedAt: row.last_edited_at,
+      statistics: row.word_count !== null ? {
+        wordCount: row.word_count,
+        totalActs: row.total_acts,
+        totalScenes: row.total_scenes,
+        totalCharacters: row.total_characters,
+        totalLines: row.total_lines,
+        estimatedDurationMinutes: row.estimated_duration_minutes
+      } : null
+    }));
+
+    const total = parseInt(countResult.rows[0].count, 10);
+
     res.json({
-      plays: plays.map(play => ({
-        ...play,
-        statistics: play.statistics || null
-      })),
+      plays,
       pagination: {
         page: validatedPage,
         limit: validatedLimit,
@@ -99,6 +113,8 @@ export async function listPlays(req, res, next) {
  * Créer une nouvelle pièce
  */
 export async function createPlay(req, res, next) {
+  const client = await pool.connect();
+  
   try {
     const { title, subtitle, rawContent, htmlContent, statistics } = req.body;
     const userId = req.user.id;
@@ -139,60 +155,76 @@ export async function createPlay(req, res, next) {
     const fileSizeBytes = Buffer.byteLength(rawContent || '', 'utf8') + 
                          Buffer.byteLength(htmlContent || '', 'utf8');
 
-    // Transaction atomique : création play + version initiale + statistiques
-    const play = await prisma.$transaction(async (tx) => {
-      // 1. Créer la pièce
-      const newPlay = await tx.play.create({
-        data: {
-          userId,
-          title: title.trim(),
-          subtitle: subtitle?.trim() || null,
-          rawContent: rawContent || '',
-          htmlContent: htmlContent || '',
-          contentVersion: 1,
-          status: 'draft',
-          lastEditedAt: new Date()
-        }
-      });
+    await client.query('BEGIN');
 
-      // 2. Créer la version initiale
-      await tx.playVersion.create({
-        data: {
-          playId: newPlay.id,
-          versionNumber: 1,
-          title: newPlay.title,
-          rawContent: newPlay.rawContent,
-          htmlContent: newPlay.htmlContent,
-          versionType: 'manual',
-          manualLabel: 'Version initiale',
-          fileSizeBytes,
-          preservedReason: 'manual'
-        }
-      });
+    // 1. Créer la pièce
+    const insertPlayQuery = `
+      INSERT INTO plays (user_id, title, subtitle, raw_content, html_content, content_version, status, last_edited_at)
+      VALUES ($1, $2, $3, $4, $5, 1, 'draft', NOW())
+      RETURNING id, user_id, title, subtitle, raw_content, html_content, content_version, status, created_at, updated_at, last_edited_at
+    `;
+    const playResult = await client.query(insertPlayQuery, [
+      userId,
+      title.trim(),
+      subtitle?.trim() || null,
+      rawContent || '',
+      htmlContent || ''
+    ]);
+    const play = playResult.rows[0];
 
-      // 3. Créer les statistiques
-      await tx.playStatistics.create({
-        data: {
-          playId: newPlay.id,
-          ...stats,
-          contentVersion: 1
-        }
-      });
+    // 2. Créer la version initiale
+    const insertVersionQuery = `
+      INSERT INTO play_versions (play_id, version_number, title, raw_content, html_content, version_type, manual_label, file_size_bytes, preserved_reason)
+      VALUES ($1, 1, $2, $3, $4, 'manual', 'Version initiale', $5, 'manual')
+      RETURNING id
+    `;
+    await client.query(insertVersionQuery, [
+      play.id,
+      play.title,
+      play.raw_content,
+      play.html_content,
+      fileSizeBytes
+    ]);
 
-      return newPlay;
-    });
+    // 3. Créer les statistiques
+    const insertStatsQuery = `
+      INSERT INTO play_statistics (play_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, content_version)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 1)
+      RETURNING id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes
+    `;
+    const statsResult = await client.query(insertStatsQuery, [
+      play.id,
+      stats.totalActs,
+      stats.totalScenes,
+      stats.totalCharacters,
+      stats.totalLines,
+      stats.wordCount,
+      stats.estimatedDurationMinutes
+    ]);
 
-    // Récupérer la pièce complète avec stats
-    const fullPlay = await prisma.play.findUnique({
-      where: { id: play.id },
-      include: {
-        statistics: true
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      play: {
+        id: play.id,
+        userId: play.user_id,
+        title: play.title,
+        subtitle: play.subtitle,
+        rawContent: play.raw_content,
+        htmlContent: play.html_content,
+        contentVersion: play.content_version,
+        status: play.status,
+        createdAt: play.created_at,
+        updatedAt: play.updated_at,
+        lastEditedAt: play.last_edited_at,
+        statistics: statsResult.rows[0]
       }
     });
-
-    res.status(201).json({ play: fullPlay });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 }
 
@@ -211,24 +243,54 @@ export async function getPlay(req, res, next) {
       throw new ValidationError(idValidation.message);
     }
 
-    // Récupération de la pièce
-    const play = await prisma.play.findUnique({
-      where: { id },
-      include: {
-        statistics: true
-      }
-    });
+    // Récupération de la pièce avec stats
+    const query = `
+      SELECT 
+        p.*,
+        s.total_acts, s.total_scenes, s.total_characters, s.total_lines, 
+        s.word_count, s.estimated_duration_minutes, s.calculated_at, s.content_version as stats_content_version
+      FROM plays p
+      LEFT JOIN play_statistics s ON s.play_id = p.id
+      WHERE p.id = $1
+    `;
+    const result = await pool.query(query, [id]);
 
-    if (!play) {
+    if (result.rows.length === 0) {
       throw new NotFoundError('Pièce non trouvée');
     }
 
+    const row = result.rows[0];
+
     // Vérification que la pièce appartient à l'utilisateur
-    if (play.userId !== userId) {
+    if (row.user_id !== userId) {
       throw new ForbiddenError('Accès non autorisé à cette pièce');
     }
 
-    res.json({ play });
+    res.json({
+      play: {
+        id: row.id,
+        userId: row.user_id,
+        title: row.title,
+        subtitle: row.subtitle,
+        rawContent: row.raw_content,
+        htmlContent: row.html_content,
+        contentVersion: row.content_version,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        lastEditedAt: row.last_edited_at,
+        statistics: row.word_count !== null ? {
+          totalActs: row.total_acts,
+          totalScenes: row.total_scenes,
+          totalCharacters: row.total_characters,
+          totalLines: row.total_lines,
+          wordCount: row.word_count,
+          estimatedDurationMinutes: row.estimated_duration_minutes,
+          calculatedAt: row.calculated_at,
+          contentVersion: row.stats_content_version
+        } : null
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -240,6 +302,8 @@ export async function getPlay(req, res, next) {
  * Crée automatiquement une nouvelle version
  */
 export async function savePlay(req, res, next) {
+  const client = await pool.connect();
+  
   try {
     const { id } = req.params;
     const { title, subtitle, rawContent, htmlContent, statistics, versionType = 'auto', manualLabel } = req.body;
@@ -252,26 +316,25 @@ export async function savePlay(req, res, next) {
     }
 
     // Vérifier que la pièce existe et appartient à l'utilisateur
-    const existingPlay = await prisma.play.findUnique({
-      where: { id },
-      select: { id: true, userId: true, contentVersion: true }
-    });
+    const checkQuery = `SELECT id, user_id, content_version FROM plays WHERE id = $1`;
+    const checkResult = await client.query(checkQuery, [id]);
 
-    if (!existingPlay) {
+    if (checkResult.rows.length === 0) {
       throw new NotFoundError('Pièce non trouvée');
     }
 
-    if (existingPlay.userId !== userId) {
+    const existingPlay = checkResult.rows[0];
+
+    if (existingPlay.user_id !== userId) {
       throw new ForbiddenError('Accès non autorisé à cette pièce');
     }
 
-    // Validation du titre
+    // Validations
     const titleValidation = validateTitle(title);
     if (!titleValidation.valid) {
       throw new ValidationError(titleValidation.message);
     }
 
-    // Validation des contenus
     const rawValidation = validateContent(rawContent, config.limits.maxContentSizeBytes);
     if (!rawValidation.valid) {
       throw new ValidationError(`rawContent: ${rawValidation.message}`);
@@ -282,97 +345,120 @@ export async function savePlay(req, res, next) {
       throw new ValidationError(`htmlContent: ${htmlValidation.message}`);
     }
 
-    // Validation des statistiques
     const statsValidation = validateStatistics(statistics);
     if (!statsValidation.valid) {
       throw new ValidationError(statsValidation.message);
     }
 
-    // Calcul de la taille
-    const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + 
-                         Buffer.byteLength(htmlContent, 'utf8');
+    const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
+
+    await client.query('BEGIN');
 
     // Récupérer le prochain numéro de version
-    const maxVersion = await prisma.playVersion.aggregate({
-      where: { playId: id },
-      _max: { versionNumber: true }
-    });
+    const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_versions WHERE play_id = $1`;
+    const maxVersionResult = await client.query(maxVersionQuery, [id]);
+    const nextVersionNumber = maxVersionResult.rows[0].max_version + 1;
+    const newContentVersion = existingPlay.content_version + 1;
 
-    const nextVersionNumber = (maxVersion._max.versionNumber || 0) + 1;
-    const newContentVersion = existingPlay.contentVersion + 1;
+    // 1. Mettre à jour la pièce
+    const updatePlayQuery = `
+      UPDATE plays
+      SET title = $1, subtitle = $2, raw_content = $3, html_content = $4, content_version = $5, last_edited_at = NOW(), updated_at = NOW()
+      WHERE id = $6
+      RETURNING *
+    `;
+    const playResult = await client.query(updatePlayQuery, [
+      title.trim(),
+      subtitle?.trim() || null,
+      rawContent,
+      htmlContent,
+      newContentVersion,
+      id
+    ]);
 
-    // Transaction atomique : update play + create version + upsert statistics + create version_statistics
-    const updatedPlay = await prisma.$transaction(async (tx) => {
-      // 1. Mettre à jour la pièce (version courante)
-      const play = await tx.play.update({
-        where: { id },
-        data: {
-          title: title.trim(),
-          subtitle: subtitle?.trim() || null,
-          rawContent,
-          htmlContent,
-          contentVersion: newContentVersion,
-          lastEditedAt: new Date()
-        }
-      });
+    // 2. Créer nouvelle version
+    const insertVersionQuery = `
+      INSERT INTO play_versions (play_id, version_number, title, raw_content, html_content, version_type, manual_label, file_size_bytes, preserved_reason)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id
+    `;
+    const versionResult = await client.query(insertVersionQuery, [
+      id,
+      nextVersionNumber,
+      title.trim(),
+      rawContent,
+      htmlContent,
+      versionType,
+      versionType === 'manual' ? (manualLabel || null) : null,
+      fileSizeBytes,
+      versionType === 'manual' ? 'manual' : null
+    ]);
+    const versionId = versionResult.rows[0].id;
 
-      // 2. Créer une nouvelle version dans l'historique
-      const version = await tx.playVersion.create({
-        data: {
-          playId: id,
-          versionNumber: nextVersionNumber,
-          title: play.title,
-          rawContent,
-          htmlContent,
-          versionType,
-          manualLabel: versionType === 'manual' ? (manualLabel || null) : null,
-          fileSizeBytes,
-          preservedReason: versionType === 'manual' ? 'manual' : null
-        }
-      });
+    // 3. Upsert play_statistics
+    const upsertStatsQuery = `
+      INSERT INTO play_statistics (play_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, content_version, calculated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      ON CONFLICT (play_id)
+      DO UPDATE SET
+        total_acts = $2, total_scenes = $3, total_characters = $4, total_lines = $5,
+        word_count = $6, estimated_duration_minutes = $7, content_version = $8, calculated_at = NOW()
+      RETURNING *
+    `;
+    const statsResult = await client.query(upsertStatsQuery, [
+      id,
+      statistics.totalActs,
+      statistics.totalScenes,
+      statistics.totalCharacters,
+      statistics.totalLines,
+      statistics.wordCount,
+      statistics.estimatedDurationMinutes,
+      newContentVersion
+    ]);
 
-      // 3. Upsert des statistiques de la version courante
-      await tx.playStatistics.upsert({
-        where: { playId: id },
-        update: {
-          ...statistics,
-          contentVersion: newContentVersion,
-          calculatedAt: new Date()
-        },
-        create: {
-          playId: id,
-          ...statistics,
-          contentVersion: newContentVersion
-        }
-      });
+    // 4. Créer version_statistics
+    const insertVersionStatsQuery = `
+      INSERT INTO version_statistics (version_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, calculated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+    `;
+    await client.query(insertVersionStatsQuery, [
+      versionId,
+      statistics.totalActs,
+      statistics.totalScenes,
+      statistics.totalCharacters,
+      statistics.totalLines,
+      statistics.wordCount,
+      statistics.estimatedDurationMinutes
+    ]);
 
-      // 4. Créer les statistiques pour cette version
-      await tx.versionStatistics.create({
-        data: {
-          versionId: version.id,
-          ...statistics,
-          calculatedAt: new Date()
-        }
-      });
+    await client.query('COMMIT');
 
-      return play;
-    });
+    const play = playResult.rows[0];
+    const stats = statsResult.rows[0];
 
-    // Récupérer la pièce complète avec stats
-    const fullPlay = await prisma.play.findUnique({
-      where: { id },
-      include: {
-        statistics: true
-      }
-    });
-
-    res.json({ 
-      play: fullPlay,
+    res.json({
+      play: {
+        id: play.id,
+        userId: play.user_id,
+        title: play.title,
+        subtitle: play.subtitle,
+        rawContent: play.raw_content,
+        htmlContent: play.html_content,
+        contentVersion: play.content_version,
+        status: play.status,
+        createdAt: play.created_at,
+        updatedAt: play.updated_at,
+        lastEditedAt: play.last_edited_at,
+        statistics: stats
+      },
       versionNumber: nextVersionNumber,
       message: 'Pièce sauvegardée avec succès'
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 }
 
@@ -392,23 +478,22 @@ export async function deletePlay(req, res, next) {
     }
 
     // Vérifier que la pièce existe et appartient à l'utilisateur
-    const play = await prisma.play.findUnique({
-      where: { id },
-      select: { id: true, userId: true, title: true }
-    });
+    const checkQuery = `SELECT id, user_id, title FROM plays WHERE id = $1`;
+    const checkResult = await pool.query(checkQuery, [id]);
 
-    if (!play) {
+    if (checkResult.rows.length === 0) {
       throw new NotFoundError('Pièce non trouvée');
     }
 
-    if (play.userId !== userId) {
+    const play = checkResult.rows[0];
+
+    if (play.user_id !== userId) {
       throw new ForbiddenError('Accès non autorisé à cette pièce');
     }
 
     // Suppression (CASCADE supprimera automatiquement versions et stats)
-    await prisma.play.delete({
-      where: { id }
-    });
+    const deleteQuery = `DELETE FROM plays WHERE id = $1`;
+    await pool.query(deleteQuery, [id]);
 
     console.log('[PLAY] Pièce supprimée:', play.title, 'par', req.user.username);
 
@@ -443,30 +528,39 @@ export async function updatePlayStatus(req, res, next) {
     }
 
     // Vérifier que la pièce existe et appartient à l'utilisateur
-    const play = await prisma.play.findUnique({
-      where: { id },
-      select: { id: true, userId: true }
-    });
+    const checkQuery = `SELECT id, user_id FROM plays WHERE id = $1`;
+    const checkResult = await pool.query(checkQuery, [id]);
 
-    if (!play) {
+    if (checkResult.rows.length === 0) {
       throw new NotFoundError('Pièce non trouvée');
     }
 
-    if (play.userId !== userId) {
+    const play = checkResult.rows[0];
+
+    if (play.user_id !== userId) {
       throw new ForbiddenError('Accès non autorisé à cette pièce');
     }
 
     // Mise à jour du statut
-    const updatedPlay = await prisma.play.update({
-      where: { id },
-      data: { status },
-      include: {
-        statistics: true
-      }
-    });
+    const updateQuery = `
+      UPDATE plays
+      SET status = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING *
+    `;
+    const updateResult = await pool.query(updateQuery, [status, id]);
+
+    // Récupérer les stats
+    const statsQuery = `SELECT * FROM play_statistics WHERE play_id = $1`;
+    const statsResult = await pool.query(statsQuery, [id]);
+
+    const updatedPlay = updateResult.rows[0];
 
     res.json({
-      play: updatedPlay,
+      play: {
+        ...updatedPlay,
+        statistics: statsResult.rows[0] || null
+      },
       message: 'Statut mis à jour avec succès'
     });
   } catch (error) {

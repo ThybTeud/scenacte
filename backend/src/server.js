@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import app from './app.js';
 import { config } from './config/env.js';
+import { testConnection, closePool } from './config/database.js';
 import { verifyEmailConnection } from './services/email.service.js';
 import { initCleanupJob } from './jobs/cleanup.job.js';
-
-const prisma = new PrismaClient();
 
 /**
  * Démarrage du serveur
@@ -17,7 +15,10 @@ async function startServer() {
 
     // 1. Vérification de la connexion à la base de données
     console.log('[DATABASE] Connexion à PostgreSQL...');
-    await prisma.$connect();
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      throw new Error('Impossible de se connecter à la base de données');
+    }
     console.log('[DATABASE] ✓ Connexion établie avec succès\n');
 
     // 2. Vérification de la connexion SMTP (non bloquant)
@@ -64,9 +65,9 @@ async function startServer() {
         cleanupJob.stop();
         console.log('[CRON] Job de nettoyage arrêté');
 
-        // Fermer la connexion Prisma
-        await prisma.$disconnect();
-        console.log('[DATABASE] Connexion fermée');
+        // Fermer le pool de connexions PostgreSQL
+        await closePool();
+        console.log('[DATABASE] Pool de connexions fermé');
 
         console.log('✓ Arrêt terminé proprement\n');
         process.exit(0);
@@ -85,7 +86,7 @@ async function startServer() {
 
   } catch (error) {
     console.error('✗ Erreur lors du démarrage du serveur:', error);
-    await prisma.$disconnect();
+    await closePool();
     process.exit(1);
   }
 }
