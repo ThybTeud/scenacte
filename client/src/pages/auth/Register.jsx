@@ -17,6 +17,7 @@ export function Register() {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,10 +27,46 @@ export function Register() {
     }
   };
 
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateUsername = (username) => {
+    // Au moins 3 caractères, lettres, chiffres, tirets et underscores uniquement
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    return usernameRegex.test(username);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 6;
+  };
+
+  const getPasswordStrength = (password) => {
+    if (password.length === 0) return null;
+    if (password.length < 6) return 'weak';
+    if (password.length < 8) return 'medium';
+    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
+    return 'medium';
+  };
+
   const validate = () => {
     const newErrors = {};
 
-    if (formData.password.length < 6) {
+    if (!validateEmail(formData.email)) {
+      newErrors.email = 'Email invalide';
+    }
+
+    if (!validateUsername(formData.username)) {
+      newErrors.username = 'Nom d\'utilisateur invalide (3-20 caractères, lettres, chiffres, - et _ uniquement)';
+    }
+
+    if (!validatePassword(formData.password)) {
       newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
     }
 
@@ -64,6 +101,8 @@ export function Register() {
     }
   };
 
+  const passwordStrength = getPasswordStrength(formData.password);
+
   return (
     <AuthLayout title="Créer un compte" subtitle="Commencez à écrire votre pièce">
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -73,15 +112,36 @@ export function Register() {
           </div>
         )}
 
+        {/* Critères de validation */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Critères de validation</h3>
+          <ul className="text-xs text-blue-800 space-y-1">
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span><strong>Email :</strong> Format valide (exemple@domaine.com)</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span><strong>Nom d'utilisateur :</strong> 3-20 caractères, lettres, chiffres, tirets (-) et underscores (_) uniquement</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span><strong>Mot de passe :</strong> Minimum 6 caractères (recommandé : 8+ avec majuscules et chiffres)</span>
+            </li>
+          </ul>
+        </div>
+
         <Input
           label="Email"
           type="email"
           name="email"
           value={formData.email}
           onChange={handleChange}
+          onBlur={handleBlur}
           required
           error={errors.email}
           disabled={isLoading}
+          placeholder="exemple@domaine.com"
         />
 
         <Input
@@ -90,21 +150,48 @@ export function Register() {
           name="username"
           value={formData.username}
           onChange={handleChange}
+          onBlur={handleBlur}
           required
           error={errors.username}
           disabled={isLoading}
+          placeholder="mon_username"
         />
 
-        <Input
-          label="Mot de passe"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          error={errors.password}
-          disabled={isLoading}
-        />
+        <div>
+          <Input
+            label="Mot de passe"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            required
+            error={errors.password}
+            disabled={isLoading}
+          />
+          {formData.password && (
+            <div className="mt-2">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all ${
+                      passwordStrength === 'weak'
+                        ? 'w-1/3 bg-red-500'
+                        : passwordStrength === 'medium'
+                        ? 'w-2/3 bg-yellow-500'
+                        : 'w-full bg-green-500'
+                    }`}
+                  />
+                </div>
+                <span className="text-xs font-medium">
+                  {passwordStrength === 'weak' && <span className="text-red-600">Faible</span>}
+                  {passwordStrength === 'medium' && <span className="text-yellow-600">Moyen</span>}
+                  {passwordStrength === 'strong' && <span className="text-green-600">Fort</span>}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
         <Input
           label="Confirmer le mot de passe"
@@ -112,6 +199,7 @@ export function Register() {
           name="confirmPassword"
           value={formData.confirmPassword}
           onChange={handleChange}
+          onBlur={handleBlur}
           required
           error={errors.confirmPassword}
           disabled={isLoading}
