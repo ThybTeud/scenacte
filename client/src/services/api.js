@@ -1,6 +1,10 @@
 // Normaliser l'URL en retirant le trailing slash
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
 
+// Debug : afficher l'URL utilisée
+console.log('🔧 API_URL configurée:', API_URL);
+console.log('🔧 VITE_API_URL brute:', import.meta.env.VITE_API_URL);
+
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('token');
   const headers = {
