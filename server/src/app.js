@@ -11,8 +11,22 @@ const app = express();
  */
 
 // CORS - Autorise les requêtes depuis le frontend
+// Accepte l'URL avec ou sans trailing slash pour éviter les problèmes CORS
 app.use(cors({
-  origin: config.client.url,
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (comme Postman, curl, etc.)
+    if (!origin) return callback(null, true);
+
+    // Normaliser les URLs en retirant le trailing slash
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const normalizedClientUrl = config.client.url.replace(/\/$/, '');
+
+    if (normalizedOrigin === normalizedClientUrl) {
+      callback(null, true);
+    } else {
+      callback(new Error('Non autorisé par CORS'));
+    }
+  },
   credentials: true
 }));
 
