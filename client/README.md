@@ -14,7 +14,7 @@ Application web d'écriture de pièces de théâtre avec gestion de versions.
 ## Prérequis
 
 - Node.js 18+ et npm
-- Le backend doit être lancé sur `http://localhost:3000`
+- Le serveur doit être lancé sur `http://localhost:3000`
 
 ## Installation
 
@@ -208,7 +208,7 @@ Routes protégées (nécessitent authentification) :
 - Validation côté client des formulaires
 - Protection XSS native de React
 - Routes protégées avec redirection automatique
-- CORS configuré côté backend pour `http://localhost:5173`
+- CORS configuré côté serveur pour `http://localhost:5173`
 
 ### TODO après MVP
 
@@ -247,8 +247,8 @@ kill -9 <PID>
 ### Erreurs CORS
 
 Vérifier que :
-1. Le backend est bien lancé sur `http://localhost:3000`
-2. Le CORS est configuré côté backend pour accepter `http://localhost:5173`
+1. Le serveur est bien lancé sur `http://localhost:3000`
+2. Le CORS est configuré côté serveur pour accepter `http://localhost:5173`
 3. La variable `VITE_API_URL` est correctement définie dans `.env`
 
 ### Token expiré
