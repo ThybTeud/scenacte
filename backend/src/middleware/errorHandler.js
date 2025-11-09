@@ -74,31 +74,21 @@ export function errorHandler(err, req, res, next) {
     timestamp: new Date().toISOString()
   });
 
-  // Erreurs Prisma
-  if (err.name === 'PrismaClientKnownRequestError') {
-    // P2002 : Contrainte unique violée
-    if (err.code === 'P2002') {
-      const field = err.meta?.target?.[0] || 'champ';
-      return res.status(409).json({
-        error: `Ce ${field} existe déjà`
-      });
-    }
-
-    // P2025 : Enregistrement non trouvé
-    if (err.code === 'P2025') {
-      return res.status(404).json({
-        error: 'Ressource non trouvée'
-      });
-    }
-
-    // Autres erreurs Prisma
-    return res.status(400).json({
-      error: 'Erreur de base de données'
+  // Erreurs de base de données PostgreSQL (ex: contrainte unique)
+  // 23505 : unique_violation
+  if (err && err.code === '23505') {
+    // Essayer d'extraire le champ de la contrainte si présent
+    const detail = err.detail || '';
+    const match = detail.match(/\(([^)]+)\)=/);
+    const field = match ? match[1] : 'champ';
+    return res.status(409).json({
+      error: `Ce ${field} existe déjà`
     });
   }
 
-  // Erreurs Prisma de validation
-  if (err.name === 'PrismaClientValidationError') {
+  // Erreurs SQL de validation ou autre
+  if (err && err.code && typeof err.code === 'string' && err.code.startsWith('22')) {
+    // Codes SQLSTATE commençant par 22 sont souvent des erreurs de données
     return res.status(400).json({
       error: 'Données invalides'
     });

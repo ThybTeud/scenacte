@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db/index.js';
 import { hashPassword, comparePassword } from '../utils/hash.js';
 import { 
   validateEmail, 
@@ -12,7 +12,7 @@ import {
   ValidationError 
 } from '../middleware/errorHandler.js';
 
-const prisma = new PrismaClient();
+// Utilise le client pg via src/db/index.js
 
 /**
  * GET /api/users/profile

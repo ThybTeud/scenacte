@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../db/index.js';
 import { validateUUID } from '../utils/validation.js';
 import { generatePDF, generatePDFFilename } from '../services/pdf.service.js';
 import { 
@@ -8,7 +8,7 @@ import {
   InternalServerError 
 } from '../middleware/errorHandler.js';
 
-const prisma = new PrismaClient();
+// Utilise le client pg via src/db/index.js
 
 /**
  * POST /api/plays/:id/export/pdf
