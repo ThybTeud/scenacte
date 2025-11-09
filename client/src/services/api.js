@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Normaliser l'URL en retirant le trailing slash
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('token');

@@ -48,7 +48,8 @@ export const config = {
 
   // Client
   client: {
-    url: process.env.CLIENT_URL || 'http://localhost:5173'
+    // Normaliser l'URL en retirant le trailing slash pour éviter les problèmes CORS
+    url: (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
   },
 
   // Limits
