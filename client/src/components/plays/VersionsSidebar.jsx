@@ -71,7 +71,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="fixed inset-0 bg-black/50 z-40"
         onClick={onClose}
       />
       <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-xl z-50 flex flex-col">
@@ -105,26 +105,26 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-medium text-gray-900">
-                        Version #{version.version_number}
+                        Version #{version.versionNumber}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatDate(version.created_at)}
+                        {formatDate(version.createdAt)}
                       </p>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        version.version_type === 'manual'
+                        version.versionType === 'manual'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {version.version_type === 'manual' ? 'Manuel' : 'Auto'}
+                      {version.versionType === 'manual' ? 'Manuel' : 'Auto'}
                     </span>
                   </div>
 
-                  {version.manual_label && (
+                  {version.manualLabel && (
                     <p className="text-sm text-gray-700 mb-2">
-                      {version.manual_label}
+                      {version.manualLabel}
                     </p>
                   )}
 
@@ -178,7 +178,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
         }
       >
         <p className="text-gray-700">
-          Êtes-vous sûr de vouloir restaurer la version #{selectedVersion?.version_number} ?
+          Êtes-vous sûr de vouloir restaurer la version #{selectedVersion?.versionNumber} ?
           Cela remplacera le contenu actuel de la pièce.
         </p>
       </Modal>

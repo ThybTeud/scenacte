@@ -217,7 +217,7 @@ export function PlaysList() {
                         <p className="text-gray-600 mb-3">{play.subtitle}</p>
                       )}
                       <p className="text-sm text-gray-500">
-                        Dernière modification : {formatDate(play.updated_at)}
+                        Dernière modification : {formatDate(play.updatedAt)}
                       </p>
                     </div>
                     <Button

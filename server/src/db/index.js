@@ -58,14 +58,74 @@ const prisma = {
       return null;
     },
 
-    async findUnique({ where } = {}) {
+    async findUnique({ where, select } = {}) {
       if (!where) return null;
+
+      // Si select est fourni avec _count, on doit faire une requête spéciale
+      if (select && select._count) {
+        let userId = null;
+
+        if (where.email) {
+          const userRes = await query('SELECT id FROM users WHERE email = $1 LIMIT 1', [where.email]);
+          if (!userRes.rows[0]) return null;
+          userId = userRes.rows[0].id;
+        } else if (where.id) {
+          userId = where.id;
+        } else if (where.username) {
+          const userRes = await query('SELECT id FROM users WHERE username = $1 LIMIT 1', [where.username]);
+          if (!userRes.rows[0]) return null;
+          userId = userRes.rows[0].id;
+        } else {
+          return null;
+        }
+
+        // Construire la requête avec les champs sélectionnés
+        const fields = [];
+        for (const [key, value] of Object.entries(select)) {
+          if (key === '_count') continue; // On le gère séparément
+          if (value === true) {
+            const columnName = key.replace(/([A-Z])/g, (m) => '_' + m.toLowerCase());
+            fields.push(columnName);
+          }
+        }
+
+        // Récupérer l'utilisateur
+        const userQuery = fields.length > 0
+          ? `SELECT ${fields.join(', ')} FROM users WHERE id = $1`
+          : `SELECT * FROM users WHERE id = $1`;
+        const userRes = await query(userQuery, [userId]);
+
+        if (!userRes.rows[0]) return null;
+
+        const user = camelizeRow(userRes.rows[0]);
+
+        // Si _count est demandé
+        if (select._count && select._count.select) {
+          user._count = {};
+
+          if (select._count.select.plays === true) {
+            const countRes = await query(
+              'SELECT COUNT(*) as count FROM plays WHERE user_id = $1',
+              [userId]
+            );
+            user._count.plays = parseInt(countRes.rows[0].count, 10);
+          }
+        }
+
+        return user;
+      }
+
+      // Comportement par défaut sans select
       if (where.email) {
         const res = await query('SELECT * FROM users WHERE email = $1 LIMIT 1', [where.email]);
         return camelizeRow(res.rows[0]);
       }
       if (where.id) {
         const res = await query('SELECT * FROM users WHERE id = $1 LIMIT 1', [where.id]);
+        return camelizeRow(res.rows[0]);
+      }
+      if (where.username) {
+        const res = await query('SELECT * FROM users WHERE username = $1 LIMIT 1', [where.username]);
         return camelizeRow(res.rows[0]);
       }
       return null;

@@ -10,6 +10,7 @@ import { ResetPassword } from './pages/auth/ResetPassword';
 import { PlaysList } from './pages/plays/PlaysList';
 import { PlayEditor } from './pages/plays/PlayEditor';
 import { UserProfile } from './pages/profile/UserProfile';
+import { Preferences } from './pages/preferences/Preferences';
 import { NotFound } from './pages/NotFound';
 
 function App() {
@@ -68,6 +69,14 @@ function App() {
             element={
               <PrivateRoute>
                 <UserProfile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/preferences"
+            element={
+              <PrivateRoute>
+                <Preferences />
               </PrivateRoute>
             }
           />
