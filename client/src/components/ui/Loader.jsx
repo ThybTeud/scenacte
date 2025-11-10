@@ -1,15 +1,12 @@
-import { Oval } from 'react-loader-spinner';
+import { Bars } from 'react-loader-spinner';
 
-export function Loader({ size = 80, color = '#FF6B35', fullScreen = false }) {
+export function Loader({ size = 80, color = '#6B6B6B', fullScreen = false }) {
   const loader = (
     <div className="flex items-center justify-center">
-      <Oval
+      <Bars
         height={size}
         width={size}
         color={color}
-        secondaryColor="#FFD4C7"
-        strokeWidth={4}
-        strokeWidthSecondary={4}
       />
     </div>
   );
