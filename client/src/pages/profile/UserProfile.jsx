@@ -163,12 +163,12 @@ export function UserProfile() {
             {profile && (
               <div className="mb-4 text-sm text-gray-600">
                 <p>
-                  Nombre de pièces : <strong>{profile.plays_count || 0}</strong>
+                  Nombre de pièces : <strong>{profile.playsCount || 0}</strong>
                 </p>
                 <p>
                   Membre depuis :{' '}
                   <strong>
-                    {new Date(profile.created_at).toLocaleDateString('fr-FR')}
+                    {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
                   </strong>
                 </p>
               </div>
