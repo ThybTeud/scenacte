@@ -1,8 +1,14 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './config/env.js';
 import routes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+
+// Pour obtenir __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -48,11 +54,30 @@ if (config.server.env === 'development') {
 app.use('/api', routes);
 
 /**
- * Gestion des erreurs
+ * Servir le frontend en production
  */
+if (config.server.env === 'production') {
+  // Chemin vers le dossier de build Vite (depuis server/src/)
+  const buildPath = path.join(__dirname, '../../client/dist');
+  
+  console.log('[STATIC] Serving frontend from:', buildPath);
+  
+  // Servir les fichiers statiques
+  app.use(express.static(buildPath));
+  
+  // Toutes les routes non-API redirigent vers index.html (pour React Router)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
-// Route non trouvée (404)
-app.use(notFoundHandler);
+/**
+ * Gestion des erreurs (uniquement pour les routes API en production)
+ */
+if (config.server.env !== 'production') {
+  // Route non trouvée (404) - en dev seulement
+  app.use(notFoundHandler);
+}
 
 // Gestionnaire d'erreurs global
 app.use(errorHandler);

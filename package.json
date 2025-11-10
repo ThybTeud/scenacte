@@ -1,0 +1,17 @@
+{
+  "name": "scenacte",
+  "version": "1.0.0",
+  "description": "Éditeur de théâtre accessible",
+  "scripts": {
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "install:all": "npm run install:client && npm run install:server",
+    "build:client": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "deploy": "npm run build:client && npm run start"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
