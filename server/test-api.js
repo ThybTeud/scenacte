@@ -197,11 +197,20 @@ async function testPlays() {
       const res = await request('PUT', `/plays/${playId}`, {
         title: 'Updated Test Play',
         rawContent: '# Acte 1\n\n## Scène 1\n\nUpdated content',
+        htmlContent: '<h1>Acte 1</h1><h2>Scène 1</h2><p>Updated content</p>',
+        statistics: {
+          totalActs: 1,
+          totalScenes: 1,
+          totalCharacters: 0,
+          totalLines: 1,
+          wordCount: 5,
+          estimatedDurationMinutes: 1
+        },
         versionType: 'manual',
         manualLabel: 'Test update',
       }, true);
       logTest(`PUT /plays/${playId}`, res.ok);
-      if (res.ok) versionId = res.data.versionNumber;
+      // Don't set versionId here, we'll get it from the versions list
     } catch (error) {
       logTest(`PUT /plays/${playId}`, false, error.message);
     }
