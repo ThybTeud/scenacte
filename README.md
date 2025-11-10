@@ -103,8 +103,9 @@ cp .env.example .env
 **Terminal 1 - Serveur :**
 ```bash
 cd server
-npm run dev
-# Serveur sur http://localhost:3000
+./start-dev.sh
+# Démarre PostgreSQL, MailDev et le serveur sur http://localhost:3000
+# MailDev web interface: http://localhost:1080
 ```
 
 **Terminal 2 - Client :**
@@ -113,6 +114,8 @@ cd client
 npm run dev
 # Application sur http://localhost:5173
 ```
+
+> **Note** : Le script `start-dev.sh` démarre automatiquement PostgreSQL, MailDev (serveur SMTP local) et le serveur Node.js
 
 #### 6. Accéder à l'application
 

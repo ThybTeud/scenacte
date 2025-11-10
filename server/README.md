@@ -124,11 +124,39 @@ GRANT ALL PRIVILEGES ON DATABASE scenacte TO scenacte_user;
 
 ## 🚀 Lancement
 
-### Mode développement (avec nodemon)
+### Mode développement (recommandé)
+
+Le script `start-dev.sh` démarre automatiquement tous les services nécessaires :
 
 ```bash
+./start-dev.sh
+```
+
+Ce script :
+1. ✅ Vérifie et démarre **PostgreSQL**
+2. ✅ Vérifie et démarre **MailDev** (serveur SMTP local)
+3. ✅ Démarre le **serveur Node.js**
+
+### Démarrage manuel (développement)
+
+Si vous préférez démarrer les services manuellement :
+
+```bash
+# 1. Démarrer PostgreSQL (si nécessaire)
+sudo service postgresql start
+# ou sur certains systèmes :
+su - postgres -c "pg_ctl -D /var/lib/postgresql/16/main start"
+
+# 2. Démarrer MailDev (pour les emails en développement)
+maildev --smtp 1025 --web 1080
+
+# 3. Dans un autre terminal, démarrer le serveur
 npm run dev
 ```
+
+**MailDev** permet de capturer les emails en développement :
+- Interface web : http://localhost:1080
+- Port SMTP : 1025
 
 ### Mode production
 
