@@ -17,23 +17,43 @@ const app = express();
  */
 
 // CORS - Autorise les requêtes depuis le frontend
-// Accepte l'URL avec ou sans trailing slash pour éviter les problèmes CORS
 app.use(cors({
   origin: (origin, callback) => {
-    // Autoriser les requêtes sans origin (comme Postman, curl, etc.)
-    if (!origin) return callback(null, true);
+    // Liste des origines autorisées
+    const allowedOrigins = [
+      config.client.url,
+      config.client.url.replace(/\/$/, ''), // Sans trailing slash
+      config.client.url + '/', // Avec trailing slash
+      'http://localhost:5173', // Dev local Vite
+      'http://localhost:3000', // Dev local alternatif
+    ];
 
-    // Normaliser les URLs en retirant le trailing slash
+    // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Normaliser l'origin en retirant le trailing slash
     const normalizedOrigin = origin.replace(/\/$/, '');
-    const normalizedClientUrl = config.client.url.replace(/\/$/, '');
+    
+    // Vérifier si l'origin est dans la liste autorisée
+    const isAllowed = allowedOrigins.some(allowed => 
+      allowed.replace(/\/$/, '') === normalizedOrigin
+    );
 
-    if (normalizedOrigin === normalizedClientUrl) {
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error('Non autorisé par CORS'));
+      console.warn(`[CORS] Origin non autorisée: ${origin}`);
+      // IMPORTANT: Ne pas passer une Error, simplement false
+      callback(null, false);
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 heures
 }));
 
 // Body parser - Parse JSON et URL-encoded
