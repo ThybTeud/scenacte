@@ -3,6 +3,7 @@ services:
   - type: pserv
     name: scenacte-db
     plan: free
+    region: frankfurt
 
   # Backend API (Node.js/Express)
   - type: web
