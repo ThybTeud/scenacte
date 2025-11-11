@@ -125,6 +125,8 @@ Ouvrez votre navigateur sur `http://localhost:5173`
 
 - [Documentation du serveur](./server/README.md)
 - [Documentation du client](./client/README.md)
+- [Guide de déploiement sur Render.com](./DEPLOYMENT.md)
+- [Démarrage rapide sur Render.com](./QUICKSTART_RENDER.md)
 
 ## 🔧 Stack technique
 
@@ -232,6 +234,39 @@ cd client
 npm run build
 npm run preview
 ```
+
+## 🌐 Déploiement
+
+L'application peut être déployée sur **Render.com** (recommandé).
+
+### Déploiement sur Render.com
+
+Render.com offre un hébergement simple et gratuit pour débuter :
+
+- **Base de données PostgreSQL** : Plan gratuit (90 jours)
+- **Backend Node.js** : Plan gratuit avec auto-sleep après 15 min d'inactivité
+- **Frontend React** : Hébergement statique gratuit illimité
+
+#### Guides de déploiement
+
+- **[Démarrage rapide (10 minutes)](./QUICKSTART_RENDER.md)** - Guide express pour déployer rapidement
+- **[Guide complet de déploiement](./DEPLOYMENT.md)** - Documentation détaillée avec troubleshooting
+
+#### Déploiement automatique avec Blueprint
+
+Le fichier `render.yaml` à la racine permet un déploiement automatisé :
+
+1. Connectez-vous à [Render.com](https://render.com)
+2. Cliquez sur **New** → **Blueprint**
+3. Sélectionnez votre repository
+4. Cliquez sur **Apply**
+
+Render créera automatiquement :
+- Une base de données PostgreSQL
+- Le backend API (Node.js)
+- Le frontend (site statique React)
+
+Consultez le [guide de déploiement](./DEPLOYMENT.md) pour plus de détails.
 
 ## 🤝 Contribution
 
