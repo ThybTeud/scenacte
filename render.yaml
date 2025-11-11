@@ -3,7 +3,6 @@ services:
   - type: pserv
     name: scenacte-db
     plan: free
-    ipAllowList: []
 
   # Backend API (Node.js/Express)
   - type: web
@@ -44,7 +43,6 @@ services:
     name: scenacte-frontend
     runtime: static
     plan: free
-    region: frankfurt
     buildCommand: npm run install:client && cd client && npm run build
     staticPublishPath: ./client/dist
     pullRequestPreviewsEnabled: true
