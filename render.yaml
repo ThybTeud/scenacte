@@ -3,8 +3,6 @@ services:
   - type: pserv
     name: scenacte-db
     plan: free
-    databaseName: scenacte
-    databaseUser: scenacte
     ipAllowList: []
 
   # Backend API (Node.js/Express)
