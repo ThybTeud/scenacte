@@ -3,8 +3,6 @@ services:
   - type: pserv
     name: scenacte-db
     plan: free
-    databaseName: scenacte
-    databaseUser: scenacte
     ipAllowList: []
 
   # Backend API (Node.js/Express)
@@ -35,44 +33,22 @@ services:
         fromService:
           type: web
           name: scenacte-frontend
-          property: host
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: SMTP_FROM
-        sync: false
+          envVarKey: RENDER_EXTERNAL_URL
+      # Note: Les variables SMTP doivent être ajoutées manuellement après le déploiement
+      # via l'interface Render : SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
 
   # Frontend (React/Vite)
+  # Note: Après le déploiement du backend, ajouter manuellement la variable
+  # VITE_API_URL=https://[votre-backend-url]/api puis redéployer le frontend
   - type: web
     name: scenacte-frontend
     runtime: static
     plan: free
     region: frankfurt
-    buildCommand: npm run install:client && cd client && VITE_API_URL=$RENDER_EXTERNAL_URL npm run build
+    buildCommand: npm run install:client && cd client && npm run build
     staticPublishPath: ./client/dist
     pullRequestPreviewsEnabled: true
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: scenacte-api
-          envVarKey: RENDER_EXTERNAL_URL

@@ -134,7 +134,20 @@ SMTP_PASSWORD=votre-app-password
 SMTP_FROM=noreply@votre-domaine.com
 ```
 
-#### b) Migrations de base de données
+Le service redémarrera automatiquement.
+
+#### b) Configuration de l'URL de l'API pour le frontend
+
+1. Notez l'URL du backend depuis le service **scenacte-api**
+2. Dans `scenacte-frontend` → **Environment**, ajoutez :
+   ```
+   VITE_API_URL=https://scenacte-api.onrender.com/api
+   ```
+   ⚠️ Remplacez par votre URL réelle et incluez `/api` à la fin
+
+3. Redéployez le frontend : **Manual Deploy** → **Deploy latest commit**
+
+#### c) Migrations de base de données
 Dans `scenacte-api` → **Shell** :
 ```bash
 cd server
@@ -145,6 +158,7 @@ npm run db:migrate
 
 - **API Health** : `https://scenacte-api.onrender.com/api/health`
 - **Frontend** : `https://scenacte-frontend.onrender.com`
+- **Test complet** : Créez un compte et testez les fonctionnalités
 
 ---
 

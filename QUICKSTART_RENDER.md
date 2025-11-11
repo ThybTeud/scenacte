@@ -21,11 +21,12 @@ Cette méthode utilise le fichier `render.yaml` pour déployer automatiquement t
 1. Cliquez sur **New** > **Blueprint**
 2. Sélectionnez votre repository `scenacte`
 3. Render détectera automatiquement le fichier `render.yaml`
-4. Cliquez sur **Apply** pour créer tous les services
+4. Cliquez sur **Apply** pour créer tous les services (base de données, backend, frontend)
+5. Attendez que les services se déploient (2-5 minutes)
 
-#### 3. Configuration des variables d'environnement SMTP
-Après la création des services, configurez les variables SMTP :
+#### 3. Configuration post-déploiement
 
+##### a) Configurer les variables SMTP (Backend)
 1. Allez dans le service **scenacte-api**
 2. Ouvrez l'onglet **Environment**
 3. Ajoutez les variables suivantes :
@@ -36,10 +37,23 @@ Après la création des services, configurez les variables SMTP :
    SMTP_PASSWORD=votre-mot-de-passe-app
    SMTP_FROM=noreply@votre-domaine.com
    ```
+4. Le service redémarrera automatiquement
 
 💡 **Pour Gmail** : Générez un mot de passe d'application depuis https://myaccount.google.com/apppasswords
 
 💡 **Autres services SMTP** : Utilisez SendGrid, Mailgun, ou tout autre service SMTP compatible
+
+##### b) Configurer l'URL de l'API (Frontend)
+1. Notez l'URL du backend depuis le service **scenacte-api** (ex: `https://scenacte-api.onrender.com`)
+2. Allez dans le service **scenacte-frontend**
+3. Ouvrez l'onglet **Environment**
+4. Ajoutez la variable :
+   ```
+   VITE_API_URL=https://scenacte-api.onrender.com/api
+   ```
+   ⚠️ **Important** : Remplacez par votre URL réelle et ajoutez `/api` à la fin
+5. Allez dans l'onglet **Manual Deploy**
+6. Cliquez sur **Deploy latest commit** pour reconstruire le frontend avec la bonne URL
 
 #### 4. Appliquer les migrations
 1. Allez dans le service **scenacte-api**
@@ -53,6 +67,7 @@ Après la création des services, configurez les variables SMTP :
 #### 5. Tester
 - **API** : Visitez `https://scenacte-api.onrender.com/api/health`
 - **Frontend** : Visitez `https://scenacte-frontend.onrender.com`
+- **Test complet** : Essayez de vous inscrire et de créer une pièce
 
 ---
 
