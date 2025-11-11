@@ -1,10 +1,10 @@
-services:
+databases:
   # Base de données PostgreSQL
-  - type: pserv
-    name: scenacte-db
+  - name: scenacte-db
     plan: free
     region: frankfurt
 
+services:
   # Backend API (Node.js/Express)
   - type: web
     name: scenacte-api
