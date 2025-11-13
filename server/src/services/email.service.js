@@ -7,10 +7,13 @@ import { config } from '../config/env.js';
  */
 const isDevelopment = config.server.env === 'development';
 
+// Vérifier si les variables SMTP sont configurées
+const isSmtpConfigured = config.smtp.host && config.smtp.user && config.smtp.password;
+
 let transporter = null;
 
-if (!isDevelopment) {
-  // Mode production uniquement : créer le transporteur SMTP
+if (!isDevelopment && isSmtpConfigured) {
+  // Mode production avec SMTP configuré : créer le transporteur SMTP
   transporter = nodemailer.createTransport({
     host: config.smtp.host,
     port: config.smtp.port,
@@ -21,6 +24,8 @@ if (!isDevelopment) {
     }
   });
   console.log('[EMAIL] Transporteur SMTP configuré pour la production');
+} else if (!isDevelopment && !isSmtpConfigured) {
+  console.warn('[EMAIL] ⚠️  Variables SMTP non configurées : les emails ne seront pas envoyés');
 } else {
   console.log('[EMAIL] Mode développement : les emails seront affichés dans la console uniquement');
 }
@@ -60,6 +65,11 @@ L'équipe Scenacte`
   }
 
   // Mode production : envoyer réellement
+  if (!transporter) {
+    console.warn('[EMAIL] ⚠️  SMTP non configuré : email de bienvenue non envoyé à', email);
+    return;
+  }
+
   try {
     await transporter.sendMail(mailContent);
     console.log('[EMAIL] Email de bienvenue envoyé à', email);
@@ -113,6 +123,11 @@ L'équipe Scenacte`
   }
 
   // Mode production : envoyer réellement
+  if (!transporter) {
+    console.warn('[EMAIL] ⚠️  SMTP non configuré : email de réinitialisation non envoyé');
+    throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
+  }
+
   try {
     await transporter.sendMail(mailContent);
     console.log('[EMAIL] Email de réinitialisation envoyé à', email);
@@ -129,6 +144,11 @@ export async function verifyEmailConnection() {
   if (isDevelopment) {
     console.log('[EMAIL] ✓ Mode développement activé (emails affichés dans la console)');
     return true;
+  }
+
+  if (!transporter) {
+    console.warn('[EMAIL] ⚠️  SMTP non configuré : les emails ne seront pas envoyés');
+    return false;
   }
 
   try {

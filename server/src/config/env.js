@@ -5,7 +5,11 @@ dotenv.config();
 // Validation des variables d'environnement critiques
 const requiredEnvVars = [
   'DATABASE_URL',
-  'JWT_SECRET',
+  'JWT_SECRET'
+];
+
+// Variables SMTP optionnelles (le serveur peut démarrer sans elles)
+const optionalEnvVars = [
   'SMTP_HOST',
   'SMTP_PORT',
   'SMTP_USER',
@@ -13,10 +17,18 @@ const requiredEnvVars = [
   'SMTP_FROM'
 ];
 
+// Vérifier les variables obligatoires
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
     throw new Error(`Variable d'environnement manquante : ${envVar}`);
   }
+}
+
+// Avertir si les variables SMTP sont manquantes (non-bloquant)
+const missingSmtpVars = optionalEnvVars.filter(envVar => !process.env[envVar]);
+if (missingSmtpVars.length > 0) {
+  console.warn(`⚠️  Variables SMTP manquantes : ${missingSmtpVars.join(', ')}`);
+  console.warn('⚠️  Les fonctionnalités d\'email seront désactivées');
 }
 
 export const config = {
@@ -31,13 +43,13 @@ export const config = {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   },
 
-  // SMTP
+  // SMTP (optionnel)
   smtp: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10),
-    user: process.env.SMTP_USER,
-    password: process.env.SMTP_PASSWORD,
-    from: process.env.SMTP_FROM
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    user: process.env.SMTP_USER || '',
+    password: process.env.SMTP_PASSWORD || '',
+    from: process.env.SMTP_FROM || ''
   },
 
   // Server
