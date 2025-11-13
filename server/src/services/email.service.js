@@ -1,18 +1,29 @@
 import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import { config } from '../config/env.js';
 
 /**
- * Mode développement : pas de SMTP du tout
- * Les emails sont simplement loggés dans la console
+ * Configuration du service d'email
+ * Supporte 3 modes :
+ * 1. Développement : emails loggés dans la console
+ * 2. SendGrid : API HTTP (recommandé pour Render.com - pas de problème de port)
+ * 3. SMTP : serveur SMTP classique (port 2525 recommandé sur Render.com free tier)
  */
+
 const isDevelopment = config.server.env === 'development';
 
-// Vérifier si les variables SMTP sont configurées
-const isSmtpConfigured = config.smtp.host && config.smtp.user && config.smtp.password;
+// Configuration SendGrid (prioritaire)
+const isSendGridConfigured = !!config.email.sendgridApiKey;
+if (!isDevelopment && isSendGridConfigured) {
+  sgMail.setApiKey(config.email.sendgridApiKey);
+  console.log('[EMAIL] SendGrid API configuré (mode HTTP)');
+}
 
+// Configuration SMTP (fallback)
+const isSmtpConfigured = config.smtp.host && config.smtp.user && config.smtp.password;
 let transporter = null;
 
-if (!isDevelopment && isSmtpConfigured) {
+if (!isDevelopment && !isSendGridConfigured && isSmtpConfigured) {
   // Mode production avec SMTP configuré : créer le transporteur SMTP
   transporter = nodemailer.createTransport({
     host: config.smtp.host,
@@ -23,15 +34,43 @@ if (!isDevelopment && isSmtpConfigured) {
       pass: config.smtp.password
     },
     // Timeouts courts pour ne pas bloquer le démarrage
-    connectionTimeout: 5000,  // 5 secondes max pour la connexion
-    greetingTimeout: 5000,    // 5 secondes max pour le greeting
-    socketTimeout: 5000       // 5 secondes max pour les opérations socket
+    connectionTimeout: 10000,  // 10 secondes max pour la connexion
+    greetingTimeout: 10000,    // 10 secondes max pour le greeting
+    socketTimeout: 10000       // 10 secondes max pour les opérations socket
   });
-  console.log('[EMAIL] Transporteur SMTP configuré pour la production');
-} else if (!isDevelopment && !isSmtpConfigured) {
-  console.warn('[EMAIL] ⚠️  Variables SMTP non configurées : les emails ne seront pas envoyés');
-} else {
+  console.log(`[EMAIL] Transporteur SMTP configuré (${config.smtp.host}:${config.smtp.port})`);
+} else if (!isDevelopment && !isSendGridConfigured && !isSmtpConfigured) {
+  console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
+  console.warn('[EMAIL] ⚠️  Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
+} else if (isDevelopment) {
   console.log('[EMAIL] Mode développement : les emails seront affichés dans la console uniquement');
+}
+
+// Fonction interne pour envoyer via SendGrid
+async function sendViaSendGrid(mailContent) {
+  const msg = {
+    to: mailContent.to,
+    from: mailContent.from || config.email.from,
+    subject: mailContent.subject,
+    text: mailContent.text,
+    html: mailContent.html
+  };
+
+  await sgMail.send(msg);
+  console.log('[EMAIL] Email envoyé via SendGrid à', mailContent.to);
+}
+
+// Fonction interne pour envoyer via SMTP
+async function sendViaSmtp(mailContent) {
+  if (!transporter) {
+    throw new Error('Transporteur SMTP non configuré');
+  }
+
+  await transporter.sendMail({
+    ...mailContent,
+    from: mailContent.from || config.email.from
+  });
+  console.log('[EMAIL] Email envoyé via SMTP à', mailContent.to);
 }
 
 /**
@@ -41,7 +80,7 @@ if (!isDevelopment && isSmtpConfigured) {
  */
 export async function sendWelcomeEmail(email, username) {
   const mailContent = {
-    from: config.smtp.from || 'noreply@scenacte.com',
+    from: config.email.from,
     to: email,
     subject: 'Bienvenue sur Scenacte',
     text: `Bonjour ${username},
@@ -52,7 +91,14 @@ Votre compte a été créé avec succès. Vous pouvez maintenant commencer à é
 
 Si vous avez des questions, n'hésitez pas à nous contacter.
 
-L'équipe Scenacte`
+L'équipe Scenacte`,
+    html: `
+      <h2>Bonjour ${username},</h2>
+      <p>Bienvenue sur <strong>Scenacte</strong> !</p>
+      <p>Votre compte a été créé avec succès. Vous pouvez maintenant commencer à écrire vos pièces de théâtre.</p>
+      <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+      <p>L'équipe Scenacte</p>
+    `
   };
 
   if (isDevelopment) {
@@ -69,16 +115,16 @@ L'équipe Scenacte`
   }
 
   // Mode production : envoyer réellement
-  if (!transporter) {
-    console.warn('[EMAIL] ⚠️  SMTP non configuré : email de bienvenue non envoyé à', email);
-    return;
-  }
-
   try {
-    await transporter.sendMail(mailContent);
-    console.log('[EMAIL] Email de bienvenue envoyé à', email);
+    if (isSendGridConfigured) {
+      await sendViaSendGrid(mailContent);
+    } else if (isSmtpConfigured) {
+      await sendViaSmtp(mailContent);
+    } else {
+      console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : email de bienvenue non envoyé à', email);
+    }
   } catch (error) {
-    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de bienvenue:', error);
+    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de bienvenue:', error.message);
     // Ne pas throw l'erreur pour ne pas bloquer l'inscription
   }
 }
@@ -93,7 +139,7 @@ export async function sendPasswordResetEmail(email, username, resetToken) {
   const resetUrl = `${config.client.url}/reset-password?token=${resetToken}`;
 
   const mailContent = {
-    from: config.smtp.from || 'noreply@scenacte.com',
+    from: config.email.from,
     to: email,
     subject: 'Réinitialisation de votre mot de passe - Scenacte',
     text: `Bonjour ${username},
@@ -107,7 +153,22 @@ Ce lien est valable pendant 1 heure.
 
 Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
 
-L'équipe Scenacte`
+L'équipe Scenacte`,
+    html: `
+      <h2>Bonjour ${username},</h2>
+      <p>Vous avez demandé la réinitialisation de votre mot de passe sur <strong>Scenacte</strong>.</p>
+      <p>Pour réinitialiser votre mot de passe, cliquez sur le bouton ci-dessous :</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Réinitialiser mon mot de passe
+        </a>
+      </p>
+      <p>Ou copiez ce lien dans votre navigateur :</p>
+      <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+      <p><strong>Ce lien est valable pendant 1 heure.</strong></p>
+      <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+      <p>L'équipe Scenacte</p>
+    `
   };
 
   if (isDevelopment) {
@@ -127,22 +188,22 @@ L'équipe Scenacte`
   }
 
   // Mode production : envoyer réellement
-  if (!transporter) {
-    console.warn('[EMAIL] ⚠️  SMTP non configuré : email de réinitialisation non envoyé');
-    throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
-  }
-
   try {
-    await transporter.sendMail(mailContent);
-    console.log('[EMAIL] Email de réinitialisation envoyé à', email);
+    if (isSendGridConfigured) {
+      await sendViaSendGrid(mailContent);
+    } else if (isSmtpConfigured) {
+      await sendViaSmtp(mailContent);
+    } else {
+      throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
+    }
   } catch (error) {
-    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de réinitialisation:', error);
+    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de réinitialisation:', error.message);
     throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
   }
 }
 
 /**
- * Vérifie la connexion SMTP au démarrage
+ * Vérifie la connexion email au démarrage
  */
 export async function verifyEmailConnection() {
   if (isDevelopment) {
@@ -150,8 +211,15 @@ export async function verifyEmailConnection() {
     return true;
   }
 
+  // SendGrid : pas de vérification nécessaire (API key validée lors de l'envoi)
+  if (isSendGridConfigured) {
+    console.log('[EMAIL] ✓ SendGrid configuré (vérification lors de l\'envoi)');
+    return true;
+  }
+
+  // SMTP : vérifier la connexion
   if (!transporter) {
-    console.warn('[EMAIL] ⚠️  SMTP non configuré : les emails ne seront pas envoyés');
+    console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
     return false;
   }
 
@@ -160,8 +228,9 @@ export async function verifyEmailConnection() {
     console.log('[EMAIL] ✓ Connexion SMTP établie avec succès');
     return true;
   } catch (error) {
-    console.error('[EMAIL] Erreur de connexion SMTP:', error);
-    console.log('[EMAIL] ⚠ Les emails ne seront pas envoyés');
+    console.error('[EMAIL] ✗ Erreur de connexion SMTP:', error.message);
+    console.warn('[EMAIL] ⚠️  Les emails ne seront pas envoyés');
+    console.warn('[EMAIL] 💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
     return false;
   }
 }
