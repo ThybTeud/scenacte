@@ -26,6 +26,7 @@ app.use(cors({
       config.client.url + '/', // Avec trailing slash
       'http://localhost:5173', // Dev local Vite
       'http://localhost:3000', // Dev local alternatif
+      'https://scenacte.vercel.app', // Déploiement alternatif
     ];
 
     // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
