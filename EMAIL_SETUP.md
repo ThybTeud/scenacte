@@ -18,11 +18,19 @@ SendGrid utilise une API HTTP (pas de problème de port SMTP bloqué sur Render)
 4. Type : **Full Access** (ou **Restricted Access** avec permissions Mail Send)
 5. Copiez la clé (vous ne pourrez plus la voir après)
 
-#### 3. Vérifier votre adresse d'expédition
+#### 3. Vérifier votre adresse d'expédition ⚠️ **OBLIGATOIRE**
 1. Allez dans **Settings** → **Sender Authentication**
 2. Cliquez sur **Verify a Single Sender**
-3. Remplissez le formulaire avec vos informations
-4. Vérifiez votre email
+3. Remplissez le formulaire avec vos informations :
+   - **From Name** : Scenacte
+   - **From Email Address** : L'adresse que vous utiliserez (ex: `noreply@votre-domaine.com` ou votre email personnel)
+   - **Reply To** : Même adresse ou votre email de support
+   - Autres champs : remplissez selon vos besoins
+4. Cliquez sur **Create**
+5. **Vérifiez votre email** : SendGrid vous envoie un email de confirmation
+6. **Cliquez sur le lien** dans l'email pour valider
+
+⚠️ **IMPORTANT** : Sans cette vérification, vous obtiendrez une erreur **403 Forbidden** lors de l'envoi d'emails !
 
 #### 4. Configurer sur Render.com
 Dans votre service `scenacte-api` sur Render :
@@ -155,18 +163,32 @@ npm start
 1. **Vérifiez les logs** dans Render → Logs
 2. **Cherchez** `[EMAIL]` dans les logs
 3. **Vérifiez** que vous voyez : `✓ Service d'email : SendGrid` ou `✓ Service d'email : SMTP`
+4. **Regardez l'adresse FROM** affichée dans les logs : `📧 Adresse d'expédition : ...`
 
 ### Erreur "ETIMEDOUT" ou "Connection timeout"
 - Vous utilisez probablement un port bloqué (25, 465, 587) sur Render free tier
 - Solution : Utilisez **SendGrid** ou changez pour le **port 2525**
 
-### Erreur "Unauthorized" avec SendGrid
-- Votre API Key est invalide ou n'a pas les bonnes permissions
-- Recréez une API Key avec **Full Access**
+### Erreur "403 Forbidden" avec SendGrid ⚠️
+C'est l'erreur la plus courante ! Elle signifie que **l'adresse email d'expédition n'est pas vérifiée**.
 
-### Erreur "Sender not verified" avec SendGrid
-- Vous devez vérifier votre adresse d'expédition sur SendGrid
-- Allez dans **Settings** → **Sender Authentication**
+**Solution :**
+1. Allez sur SendGrid → **Settings** → **Sender Authentication**
+2. Vérifiez que l'adresse email configurée dans `EMAIL_FROM` apparaît dans la liste avec un statut **Verified** ✅
+3. Si elle n'est pas vérifiée, cliquez sur **Verify a Single Sender** et suivez les étapes
+4. Vérifiez votre boîte email et **cliquez sur le lien de confirmation**
+5. Attendez quelques minutes et réessayez
+
+**Logs à vérifier :**
+```
+[EMAIL] ✓ SendGrid API configuré (mode HTTP)
+[EMAIL] 📧 Adresse d'expédition : votre-email@example.com
+[EMAIL] ⚠️  Cette adresse doit être vérifiée sur SendGrid
+```
+
+### Erreur "401 Unauthorized" avec SendGrid
+- Votre API Key est invalide ou n'a pas les bonnes permissions
+- **Solution** : Recréez une API Key avec **Full Access** ou **Mail Send** permission
 
 ### Les emails arrivent en spam
 - Ajoutez un **SPF record** et **DKIM** pour votre domaine
