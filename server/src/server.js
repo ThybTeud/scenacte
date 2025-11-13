@@ -21,14 +21,18 @@ async function startServer() {
     }
     console.log('[DATABASE] ✓ Connexion établie avec succès\n');
 
-    // 2. Vérification de la connexion SMTP (non bloquant)
-    console.log('[EMAIL] Vérification de la connexion SMTP...');
-    const emailOk = await verifyEmailConnection();
-    if (emailOk) {
-      console.log('[EMAIL] ✓ Connexion SMTP établie avec succès\n');
-    } else {
-      console.warn('[EMAIL] ⚠ Connexion SMTP échouée (les emails ne seront pas envoyés)\n');
-    }
+    // 2. Vérification de la connexion SMTP (non bloquant - en arrière-plan)
+    console.log('[EMAIL] Vérification de la connexion SMTP en arrière-plan...');
+    // Ne pas attendre la vérification SMTP pour ne pas retarder le démarrage
+    verifyEmailConnection().then(emailOk => {
+      if (emailOk) {
+        console.log('[EMAIL] ✓ Connexion SMTP établie avec succès');
+      } else {
+        console.warn('[EMAIL] ⚠ Connexion SMTP échouée (les emails ne seront pas envoyés)');
+      }
+    }).catch(error => {
+      console.error('[EMAIL] ⚠ Erreur lors de la vérification SMTP:', error.message);
+    });
 
     // 3. Initialisation et démarrage du job de nettoyage
     console.log('[CRON] Initialisation du job de nettoyage...');

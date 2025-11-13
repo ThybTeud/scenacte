@@ -21,7 +21,11 @@ if (!isDevelopment && isSmtpConfigured) {
     auth: {
       user: config.smtp.user,
       pass: config.smtp.password
-    }
+    },
+    // Timeouts courts pour ne pas bloquer le démarrage
+    connectionTimeout: 5000,  // 5 secondes max pour la connexion
+    greetingTimeout: 5000,    // 5 secondes max pour le greeting
+    socketTimeout: 5000       // 5 secondes max pour les opérations socket
   });
   console.log('[EMAIL] Transporteur SMTP configuré pour la production');
 } else if (!isDevelopment && !isSmtpConfigured) {
