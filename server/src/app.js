@@ -26,7 +26,8 @@ app.use(cors({
       config.client.url + '/', // Avec trailing slash
       'http://localhost:5173', // Dev local Vite
       'http://localhost:3000', // Dev local alternatif
-      'https://scenacte.vercel.app', // Déploiement alternatif
+      'https://scenacte.vercel.app', // Déploiement Vercel
+      'https://scenacte-frontend.onrender.com', // Déploiement Render (backup)
     ];
 
     // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
@@ -36,16 +37,18 @@ app.use(cors({
 
     // Normaliser l'origin en retirant le trailing slash
     const normalizedOrigin = origin.replace(/\/$/, '');
-    
+
     // Vérifier si l'origin est dans la liste autorisée
-    const isAllowed = allowedOrigins.some(allowed => 
-      allowed.replace(/\/$/, '') === normalizedOrigin
+    const isAllowed = allowedOrigins.some(allowed =>
+      allowed && allowed.replace(/\/$/, '') === normalizedOrigin
     );
 
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`[CORS] Origin non autorisée: ${origin}`);
+      console.warn(`[CORS] ⚠️  Origin non autorisée: ${origin}`);
+      console.warn(`[CORS] 💡 Origines autorisées: ${allowedOrigins.filter(o => o).join(', ')}`);
+      console.warn(`[CORS] 💡 Configurez CLIENT_URL=${origin} sur Render si c'est votre frontend`);
       // IMPORTANT: Ne pas passer une Error, simplement false
       callback(null, false);
     }
