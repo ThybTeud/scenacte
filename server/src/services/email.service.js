@@ -16,7 +16,9 @@ const isDevelopment = config.server.env === 'development';
 const isSendGridConfigured = !!config.email.sendgridApiKey;
 if (!isDevelopment && isSendGridConfigured) {
   sgMail.setApiKey(config.email.sendgridApiKey);
-  console.log('[EMAIL] SendGrid API configuré (mode HTTP)');
+  console.log('[EMAIL] ✓ SendGrid API configuré (mode HTTP)');
+  console.log(`[EMAIL] 📧 Adresse d'expédition : ${config.email.from}`);
+  console.log('[EMAIL] ⚠️  Cette adresse doit être vérifiée sur SendGrid (Settings → Sender Authentication)');
 }
 
 // Configuration SMTP (fallback)
@@ -38,12 +40,13 @@ if (!isDevelopment && !isSendGridConfigured && isSmtpConfigured) {
     greetingTimeout: 10000,    // 10 secondes max pour le greeting
     socketTimeout: 10000       // 10 secondes max pour les opérations socket
   });
-  console.log(`[EMAIL] Transporteur SMTP configuré (${config.smtp.host}:${config.smtp.port})`);
+  console.log(`[EMAIL] ✓ Transporteur SMTP configuré (${config.smtp.host}:${config.smtp.port})`);
+  console.log(`[EMAIL] 📧 Adresse d'expédition : ${config.email.from}`);
 } else if (!isDevelopment && !isSendGridConfigured && !isSmtpConfigured) {
   console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
-  console.warn('[EMAIL] ⚠️  Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
+  console.warn('[EMAIL] 💡 Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
 } else if (isDevelopment) {
-  console.log('[EMAIL] Mode développement : les emails seront affichés dans la console uniquement');
+  console.log('[EMAIL] ✓ Mode développement : les emails seront affichés dans la console uniquement');
 }
 
 // Fonction interne pour envoyer via SendGrid
@@ -56,8 +59,25 @@ async function sendViaSendGrid(mailContent) {
     html: mailContent.html
   };
 
-  await sgMail.send(msg);
-  console.log('[EMAIL] Email envoyé via SendGrid à', mailContent.to);
+  try {
+    await sgMail.send(msg);
+    console.log('[EMAIL] ✓ Email envoyé via SendGrid à', mailContent.to);
+  } catch (error) {
+    // Erreurs SendGrid détaillées
+    if (error.response) {
+      const { statusCode, body } = error.response;
+      console.error('[EMAIL] ✗ Erreur SendGrid:', statusCode, body);
+
+      if (statusCode === 403) {
+        throw new Error(`Erreur SendGrid (403 Forbidden): L'adresse email "${msg.from}" n'est pas vérifiée sur SendGrid. Allez dans Settings → Sender Authentication pour la vérifier.`);
+      } else if (statusCode === 401) {
+        throw new Error('Erreur SendGrid (401 Unauthorized): API Key invalide ou sans permissions.');
+      } else {
+        throw new Error(`Erreur SendGrid (${statusCode}): ${JSON.stringify(body)}`);
+      }
+    }
+    throw error;
+  }
 }
 
 // Fonction interne pour envoyer via SMTP
