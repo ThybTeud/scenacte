@@ -76,20 +76,30 @@ app.use('/api', routes);
 
 /**
  * Servir le frontend en production
+ *
+ * Note: Sur des plateformes comme Render, le frontend et le backend sont souvent
+ * déployés séparément. Cette section ne sert que pour des déploiements monolithiques
+ * (par exemple sur AlwaysData ou un VPS).
+ *
+ * Pour activer le service du frontend depuis le backend, définissez la variable
+ * d'environnement SERVE_FRONTEND=true
  */
-if (config.server.env === 'production') {
+if (config.server.env === 'production' && process.env.SERVE_FRONTEND === 'true') {
   // Chemin vers le dossier de build Vite (depuis server/src/)
   const buildPath = path.join(__dirname, '../../client/dist');
-  
+
   console.log('[STATIC] Serving frontend from:', buildPath);
-  
+
   // Servir les fichiers statiques
   app.use(express.static(buildPath));
-  
+
   // Toutes les routes non-API redirigent vers index.html (pour React Router)
   app.get('*', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'));
   });
+} else if (config.server.env === 'production') {
+  console.log('[STATIC] Frontend serving disabled (backend-only mode)');
+  console.log('[STATIC] Set SERVE_FRONTEND=true to enable static file serving');
 }
 
 /**
