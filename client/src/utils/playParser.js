@@ -3,13 +3,11 @@
  * Génère un AST (Abstract Syntax Tree) à partir du texte brut
  *
  * Balises supportées :
- * - [acte:N] - Marqueur d'acte (N = numéro)
- * - [scene:N] - Marqueur de scène (N = numéro)
- * - [personnage:NOM] - Marqueur de personnage
- * - [didascalie]texte[/didascalie] - Didascalies (indications scéniques)
- * - [dialogue:NOM]texte[/dialogue] - Dialogue d'un personnage
- * - [tirade:NOM]texte[/tirade] - Tirade (long monologue)
- * - [aparté:NOM]texte[/aparté] - Aparté (texte dit à part)
+ * - #Acte N - Marqueur d'acte (N = numéro optionnel)
+ * - ##Scène N - Marqueur de scène (N = numéro optionnel)
+ * - @PERSONNAGE - Marqueur de personnage
+ * - (texte) - Didascalies (indications scéniques)
+ * - Texte normal - Dialogue après un personnage
  */
 
 /**
@@ -22,8 +20,6 @@ export const NodeType = {
   PERSONNAGE: 'personnage',
   DIDASCALIE: 'didascalie',
   DIALOGUE: 'dialogue',
-  TIRADE: 'tirade',
-  APARTE: 'aparte',
   TEXT: 'text',
   LINE_BREAK: 'linebreak'
 };
@@ -32,13 +28,10 @@ export const NodeType = {
  * Expression régulière pour détecter les balises
  */
 const TAG_PATTERNS = {
-  acte: /\[acte:(\d+)\]/gi,
-  scene: /\[scene:(\d+)\]/gi,
-  personnage: /\[personnage:([^\]]+)\]/gi,
-  didascalie: /\[didascalie\](.*?)\[\/didascalie\]/gis,
-  dialogue: /\[dialogue:([^\]]+)\](.*?)\[\/dialogue\]/gis,
-  tirade: /\[tirade:([^\]]+)\](.*?)\[\/tirade\]/gis,
-  aparte: /\[aparté:([^\]]+)\](.*?)\[\/aparté\]/gis
+  acte: /^#\s*(?:Acte\s+)?(\d+|[IVXLCDM]+)?\s*$/gim,
+  scene: /^##\s*(?:Scène\s+)?(\d+|[ivxlcdm]+)?\s*$/gim,
+  personnage: /^@([A-ZÀ-ÿ\s\-']+)$/gim,
+  didascalie: /\(([^)]+)\)/g
 };
 
 /**
@@ -88,109 +81,138 @@ export class PlayParser {
     this.position = 0;
 
     const root = new ASTNode(NodeType.ROOT);
-    const tokens = this.tokenize(text);
+    const lines = text.split('\n');
+    let currentSpeaker = null;
 
-    tokens.forEach(token => {
-      root.addChild(token);
-    });
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+
+      if (!trimmedLine) {
+        continue; // Ignorer les lignes vides
+      }
+
+      // Vérifier acte (#)
+      const acteMatch = /^#\s*(?:Acte\s+)?(\d+|[IVXLCDM]+)?/i.exec(trimmedLine);
+      if (acteMatch) {
+        const number = acteMatch[1] || '1';
+        const node = new ASTNode(NodeType.ACTE, null, { number });
+        node.position = { start: i, end: i };
+        root.addChild(node);
+        currentSpeaker = null;
+        continue;
+      }
+
+      // Vérifier scène (##)
+      const sceneMatch = /^##\s*(?:Scène\s+)?(\d+|[ivxlcdm]+)?/i.exec(trimmedLine);
+      if (sceneMatch) {
+        const number = sceneMatch[1] || '1';
+        const node = new ASTNode(NodeType.SCENE, null, { number });
+        node.position = { start: i, end: i };
+        root.addChild(node);
+        currentSpeaker = null;
+        continue;
+      }
+
+      // Vérifier personnage (@)
+      const personnageMatch = /^@([A-ZÀ-ÿ\s\-']+)$/i.exec(trimmedLine);
+      if (personnageMatch) {
+        const name = personnageMatch[1].trim().toUpperCase();
+        currentSpeaker = name;
+        const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
+        node.position = { start: i, end: i };
+        root.addChild(node);
+        continue;
+      }
+
+      // Parser la ligne pour les didascalies et le dialogue
+      const parsedLine = this.parseLine(trimmedLine, currentSpeaker, i);
+      parsedLine.forEach(node => root.addChild(node));
+    }
 
     return root;
   }
 
   /**
-   * Tokenize le texte en identifiant toutes les balises
-   * @param {string} text - Texte à tokenizer
-   * @returns {ASTNode[]} - Liste de nœuds AST
+   * Parse une ligne pour extraire les didascalies et le dialogue
+   * @param {string} line - Ligne à parser
+   * @param {string|null} speaker - Personnage actuel
+   * @param {number} lineNumber - Numéro de ligne
+   * @returns {ASTNode[]} - Liste de nœuds
    */
-  tokenize(text) {
-    const tokens = [];
-    const matches = [];
-
-    // Collecter toutes les correspondances de balises
-    Object.entries(TAG_PATTERNS).forEach(([type, pattern]) => {
-      let match;
-      const regex = new RegExp(pattern);
-
-      while ((match = regex.exec(text)) !== null) {
-        matches.push({
-          type,
-          match: match[0],
-          groups: match.slice(1),
-          start: match.index,
-          end: match.index + match[0].length
-        });
-      }
-    });
-
-    // Trier par position
-    matches.sort((a, b) => a.start - b.start);
-
+  parseLine(line, speaker, lineNumber) {
+    const nodes = [];
     let lastIndex = 0;
+    const didascalieRegex = /\(([^)]+)\)/g;
+    let match;
 
-    matches.forEach(({ type, groups, start, end }) => {
-      // Ajouter le texte avant la balise
-      if (start > lastIndex) {
-        const textBefore = text.substring(lastIndex, start);
-        if (textBefore.trim()) {
-          const textNode = new ASTNode(NodeType.TEXT, textBefore.trim());
-          textNode.position = { start: lastIndex, end: start };
-          tokens.push(textNode);
+    // Extraire toutes les didascalies
+    const didascalies = [];
+    while ((match = didascalieRegex.exec(line)) !== null) {
+      didascalies.push({
+        text: match[1].trim(),
+        start: match.index,
+        end: match.index + match[0].length
+      });
+    }
+
+    if (didascalies.length === 0) {
+      // Pas de didascalie, traiter comme dialogue ou texte
+      if (speaker) {
+        const node = new ASTNode(NodeType.DIALOGUE, line.trim(), { speaker });
+        node.position = { start: lineNumber, end: lineNumber };
+        nodes.push(node);
+      } else {
+        const node = new ASTNode(NodeType.TEXT, line.trim());
+        node.position = { start: lineNumber, end: lineNumber };
+        nodes.push(node);
+      }
+      return nodes;
+    }
+
+    // Traiter les didascalies et le texte entre elles
+    didascalies.forEach((didascalie, index) => {
+      // Texte avant la didascalie
+      if (didascalie.start > lastIndex) {
+        const textBefore = line.substring(lastIndex, didascalie.start).trim();
+        if (textBefore) {
+          if (speaker) {
+            const node = new ASTNode(NodeType.DIALOGUE, textBefore, { speaker });
+            node.position = { start: lineNumber, end: lineNumber };
+            nodes.push(node);
+          } else {
+            const node = new ASTNode(NodeType.TEXT, textBefore);
+            node.position = { start: lineNumber, end: lineNumber };
+            nodes.push(node);
+          }
         }
       }
 
-      // Créer le nœud pour la balise
-      const node = this.createNodeFromMatch(type, groups);
-      node.position = { start, end };
-      tokens.push(node);
+      // Didascalie
+      const node = new ASTNode(NodeType.DIDASCALIE, didascalie.text);
+      node.position = { start: lineNumber, end: lineNumber };
+      nodes.push(node);
 
-      lastIndex = end;
+      lastIndex = didascalie.end;
+
+      // Texte après la dernière didascalie
+      if (index === didascalies.length - 1 && lastIndex < line.length) {
+        const textAfter = line.substring(lastIndex).trim();
+        if (textAfter) {
+          if (speaker) {
+            const node = new ASTNode(NodeType.DIALOGUE, textAfter, { speaker });
+            node.position = { start: lineNumber, end: lineNumber };
+            nodes.push(node);
+          } else {
+            const node = new ASTNode(NodeType.TEXT, textAfter);
+            node.position = { start: lineNumber, end: lineNumber };
+            nodes.push(node);
+          }
+        }
+      }
     });
 
-    // Ajouter le texte restant
-    if (lastIndex < text.length) {
-      const textAfter = text.substring(lastIndex);
-      if (textAfter.trim()) {
-        const textNode = new ASTNode(NodeType.TEXT, textAfter.trim());
-        textNode.position = { start: lastIndex, end: text.length };
-        tokens.push(textNode);
-      }
-    }
-
-    return tokens;
-  }
-
-  /**
-   * Crée un nœud AST à partir d'une correspondance de regex
-   * @param {string} type - Type de balise
-   * @param {string[]} groups - Groupes capturés de la regex
-   * @returns {ASTNode} - Nœud AST créé
-   */
-  createNodeFromMatch(type, groups) {
-    switch (type) {
-      case 'acte':
-        return new ASTNode(NodeType.ACTE, null, { number: parseInt(groups[0], 10) });
-
-      case 'scene':
-        return new ASTNode(NodeType.SCENE, null, { number: parseInt(groups[0], 10) });
-
-      case 'personnage':
-        return new ASTNode(NodeType.PERSONNAGE, null, { name: groups[0].trim() });
-
-      case 'didascalie':
-        return new ASTNode(NodeType.DIDASCALIE, groups[0].trim());
-
-      case 'dialogue':
-        return new ASTNode(NodeType.DIALOGUE, groups[1].trim(), { speaker: groups[0].trim() });
-
-      case 'tirade':
-        return new ASTNode(NodeType.TIRADE, groups[1].trim(), { speaker: groups[0].trim() });
-
-      case 'aparte':
-        return new ASTNode(NodeType.APARTE, groups[1].trim(), { speaker: groups[0].trim() });
-
-      default:
-        return new ASTNode(NodeType.TEXT, groups.join(' '));
-    }
+    return nodes;
   }
 }
 
@@ -210,40 +232,19 @@ export function astToHTML(ast) {
         return `<div class="play-root">${node.children.map(renderNode).join('')}</div>`;
 
       case NodeType.ACTE:
-        return `<h1 class="acte" data-number="${node.attributes.number}">ACTE ${node.attributes.number}</h1>`;
+        return `<h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">ACTE ${escapeHTML(node.attributes.number)}</h1>`;
 
       case NodeType.SCENE:
-        return `<h2 class="scene" data-number="${node.attributes.number}">Scène ${node.attributes.number}</h2>`;
+        return `<h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">Scène ${escapeHTML(node.attributes.number)}</h2>`;
 
       case NodeType.PERSONNAGE:
-        return `<h3 class="personnage" data-name="${node.attributes.name}">${node.attributes.name}</h3>`;
+        return `<h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>`;
 
       case NodeType.DIDASCALIE:
         return `<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`;
 
       case NodeType.DIALOGUE:
-        return `
-          <div class="dialogue" data-speaker="${node.attributes.speaker}">
-            <strong class="speaker">${escapeHTML(node.attributes.speaker)}</strong>
-            <p class="dialogue-text">${escapeHTML(node.value)}</p>
-          </div>
-        `;
-
-      case NodeType.TIRADE:
-        return `
-          <div class="tirade" data-speaker="${node.attributes.speaker}">
-            <strong class="speaker">${escapeHTML(node.attributes.speaker)}</strong>
-            <div class="tirade-text">${escapeHTML(node.value)}</div>
-          </div>
-        `;
-
-      case NodeType.APARTE:
-        return `
-          <div class="aparte" data-speaker="${node.attributes.speaker}">
-            <strong class="speaker">${escapeHTML(node.attributes.speaker)}</strong>
-            <p class="aparte-text">${escapeHTML(node.value)}</p>
-          </div>
-        `;
+        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`;
 
       case NodeType.TEXT:
         return `<p class="text">${escapeHTML(node.value)}</p>`;

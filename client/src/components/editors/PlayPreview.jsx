@@ -125,81 +125,14 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
         .didascalie {
           font-style: italic;
           color: #6b7280;
-          margin: 1rem 0;
-          padding: 0.75rem 1rem;
-          background-color: #f9fafb;
-          border-left: 3px solid #d1d5db;
-          border-radius: 0.25rem;
+          margin: 0.5rem 0;
+          padding: 0.5rem 0;
         }
 
         .dialogue {
-          margin: 1rem 0 1.5rem;
-          padding-left: 1rem;
-        }
-
-        .dialogue .speaker {
-          display: block;
-          font-weight: 600;
-          color: #FF6B35;
-          margin-bottom: 0.5rem;
-          text-transform: uppercase;
-          font-size: 0.875rem;
-          letter-spacing: 0.05em;
-        }
-
-        .dialogue-text {
-          margin: 0;
-          padding-left: 1rem;
-          border-left: 2px solid #FF6B35;
+          margin: 0.5rem 0;
+          padding-left: 2rem;
           color: #1f2937;
-        }
-
-        .tirade {
-          margin: 1.5rem 0 2rem;
-          padding: 1rem;
-          background-color: #fef3f2;
-          border-left: 4px solid #FF6B35;
-          border-radius: 0.25rem;
-        }
-
-        .tirade .speaker {
-          display: block;
-          font-weight: 600;
-          color: #FF6B35;
-          margin-bottom: 0.75rem;
-          text-transform: uppercase;
-          font-size: 0.875rem;
-          letter-spacing: 0.05em;
-        }
-
-        .tirade-text {
-          color: #1f2937;
-          line-height: 1.8;
-        }
-
-        .aparte {
-          margin: 1rem 0;
-          padding: 0.75rem 1rem;
-          background-color: #f3f4f6;
-          border-left: 3px solid #9ca3af;
-          border-radius: 0.25rem;
-          font-style: italic;
-        }
-
-        .aparte .speaker {
-          display: inline;
-          font-weight: 600;
-          color: #6b7280;
-          text-transform: uppercase;
-          font-size: 0.875rem;
-          letter-spacing: 0.05em;
-          font-style: normal;
-        }
-
-        .aparte-text {
-          display: inline;
-          color: #4b5563;
-          margin-left: 0.5rem;
         }
 
         .text {

@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-L'éditeur de pièces de théâtre utilise CodeMirror 6 avec un système de preview HTML en temps réel et un scrolling synchronisé entre les deux panneaux.
+L'éditeur de pièces de théâtre utilise CodeMirror 6 avec un système de preview HTML en temps réel et un scrolling synchronisé entre les deux panneaux. La syntaxe est simple et inspirée de Markdown pour faciliter l'écriture.
 
 ## Architecture
 
@@ -39,129 +39,107 @@ Le tout est intégré dans **PlayEditor** (`/client/src/pages/plays/PlayEditor.j
 - Indicateur d'état (sauvegardé / non sauvegardé / en cours)
 - Support des versions (restore)
 
-## Balises personnalisées
+## Syntaxe simplifiée
 
-### Syntaxe
+### Balises disponibles
 
-#### 1. Acte
+#### 1. Acte (`#`)
 ```
-[acte:1]
+#Acte 1
 ```
-Marque le début d'un acte. Le numéro est obligatoire.
+ou simplement
+```
+#1
+```
+Marque le début d'un acte. Le numéro est optionnel.
 
 **Rendu HTML :**
 ```html
 <h1 class="acte" data-number="1">ACTE 1</h1>
 ```
 
-#### 2. Scène
+#### 2. Scène (`##`)
 ```
-[scene:1]
+##Scène 1
 ```
-Marque le début d'une scène. Le numéro est obligatoire.
+ou simplement
+```
+##1
+```
+Marque le début d'une scène. Le numéro est optionnel.
 
 **Rendu HTML :**
 ```html
 <h2 class="scene" data-number="1">Scène 1</h2>
 ```
 
-#### 3. Personnage
+#### 3. Personnage (`@`)
 ```
-[personnage:HAMLET]
+@HAMLET
 ```
-Introduit un personnage. Le nom est obligatoire.
+Introduit un personnage. Tous les textes suivants seront attribués à ce personnage jusqu'au prochain `@`.
 
 **Rendu HTML :**
 ```html
 <h3 class="personnage" data-name="HAMLET">HAMLET</h3>
 ```
 
-#### 4. Didascalie
+#### 4. Didascalie (`(...)`)
 ```
-[didascalie]Le rideau se lève sur une scène vide[/didascalie]
+(Il se lève et marche vers la fenêtre)
 ```
-Indications scéniques en italique sur fond gris.
+Indications scéniques entre parenthèses. Les parenthèses se ferment automatiquement dans l'éditeur (autoclose).
 
 **Rendu HTML :**
 ```html
-<p class="didascalie"><em>Le rideau se lève sur une scène vide</em></p>
+<p class="didascalie"><em>Il se lève et marche vers la fenêtre</em></p>
 ```
 
-#### 5. Dialogue
+#### 5. Dialogue (texte normal)
 ```
-[dialogue:HAMLET]Être ou ne pas être, telle est la question.[/dialogue]
-```
-Dialogue d'un personnage avec son nom en gras.
-
-**Rendu HTML :**
-```html
-<div class="dialogue" data-speaker="HAMLET">
-  <strong class="speaker">HAMLET</strong>
-  <p class="dialogue-text">Être ou ne pas être, telle est la question.</p>
-</div>
-```
-
-#### 6. Tirade
-```
-[tirade:HAMLET]
+@HAMLET
 Être ou ne pas être, telle est la question.
-Qu'est-il plus noble pour l'âme...
-[/tirade]
 ```
-Tirade (long monologue) avec fond coloré.
+Tout texte suivant un `@PERSONNAGE` est considéré comme un dialogue de ce personnage.
 
 **Rendu HTML :**
 ```html
-<div class="tirade" data-speaker="HAMLET">
-  <strong class="speaker">HAMLET</strong>
-  <div class="tirade-text">Être ou ne pas être...</div>
-</div>
-```
-
-#### 7. Aparté
-```
-[aparté:HAMLET]Quelle canaille je fais![/aparté]
-```
-Aparté (texte dit à part) en italique sur fond gris.
-
-**Rendu HTML :**
-```html
-<div class="aparte" data-speaker="HAMLET">
-  <strong class="speaker">HAMLET</strong>
-  <p class="aparte-text">Quelle canaille je fais!</p>
-</div>
+<p class="dialogue" data-speaker="HAMLET">Être ou ne pas être, telle est la question.</p>
 ```
 
 ### Exemple complet
 
 ```
-[acte:1]
+#Acte 1
 
-[scene:1]
+##Scène 1
 
-[didascalie]Une terrasse devant le château. Il fait nuit.[/didascalie]
+(Une terrasse devant le château. Il fait nuit.)
 
-[personnage:BERNARDO]
-[dialogue:BERNARDO]Qui va là ?[/dialogue]
+@BERNARDO
+Qui va là ?
 
-[personnage:FRANCISCO]
-[dialogue:FRANCISCO]Non, répondez-moi : halte, et déclinez votre nom.[/dialogue]
+@FRANCISCO
+Non, répondez-moi : halte, et déclinez votre nom.
 
-[dialogue:BERNARDO]Vive le roi ![/dialogue]
+@BERNARDO
+Vive le roi !
 
-[dialogue:FRANCISCO]Bernardo ?[/dialogue]
+@FRANCISCO
+Bernardo ?
 
-[dialogue:BERNARDO]Lui-même.[/dialogue]
+@BERNARDO
+Lui-même.
 
-[tirade:HAMLET]
+@HAMLET
 Être ou ne pas être, telle est la question.
 Qu'est-il plus noble pour l'âme de supporter
 Les coups et les revers d'une injurieuse fortune,
 Ou de s'armer contre une mer de douleurs
 Et de l'arrêter en s'y opposant ?
-[/tirade]
 
-[aparté:HAMLET]Quelle canaille je fais![/aparté]
+(Il s'assoit, pensif)
+Quelle canaille je fais !
 ```
 
 ## Structure de l'AST
@@ -201,8 +179,6 @@ L'AST généré par le parser a la structure suivante :
 - `personnage` - Personnage (attributes: { name })
 - `didascalie` - Didascalie (value: texte)
 - `dialogue` - Dialogue (value: texte, attributes: { speaker })
-- `tirade` - Tirade (value: texte, attributes: { speaker })
-- `aparte` - Aparté (value: texte, attributes: { speaker })
 - `text` - Texte brut (value: texte)
 
 ## API
@@ -296,17 +272,16 @@ Le bouton "Sauvegarder" permet de forcer la sauvegarde immédiate. Il est désac
 Les styles du preview sont définis inline dans le composant `PlayPreview.jsx` et utilisent :
 - La couleur primaire `#FF6B35` (orange) du thème
 - Police serif Georgia pour le rendu théâtral
-- Bordures et backgrounds pour distinguer les différents éléments
+- Mise en page simple et épurée
 
 ### Classes CSS principales
 
-- `.acte` - Titre d'acte en majuscules avec bordures
-- `.scene` - Titre de scène avec bordure inférieure
+- `.acte` - Titre d'acte en majuscules avec bordures orange
+- `.scene` - Titre de scène avec bordure inférieure grise
 - `.personnage` - Nom de personnage en majuscules orange
-- `.didascalie` - Italique sur fond gris clair
-- `.dialogue` - Dialogue avec bordure gauche orange
-- `.tirade` - Monologue avec fond coloré
-- `.aparte` - Aparté en italique sur fond gris
+- `.didascalie` - Italique en gris
+- `.dialogue` - Dialogue avec indentation à gauche
+- `.text` - Texte normal
 
 ## Dépendances
 
@@ -314,14 +289,15 @@ Les styles du preview sont définis inline dans le composant `PlayPreview.jsx` e
 
 ```json
 {
-  "codemirror": "^6.0.0",
-  "@codemirror/state": "^6.0.0",
-  "@codemirror/view": "^6.0.0",
-  "@codemirror/commands": "^6.0.0",
-  "@codemirror/language": "^6.0.0",
-  "@lezer/common": "^1.0.0",
-  "@lezer/highlight": "^1.0.0",
-  "@codemirror/lang-markdown": "^6.0.0"
+  "codemirror": "^6.0.2",
+  "@codemirror/state": "^6.5.2",
+  "@codemirror/view": "^6.38.6",
+  "@codemirror/commands": "^6.10.0",
+  "@codemirror/language": "^6.11.3",
+  "@codemirror/autocomplete": "^6.20.0",
+  "@lezer/common": "^1.3.0",
+  "@lezer/highlight": "^1.2.3",
+  "@codemirror/lang-markdown": "^6.5.0"
 }
 ```
 

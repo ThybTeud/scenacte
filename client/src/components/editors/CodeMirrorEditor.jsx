@@ -3,6 +3,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 
 /**
  * Composant éditeur CodeMirror pour l'édition de pièces de théâtre
@@ -70,7 +71,9 @@ export function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync })
         highlightActiveLineGutter(),
         history(),
         syntaxHighlighting(defaultHighlightStyle),
+        closeBrackets(), // Autoclose des parenthèses
         keymap.of([
+          ...closeBracketsKeymap,
           ...defaultKeymap,
           ...historyKeymap
         ]),

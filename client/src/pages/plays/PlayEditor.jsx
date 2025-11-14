@@ -116,7 +116,7 @@ export function PlayEditor() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
       <Header />
 
       <div className="border-b border-gray-200 px-6 py-4">
@@ -176,8 +176,8 @@ export function PlayEditor() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        <div className="w-64 border-r border-gray-200 p-4 bg-gray-50">
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="w-64 border-r border-gray-200 p-4 bg-gray-50 overflow-y-auto">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Navigation</h3>
           <div className="text-sm text-gray-500 space-y-2">
             <p className="italic">Fonctionnalité à venir :</p>
@@ -189,22 +189,20 @@ export function PlayEditor() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-700">Éditeur</h3>
               <div className="text-xs text-gray-500">
                 <details className="inline-block">
-                  <summary className="cursor-pointer hover:text-primary-600">Balises disponibles</summary>
-                  <div className="absolute mt-2 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-10 text-left w-96">
+                  <summary className="cursor-pointer hover:text-primary-600">Syntaxe disponible</summary>
+                  <div className="absolute mt-2 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-10 text-left w-80">
                     <ul className="space-y-2 text-xs">
-                      <li><code className="bg-gray-100 px-1 rounded">[acte:N]</code> - Marqueur d'acte</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[scene:N]</code> - Marqueur de scène</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[personnage:NOM]</code> - Marqueur de personnage</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[didascalie]texte[/didascalie]</code> - Didascalies</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[dialogue:NOM]texte[/dialogue]</code> - Dialogue</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[tirade:NOM]texte[/tirade]</code> - Tirade</li>
-                      <li><code className="bg-gray-100 px-1 rounded">[aparté:NOM]texte[/aparté]</code> - Aparté</li>
+                      <li><code className="bg-gray-100 px-1 rounded">#Acte 1</code> - Marqueur d'acte</li>
+                      <li><code className="bg-gray-100 px-1 rounded">##Scène 1</code> - Marqueur de scène</li>
+                      <li><code className="bg-gray-100 px-1 rounded">@PERSONNAGE</code> - Marqueur de personnage</li>
+                      <li><code className="bg-gray-100 px-1 rounded">(didascalie)</code> - Indication scénique (autoclose)</li>
+                      <li><code className="bg-gray-100 px-1 rounded">Texte</code> - Dialogue après personnage</li>
                     </ul>
                   </div>
                 </details>
@@ -221,9 +219,9 @@ export function PlayEditor() {
           </div>
         </div>
 
-        <div className="w-96 border-l border-gray-200 p-4 bg-gray-50 overflow-hidden flex flex-col">
+        <div className="w-96 border-l border-gray-200 p-4 bg-gray-50 overflow-hidden flex flex-col min-w-0">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Preview HTML</h3>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <PlayPreview
               content={content}
               onScroll={handlePreviewScroll}
