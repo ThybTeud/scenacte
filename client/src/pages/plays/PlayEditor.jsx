@@ -21,6 +21,11 @@ export function PlayEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [autosaveEnabled, setAutosaveEnabled] = useState(() => {
+    // Récupérer la préférence depuis localStorage (true par défaut)
+    const saved = localStorage.getItem('autosaveEnabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const saveTimeoutRef = useRef(null);
 
   // Hook pour le scroll synchronisé
@@ -32,6 +37,13 @@ export function PlayEditor() {
   useEffect(() => {
     fetchPlay();
   }, [id]);
+
+  /**
+   * Persiste la préférence d'autosave dans localStorage
+   */
+  useEffect(() => {
+    localStorage.setItem('autosaveEnabled', JSON.stringify(autosaveEnabled));
+  }, [autosaveEnabled]);
 
   const fetchPlay = async () => {
     setIsLoading(true);
@@ -97,14 +109,18 @@ export function PlayEditor() {
     setContent(newContent);
     setHasUnsavedChanges(true);
 
-    // Sauvegarde automatique avec debounce (2 secondes)
+    // Annuler le timeout précédent
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    saveTimeoutRef.current = setTimeout(() => {
-      savePlay();
-    }, 2000);
-  }, [savePlay]);
+
+    // Sauvegarde automatique avec debounce (3 secondes) si activée
+    if (autosaveEnabled) {
+      saveTimeoutRef.current = setTimeout(() => {
+        savePlay();
+      }, 3000);
+    }
+  }, [savePlay, autosaveEnabled]);
 
   /**
    * Sauvegarde manuelle
@@ -169,6 +185,33 @@ export function PlayEditor() {
             {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
             {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
             {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
+          </div>
+
+          {/* Toggle autosave */}
+          <div className="flex items-center space-x-2 mr-2 px-3 py-1 bg-gray-50 rounded-lg border border-gray-200">
+            <label htmlFor="autosave-toggle" className="text-xs font-medium text-gray-700 cursor-pointer">
+              Autosave
+            </label>
+            <button
+              id="autosave-toggle"
+              type="button"
+              role="switch"
+              aria-checked={autosaveEnabled}
+              onClick={() => setAutosaveEnabled(!autosaveEnabled)}
+              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                autosaveEnabled ? 'bg-primary-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  autosaveEnabled ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            {autosaveEnabled && (
+              <span className="text-xs text-gray-500">(3s)</span>
+            )}
           </div>
 
           <Button variant="ghost" size="sm" disabled>
