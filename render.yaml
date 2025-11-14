@@ -11,7 +11,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: cd server && npm install
+    buildCommand: npm run install:all && npm run build:client && cd server && npm install
     startCommand: cd server && npm start
     healthCheckPath: /api/health
     envVars:
@@ -29,6 +29,8 @@ services:
         value: 7d
       - key: MAX_CONTENT_SIZE_MB
         value: 10
+      - key: SERVE_FRONTEND
+        value: true
       - key: CLIENT_URL
         fromService:
           type: web
