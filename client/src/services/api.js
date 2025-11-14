@@ -22,10 +22,10 @@ async function request(endpoint, options = {}) {
   });
 
   if (response.status === 401) {
-    // Token expiré ou invalide
+    // Token expiré ou invalide - on nettoie juste le token
+    // Le redirect sera géré par PrivateRoute ou le composant qui gère l'erreur
     localStorage.removeItem('token');
-    window.location.href = '/login';
-    throw new Error('Session expirée');
+    // Ne pas faire de redirect ici pour éviter de recharger la page
   }
 
   if (!response.ok) {
