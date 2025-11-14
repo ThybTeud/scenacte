@@ -28,6 +28,7 @@ app.use(cors({
       'http://localhost:3000', // Dev local alternatif
       'https://scenacte.vercel.app', // Déploiement Vercel
       'https://scenacte-frontend.onrender.com', // Déploiement Render (backup)
+      'https://scenacte.onrender.com', // Déploiement Render (principal)
     ];
 
     // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
