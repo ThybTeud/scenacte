@@ -65,7 +65,7 @@ export function PlayEditor() {
    * Sauvegarde le contenu de la pièce
    */
   const savePlay = useCallback(async () => {
-    if (!play || !hasUnsavedChanges) return;
+    if (!play) return;
 
     setIsSaving(true);
     try {
@@ -100,7 +100,7 @@ export function PlayEditor() {
     } finally {
       setIsSaving(false);
     }
-  }, [id, content, play, hasUnsavedChanges, parser]);
+  }, [id, content, play, parser]);
 
   /**
    * Gère le changement de contenu dans l'éditeur
