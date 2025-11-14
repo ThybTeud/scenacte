@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { playsService } from '../../services/plays.service';
 import { Header } from '../../components/layout/Header';
@@ -8,6 +8,8 @@ import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
 import { CodeMirrorEditor } from '../../components/editors/CodeMirrorEditor';
 import { PlayPreview } from '../../components/editors/PlayPreview';
 import { useSyncScroll } from '../../hooks/useSyncScroll';
+import { PlayParser, astToHTML } from '../../utils/playParser';
+import { calculatePlayStatistics } from '../../utils/playStatistics';
 import toast from 'react-hot-toast';
 
 export function PlayEditor() {
@@ -24,6 +26,9 @@ export function PlayEditor() {
   // Hook pour le scroll synchronisé
   const { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll } = useSyncScroll();
 
+  // Parser pour générer le HTML
+  const parser = useMemo(() => new PlayParser(), []);
+
   useEffect(() => {
     fetchPlay();
   }, [id]);
@@ -33,7 +38,7 @@ export function PlayEditor() {
     try {
       const response = await playsService.getPlay(id);
       setPlay(response.play);
-      setContent(response.play.raw_content || '');
+      setContent(response.play.rawContent || '');
       setHasUnsavedChanges(false);
     } catch (error) {
       toast.error('Erreur lors du chargement de la pièce');
@@ -52,16 +57,38 @@ export function PlayEditor() {
 
     setIsSaving(true);
     try {
-      await playsService.savePlay(id, { raw_content: content });
+      // Générer le HTML à partir du contenu brut
+      let htmlContent = '';
+      try {
+        const ast = parser.parse(content);
+        htmlContent = astToHTML(ast);
+      } catch (parseError) {
+        console.error('Erreur lors du parsing:', parseError);
+        htmlContent = '';
+      }
+
+      // Calculer les statistiques
+      const statistics = calculatePlayStatistics(content);
+
+      // Préparer les données pour la sauvegarde
+      const saveData = {
+        title: play.title,
+        subtitle: play.subtitle || null,
+        rawContent: content,
+        htmlContent: htmlContent,
+        statistics: statistics
+      };
+
+      await playsService.savePlay(id, saveData);
       setHasUnsavedChanges(false);
       toast.success('Pièce sauvegardée');
     } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(error.message || 'Erreur lors de la sauvegarde');
       console.error(error);
     } finally {
       setIsSaving(false);
     }
-  }, [id, content, play, hasUnsavedChanges]);
+  }, [id, content, play, hasUnsavedChanges, parser]);
 
   /**
    * Gère le changement de contenu dans l'éditeur
