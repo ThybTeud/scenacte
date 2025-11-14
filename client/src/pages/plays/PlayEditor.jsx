@@ -1,18 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { playsService } from '../../services/plays.service';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
 import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
+import { CodeMirrorEditor } from '../../components/editors/CodeMirrorEditor';
+import { PlayPreview } from '../../components/editors/PlayPreview';
+import { useSyncScroll } from '../../hooks/useSyncScroll';
 import toast from 'react-hot-toast';
 
 export function PlayEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [play, setPlay] = useState(null);
+  const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const saveTimeoutRef = useRef(null);
+
+  // Hook pour le scroll synchronisé
+  const { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll } = useSyncScroll();
 
   useEffect(() => {
     fetchPlay();
@@ -23,6 +33,8 @@ export function PlayEditor() {
     try {
       const response = await playsService.getPlay(id);
       setPlay(response.play);
+      setContent(response.play.raw_content || '');
+      setHasUnsavedChanges(false);
     } catch (error) {
       toast.error('Erreur lors du chargement de la pièce');
       console.error(error);
@@ -31,6 +43,62 @@ export function PlayEditor() {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Sauvegarde le contenu de la pièce
+   */
+  const savePlay = useCallback(async () => {
+    if (!play || !hasUnsavedChanges) return;
+
+    setIsSaving(true);
+    try {
+      await playsService.savePlay(id, { raw_content: content });
+      setHasUnsavedChanges(false);
+      toast.success('Pièce sauvegardée');
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde');
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [id, content, play, hasUnsavedChanges]);
+
+  /**
+   * Gère le changement de contenu dans l'éditeur
+   */
+  const handleContentChange = useCallback((newContent) => {
+    setContent(newContent);
+    setHasUnsavedChanges(true);
+
+    // Sauvegarde automatique avec debounce (2 secondes)
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      savePlay();
+    }, 2000);
+  }, [savePlay]);
+
+  /**
+   * Sauvegarde manuelle
+   */
+  const handleManualSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    savePlay();
+  }, [savePlay]);
+
+  /**
+   * Cleanup du timeout lors du démontage
+   */
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -69,6 +137,13 @@ export function PlayEditor() {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Indicateur de sauvegarde */}
+          <div className="text-sm mr-2">
+            {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
+            {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
+            {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
+          </div>
+
           <Button variant="ghost" size="sm" disabled>
             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -81,7 +156,12 @@ export function PlayEditor() {
             </svg>
             Rétablir
           </Button>
-          <Button variant="ghost" size="sm" disabled>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleManualSave}
+            disabled={!hasUnsavedChanges || isSaving}
+          >
             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
             </svg>
@@ -110,33 +190,45 @@ export function PlayEditor() {
         </div>
 
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Éditeur</h3>
-            <div className="h-full border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-              <p className="text-gray-500 text-center">
-                Zone d'édition - À implémenter
-              </p>
-              <p className="text-gray-400 text-sm text-center mt-2">
-                Textarea simple ou éditeur de texte riche
-              </p>
-              {play.raw_content && (
-                <div className="mt-4 text-sm text-gray-700 whitespace-pre-wrap">
-                  {play.raw_content}
-                </div>
-              )}
+          <div className="flex-1 p-6 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700">Éditeur</h3>
+              <div className="text-xs text-gray-500">
+                <details className="inline-block">
+                  <summary className="cursor-pointer hover:text-primary-600">Balises disponibles</summary>
+                  <div className="absolute mt-2 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-10 text-left w-96">
+                    <ul className="space-y-2 text-xs">
+                      <li><code className="bg-gray-100 px-1 rounded">[acte:N]</code> - Marqueur d'acte</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[scene:N]</code> - Marqueur de scène</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[personnage:NOM]</code> - Marqueur de personnage</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[didascalie]texte[/didascalie]</code> - Didascalies</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[dialogue:NOM]texte[/dialogue]</code> - Dialogue</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[tirade:NOM]texte[/tirade]</code> - Tirade</li>
+                      <li><code className="bg-gray-100 px-1 rounded">[aparté:NOM]texte[/aparté]</code> - Aparté</li>
+                    </ul>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <CodeMirrorEditor
+                value={content}
+                onChange={handleContentChange}
+                onScroll={handleEditorScroll}
+                scrollSync={editorScrollRef}
+              />
             </div>
           </div>
         </div>
 
-        <div className="w-96 border-l border-gray-200 p-4 bg-gray-50 overflow-y-auto">
+        <div className="w-96 border-l border-gray-200 p-4 bg-gray-50 overflow-hidden flex flex-col">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Preview HTML</h3>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-            <p className="text-gray-500 text-center">
-              Preview HTML - À implémenter
-            </p>
-            <p className="text-gray-400 text-sm text-center mt-2">
-              Affichage du rendu HTML en temps réel
-            </p>
+          <div className="flex-1 overflow-hidden">
+            <PlayPreview
+              content={content}
+              onScroll={handlePreviewScroll}
+              scrollSync={previewScrollRef}
+            />
           </div>
         </div>
       </div>
