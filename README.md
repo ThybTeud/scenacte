@@ -123,10 +123,10 @@ Ouvrez votre navigateur sur `http://localhost:5173`
 
 ## 📚 Documentation
 
-- [Documentation du serveur](./server/README.md)
-- [Documentation du client](./client/README.md)
-- [Guide de déploiement sur Render.com](./DEPLOYMENT.md)
-- [Démarrage rapide sur Render.com](./QUICKSTART_RENDER.md)
+- [Documentation du serveur](./server/README.md) - API complète, configuration, architecture
+- [Documentation du client](./client/README.md) - Frontend React, composants, services
+- [Guide de déploiement](./DEPLOYMENT.md) - Déploiement sur Render.com
+- [Guide de maintenance](./MAINTENANCE.md) - Maintenance, dépendances critiques, troubleshooting
 
 ## 🔧 Stack technique
 
@@ -247,10 +247,9 @@ Render.com offre un hébergement simple et gratuit pour débuter :
 - **Backend Node.js** : Plan gratuit avec auto-sleep après 15 min d'inactivité
 - **Frontend React** : Hébergement statique gratuit illimité
 
-#### Guides de déploiement
+#### Guide de déploiement
 
-- **[Démarrage rapide (10 minutes)](./QUICKSTART_RENDER.md)** - Guide express pour déployer rapidement
-- **[Guide complet de déploiement](./DEPLOYMENT.md)** - Documentation détaillée avec troubleshooting
+- **[Guide de déploiement complet](./DEPLOYMENT.md)** - Documentation détaillée avec troubleshooting
 
 #### Déploiement automatique avec Blueprint
 
