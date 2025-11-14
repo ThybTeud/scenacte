@@ -38,7 +38,8 @@ Scenacte est un outil d'écriture dramaturgique permettant aux auteurs de :
     "pg": "Driver PostgreSQL natif",
     "bcrypt": "Hashing mot de passe",
     "jsonwebtoken": "Authentification JWT",
-    "nodemailer": "Envoi d'emails",
+    "nodemailer": "Envoi d'emails (SMTP)",
+    "@sendgrid/mail": "Envoi d'emails (SendGrid API)",
     "node-cron": "Jobs planifiés",
     "dotenv": "Variables d'environnement",
     "cors": "Cross-Origin Resource Sharing",
@@ -46,6 +47,18 @@ Scenacte est un outil d'écriture dramaturgique permettant aux auteurs de :
   }
 }
 ```
+
+### Architecture Base de Données
+
+Ce projet utilise **PostgreSQL** avec le driver natif `pg`.
+
+**Important** : Bien que le code utilise une syntaxe similaire à Prisma (`prisma.user.findUnique()`), il ne s'agit PAS de Prisma ORM. Le fichier `src/db/index.js` est un **wrapper custom** qui émule l'API Prisma pour la simplicité du code, tout en utilisant le driver `pg` natif sous le capot.
+
+**Avantages de cette approche** :
+- Pas de couche ORM supplémentaire
+- Contrôle total sur les requêtes SQL
+- Performance optimale
+- Code maintenable avec une API élégante
 
 ## 📦 Installation
 
@@ -71,14 +84,14 @@ cp .env.example .env
 # 4. Éditer .env avec vos valeurs
 nano .env  # ou votre éditeur préféré
 
-# 5. Générer le client Prisma
-npm run prisma:generate
+# 5. Créer la base de données PostgreSQL
+createdb scenacte_db
+createuser scenacte_user -P  # Entrez le mot de passe
 
-# 6. Créer la base de données et exécuter les migrations
-npm run prisma:migrate
-
-# 7. (Optionnel) Ouvrir Prisma Studio
-npm run prisma:studio
+# 6. Appliquer les migrations
+npm run db:migrate
+# ou manuellement :
+# psql -U scenacte_user -d scenacte_db -f migrations/init.sql
 ```
 
 ## ⚙️ Configuration
@@ -120,6 +133,69 @@ CREATE DATABASE scenacte;
 -- Créer un utilisateur (optionnel)
 CREATE USER scenacte_user WITH PASSWORD 'votre_password';
 GRANT ALL PRIVILEGES ON DATABASE scenacte TO scenacte_user;
+```
+
+### Configuration Email
+
+Le service email supporte **3 modes** configurables via `src/services/email.service.js` :
+
+#### 1. Mode Développement (par défaut)
+```env
+NODE_ENV=development
+```
+- Emails affichés uniquement dans la console
+- Aucune configuration SMTP nécessaire
+- Parfait pour le développement local
+
+#### 2. Mode SendGrid (RECOMMANDÉ pour production)
+```env
+SENDGRID_API_KEY=SG.xxx...
+SMTP_FROM=noreply@votre-domaine.com
+```
+
+**Avantages** :
+- API HTTP (pas de problème de port bloqué)
+- Très fiable pour Render.com et autres PaaS
+- Statistiques d'envoi incluses
+
+**Configuration SendGrid** :
+1. Créer un compte gratuit sur [SendGrid](https://sendgrid.com) (100 emails/jour gratuits)
+2. Vérifier votre adresse email dans **Settings → Sender Authentication**
+3. Créer une API Key dans **Settings → API Keys** avec permissions d'envoi
+4. Ajouter `SENDGRID_API_KEY` dans votre `.env`
+
+⚠️ **Important** : L'adresse dans `SMTP_FROM` DOIT être vérifiée sur SendGrid sinon erreur 403
+
+#### 3. Mode SMTP (Fallback)
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=votre-email@gmail.com
+SMTP_PASSWORD=votre-app-password
+SMTP_FROM=Scenacte <noreply@scenacte.com>
+```
+
+**Ports disponibles** :
+- `587` : TLS (recommandé, standard)
+- `2525` : Alternative pour Render.com free tier
+- `465` : SSL (moins flexible)
+
+**Pour Gmail** :
+1. Activer la validation en 2 étapes
+2. Générer un [App Password](https://support.google.com/accounts/answer/185833)
+3. Utiliser cet App Password dans `SMTP_PASSWORD`
+
+**Emails envoyés** :
+- Email de bienvenue après inscription
+- Email de réinitialisation de mot de passe (lien valide 1h)
+
+**Vérification au démarrage** :
+```bash
+[EMAIL] ✓ SendGrid API configuré (mode HTTP)
+# ou
+[EMAIL] ✓ Connexion SMTP établie avec succès
+# ou
+[EMAIL] ⚠️ Aucun service d'email configuré
 ```
 
 ## 🚀 Lancement
@@ -167,12 +243,9 @@ npm start
 ### Scripts disponibles
 
 ```bash
-npm run dev              # Démarrer en mode développement
+npm run dev              # Démarrer en mode développement (nodemon)
 npm start                # Démarrer en mode production
-npm run prisma:generate  # Générer le client Prisma
-npm run prisma:migrate   # Créer et appliquer une migration
-npm run prisma:studio    # Ouvrir Prisma Studio
-npm run prisma:reset     # Reset la base de données (⚠️ perte de données)
+npm run db:migrate       # Appliquer les migrations SQL
 ```
 
 ### Logs au démarrage
@@ -802,20 +875,19 @@ Job de nettoyage quotidien à 3h du matin :
 - **Logging** : console.log/error uniquement
 - **Erreurs** : classes custom avec statusCode
 
-### Prisma
+### Migrations SQL
+
+Les migrations se trouvent dans `migrations/` et `db/` :
+- `migrations/init.sql` : Schema initial avec toutes les tables
+- `db/schema.sql` : Schema complet de référence
+- `db/migrate.js` : Script utilitaire de migration
 
 ```bash
-# Créer une migration
-npx prisma migrate dev --name nom_migration
+# Appliquer les migrations
+npm run db:migrate
 
-# Générer le client
-npx prisma generate
-
-# Ouvrir Prisma Studio
-npx prisma studio
-
-# Reset la base (⚠️ perte de données)
-npx prisma migrate reset
+# Ou manuellement avec psql
+psql $DATABASE_URL -f migrations/init.sql
 ```
 
 ### Test manuel du cleanup
