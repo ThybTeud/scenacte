@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
@@ -14,7 +14,7 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync }) {
+export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
 
@@ -107,7 +107,7 @@ export function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync })
 
     viewRef.current = view;
 
-    // Exposer la méthode de scroll via la ref
+    // Exposer la méthode de scroll via la ref (pour compatibilité)
     if (scrollSync) {
       scrollSync.current = {
         scrollToPercentage: (percentage) => {
@@ -124,6 +124,18 @@ export function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync })
             return scrollHeight > 0 ? scrollDOM.scrollTop / scrollHeight : 0;
           }
           return 0;
+        },
+        scrollToLine: (lineNumber) => {
+          if (!view) return;
+          try {
+            const line = view.state.doc.line(Math.max(1, lineNumber));
+            view.dispatch({
+              selection: { anchor: line.from },
+              scrollIntoView: true
+            });
+          } catch (error) {
+            console.error('Error scrolling to line:', error);
+          }
         }
       };
     }
@@ -155,9 +167,66 @@ export function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync })
     }
   }, [value]);
 
+  /**
+   * Expose les méthodes via la ref
+   */
+  useImperativeHandle(ref, () => ({
+    /**
+     * Insère du texte à la position actuelle du curseur
+     * @param {string} text - Le texte à insérer
+     */
+    insertText: (text) => {
+      if (!viewRef.current) return;
+
+      const view = viewRef.current;
+      const selection = view.state.selection.main;
+
+      view.dispatch({
+        changes: {
+          from: selection.from,
+          to: selection.to,
+          insert: text
+        },
+        selection: {
+          anchor: selection.from + text.length
+        }
+      });
+
+      // Focus l'éditeur après insertion
+      view.focus();
+    },
+
+    /**
+     * Scroll vers une ligne spécifique
+     * @param {number} lineNumber - Le numéro de ligne (1-indexed)
+     */
+    scrollToLine: (lineNumber) => {
+      if (!viewRef.current) return;
+
+      try {
+        const line = viewRef.current.state.doc.line(Math.max(1, lineNumber));
+        viewRef.current.dispatch({
+          selection: { anchor: line.from },
+          scrollIntoView: true
+        });
+      } catch (error) {
+        console.error('Error scrolling to line:', error);
+      }
+    },
+
+    /**
+     * Focus l'éditeur
+     */
+    focus: () => {
+      if (viewRef.current) {
+        viewRef.current.focus();
+      }
+    }
+  }), []);
+
   return (
     <div className="h-full w-full overflow-hidden border border-gray-300 rounded-lg bg-white">
       <div ref={editorRef} className="h-full w-full" />
     </div>
   );
-}
+});

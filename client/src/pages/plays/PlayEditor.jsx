@@ -7,8 +7,11 @@ import { Loader } from '../../components/ui/Loader';
 import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
 import { CodeMirrorEditor } from '../../components/editors/CodeMirrorEditor';
 import { PlayPreview } from '../../components/editors/PlayPreview';
+import { LeftPanel } from '../../components/editors/LeftPanel';
+import { RightPanel } from '../../components/editors/RightPanel';
 import { useSyncScroll } from '../../hooks/useSyncScroll';
-import { PlayParser, astToHTML } from '../../utils/playParser';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { PlayParser, astToHTML, extractStructure } from '../../utils/playParser';
 import { calculatePlayStatistics } from '../../utils/playStatistics';
 import toast from 'react-hot-toast';
 
@@ -22,6 +25,14 @@ export function PlayEditor() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
   const saveTimeoutRef = useRef(null);
+
+  // États pour le responsive
+  const [showPreview, setShowPreview] = useState(true);
+  const [showLeftPanel, setShowLeftPanel] = useState(false); // Masqué par défaut sur mobile
+  const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
+
+  // Référence à l'éditeur CodeMirror pour l'insertion de texte
+  const editorRef = useRef(null);
 
   // Hook pour le scroll synchronisé
   const { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll } = useSyncScroll();
@@ -119,6 +130,98 @@ export function PlayEditor() {
     };
   }, []);
 
+  /**
+   * Extraire la structure (actes, scènes, personnages) du contenu
+   */
+  const structure = useMemo(() => {
+    if (!content) return { actes: [], scenes: [], personnages: [] };
+
+    try {
+      const ast = parser.parse(content);
+      return extractStructure(ast);
+    } catch (error) {
+      console.error('Erreur lors de l\'extraction de la structure:', error);
+      return { actes: [], scenes: [], personnages: [] };
+    }
+  }, [content, parser]);
+
+  /**
+   * Calculer les statistiques
+   */
+  const statistics = useMemo(() => {
+    if (!content) return null;
+
+    try {
+      return calculatePlayStatistics(content);
+    } catch (error) {
+      console.error('Erreur lors du calcul des statistiques:', error);
+      return null;
+    }
+  }, [content]);
+
+  /**
+   * Insérer un format dans l'éditeur à la position du curseur
+   */
+  const insertFormat = useCallback((formatId) => {
+    if (!editorRef.current) return;
+
+    const formatMap = {
+      acte: '#Acte 1\n',
+      scene: '##Scène 1\n',
+      personnage: '@PERSONNAGE\n',
+      didascalie: '(didascalie)\n',
+      dialogue: '',
+    };
+
+    const textToInsert = formatMap[formatId] || '';
+    if (textToInsert) {
+      editorRef.current.insertText(textToInsert);
+    }
+  }, []);
+
+  /**
+   * Insérer un nom de personnage dans l'éditeur
+   */
+  const insertCharacter = useCallback((characterName) => {
+    if (!editorRef.current) return;
+    editorRef.current.insertText(`@${characterName}\n`);
+  }, []);
+
+  /**
+   * Naviguer vers une section dans l'éditeur
+   */
+  const navigateToSection = useCallback((position) => {
+    if (!editorRef.current || !position) return;
+
+    // Utiliser la fonction de scroll de l'éditeur
+    if (editorScrollRef.current && editorScrollRef.current.scrollToLine) {
+      editorScrollRef.current.scrollToLine(position.start);
+    }
+  }, [editorScrollRef]);
+
+  /**
+   * Télécharger le contenu brut
+   */
+  const handleDownload = useCallback(() => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${play?.title || 'piece'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Fichier téléchargé');
+  }, [content, play]);
+
+  /**
+   * Hook pour les raccourcis clavier
+   */
+  useKeyboardShortcuts({
+    onInsertFormat: insertFormat,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -138,10 +241,23 @@ export function PlayEditor() {
     <div className="h-screen bg-white flex flex-col overflow-hidden">
       <Header />
 
-      <div className="border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">{play.title}</h1>
-          <div className="flex items-center space-x-2">
+      {/* Header avec titre et boutons de navigation */}
+      <div className="border-b border-gray-200 px-4 md:px-6 py-3 md:py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Bouton hamburger pour mobile */}
+            <button
+              onClick={() => setShowLeftPanel(!showLeftPanel)}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">{play.title}</h1>
+          </div>
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/plays')}>
               Retour
             </Button>
@@ -155,96 +271,147 @@ export function PlayEditor() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {/* Indicateur de sauvegarde */}
-          <div className="text-sm mr-2">
-            {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
-            {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
-            {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
-          </div>
-
-          <Button variant="ghost" size="sm" disabled>
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            Annuler
-          </Button>
-          <Button variant="ghost" size="sm" disabled>
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-            </svg>
-            Rétablir
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleManualSave}
-            disabled={!hasUnsavedChanges || isSaving}
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-            </svg>
-            Sauvegarder
-          </Button>
-          <Button variant="ghost" size="sm" disabled>
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            Exporter PDF
-          </Button>
+        {/* Indicateur de sauvegarde (visible sur desktop) */}
+        <div className="hidden md:block text-sm mt-2">
+          {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
+          {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
+          {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
         </div>
       </div>
 
+      {/* Layout principal : 3 colonnes */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        <div className="w-64 border-r border-gray-200 p-4 bg-gray-50 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Navigation</h3>
-          <div className="text-sm text-gray-500 space-y-2">
-            <p className="italic">Fonctionnalité à venir :</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Liste des actes</li>
-              <li>Liste des scènes</li>
-              <li>Filtrage par personnage</li>
-            </ul>
+        {/* Panneau gauche - Desktop: visible, Mobile/Tablet: overlay */}
+        <div className={`
+          ${showLeftPanel ? 'fixed inset-0 z-40 lg:relative lg:z-auto' : 'hidden'}
+          lg:block lg:w-72 xl:w-80
+        `}>
+          {/* Overlay backdrop (mobile/tablet) */}
+          {showLeftPanel && (
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 lg:hidden"
+              onClick={() => setShowLeftPanel(false)}
+            />
+          )}
+
+          {/* Panneau */}
+          <div className={`
+            relative lg:relative h-full w-72 xl:w-80 bg-white lg:bg-transparent
+            ${showLeftPanel ? 'shadow-xl' : ''}
+          `}>
+            {/* Bouton fermer (mobile/tablet) */}
+            <button
+              onClick={() => setShowLeftPanel(false)}
+              className="lg:hidden absolute top-4 right-4 z-10 p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              aria-label="Fermer"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <LeftPanel
+              onUndo={() => {}} // TODO: Implémenter avec CodeMirror history
+              onRedo={() => {}} // TODO: Implémenter avec CodeMirror history
+              onSave={handleManualSave}
+              onDownload={handleDownload}
+              onTogglePreview={() => setShowPreview(!showPreview)}
+              onInsertFormat={insertFormat}
+              onInsertCharacter={insertCharacter}
+              characters={structure.personnages || []}
+              canUndo={false}
+              canRedo={false}
+              showPreview={showPreview}
+              isSaving={isSaving}
+            />
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">Éditeur</h3>
-              <div className="text-xs text-gray-500">
-                <details className="inline-block">
-                  <summary className="cursor-pointer hover:text-primary-600">Syntaxe disponible</summary>
-                  <div className="absolute mt-2 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-10 text-left w-80">
-                    <ul className="space-y-2 text-xs">
-                      <li><code className="bg-gray-100 px-1 rounded">#Acte 1</code> - Marqueur d'acte</li>
-                      <li><code className="bg-gray-100 px-1 rounded">##Scène 1</code> - Marqueur de scène</li>
-                      <li><code className="bg-gray-100 px-1 rounded">@PERSONNAGE</code> - Marqueur de personnage</li>
-                      <li><code className="bg-gray-100 px-1 rounded">(didascalie)</code> - Indication scénique (autoclose)</li>
-                      <li><code className="bg-gray-100 px-1 rounded">Texte</code> - Dialogue après personnage</li>
-                    </ul>
-                  </div>
-                </details>
+        {/* Zone centrale : Éditeur + Preview */}
+        <div className="flex-1 flex overflow-hidden min-w-0">
+          {/* Éditeur CodeMirror */}
+          <div className={`
+            ${showPreview ? 'flex-1' : 'w-full'}
+            flex flex-col overflow-hidden min-w-0
+          `}>
+            <div className="flex-1 p-3 md:p-6 overflow-hidden flex flex-col min-h-0">
+              {/* Mobile: Indicateur de sauvegarde + bouton sommaire */}
+              <div className="md:hidden flex items-center justify-between mb-2">
+                <div className="text-xs">
+                  {isSaving && <span className="text-primary-600">Sauvegarde...</span>}
+                  {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Non sauvegardé</span>}
+                  {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">✓</span>}
+                </div>
+                <button
+                  onClick={() => setShowRightPanel(!showRightPanel)}
+                  className="lg:hidden px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md"
+                >
+                  Sommaire
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-hidden">
+                <CodeMirrorEditor
+                  ref={editorRef}
+                  value={content}
+                  onChange={handleContentChange}
+                  onScroll={handleEditorScroll}
+                  scrollSync={editorScrollRef}
+                />
               </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <CodeMirrorEditor
-                value={content}
-                onChange={handleContentChange}
-                onScroll={handleEditorScroll}
-                scrollSync={editorScrollRef}
-              />
-            </div>
           </div>
+
+          {/* Preview - Desktop: visible, Mobile: caché ou toggle */}
+          {showPreview && (
+            <div className="hidden lg:block lg:flex-1 border-l border-gray-200 overflow-hidden">
+              <div className="h-full p-4 bg-gray-50 overflow-hidden flex flex-col">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu</h3>
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <PlayPreview
+                    content={content}
+                    onScroll={handlePreviewScroll}
+                    scrollSync={previewScrollRef}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="w-96 border-l border-gray-200 p-4 bg-gray-50 overflow-hidden flex flex-col min-w-0">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Preview HTML</h3>
-          <div className="flex-1 overflow-hidden min-h-0">
-            <PlayPreview
-              content={content}
-              onScroll={handlePreviewScroll}
-              scrollSync={previewScrollRef}
+        {/* Panneau droit - Desktop: visible, Mobile/Tablet: overlay */}
+        <div className={`
+          ${showRightPanel ? 'fixed inset-y-0 right-0 z-40 lg:relative lg:z-auto' : 'hidden'}
+          lg:block lg:w-72 xl:w-80
+        `}>
+          {/* Overlay backdrop (mobile/tablet) */}
+          {showRightPanel && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 lg:hidden"
+              onClick={() => setShowRightPanel(false)}
+            />
+          )}
+
+          {/* Panneau */}
+          <div className={`
+            relative h-full w-72 xl:w-80 bg-white lg:bg-transparent
+            ${showRightPanel ? 'shadow-xl' : ''}
+          `}>
+            {/* Bouton fermer (mobile/tablet) */}
+            <button
+              onClick={() => setShowRightPanel(false)}
+              className="lg:hidden absolute top-4 right-4 z-10 p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              aria-label="Fermer"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <RightPanel
+              structure={structure}
+              statistics={statistics}
+              onNavigateToSection={navigateToSection}
             />
           </div>
         </div>
