@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playsService } from '../../services/plays.service';
 import { Header } from '../../components/layout/Header';
@@ -29,10 +29,29 @@ export function PlaysList() {
   const [selectedPlay, setSelectedPlay] = useState(null);
   const [newPlay, setNewPlay] = useState({ title: '', subtitle: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     fetchPlays();
   }, [pagination.page, filters]);
+
+  // Fermer le menu quand on clique à l'extérieur
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const fetchPlays = async () => {
     setIsLoading(true);
@@ -84,6 +103,25 @@ export function PlaysList() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleVersionsClick = (play, e) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    // TODO: Navigate to versions page or open versions modal
+    toast.info('Fonctionnalité Versions à venir');
+  };
+
+  const handleDeleteClick = (play, e) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    setSelectedPlay(play);
+    setShowDeleteModal(true);
+  };
+
+  const toggleMenu = (playId, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === playId ? null : playId);
   };
 
   const formatDate = (dateString) => {
@@ -220,17 +258,33 @@ export function PlaysList() {
                         Dernière modification : {formatDate(play.updatedAt)}
                       </p>
                     </div>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPlay(play);
-                        setShowDeleteModal(true);
-                      }}
-                    >
-                      Supprimer
-                    </Button>
+                    <div className="relative" ref={openMenuId === play.id ? menuRef : null}>
+                      <button
+                        onClick={(e) => toggleMenu(play.id, e)}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Actions"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+                      {openMenuId === play.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                          <button
+                            onClick={(e) => handleVersionsClick(play, e)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            Versions
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteClick(play, e)}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            Supprimer la pièce
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}
