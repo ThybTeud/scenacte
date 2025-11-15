@@ -109,7 +109,7 @@ export function PlaysList() {
     e.stopPropagation();
     setOpenMenuId(null);
     // TODO: Navigate to versions page or open versions modal
-    toast.info('Fonctionnalité Versions à venir');
+    toast('Fonctionnalité Versions à venir', { icon: 'ℹ️' });
   };
 
   const handleDeleteClick = (play, e) => {
