@@ -15,11 +15,11 @@ export function LeftPanel({
   isSaving = false,
 }) {
   const formatButtons = [
-    { id: 'acte', label: '#Acte', shortcut: 'Ctrl+1', icon: '📖' },
-    { id: 'scene', label: '##Scène', shortcut: 'Ctrl+1 (cycle)', icon: '🎬' },
-    { id: 'personnage', label: '@Personnage', shortcut: 'Ctrl+2', icon: '👤' },
-    { id: 'didascalie', label: '(Didascalie)', shortcut: 'Ctrl+3', icon: '💬' },
-    { id: 'dialogue', label: 'Dialogue', shortcut: 'Ctrl+4', icon: '💭' },
+    { id: 'acte', label: '#Acte', shortcut: 'Ctrl+1'},
+    { id: 'scene', label: '##Scène', shortcut: 'Ctrl+1' },
+    { id: 'personnage', label: '@Personnage', shortcut: 'Ctrl+2'},
+    { id: 'didascalie', label: '(Didascalie)', shortcut: 'Ctrl+3' },
+    { id: 'dialogue', label: 'Dialogue', shortcut: 'Ctrl+4'},
   ];
 
   return (

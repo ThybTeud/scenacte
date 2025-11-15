@@ -145,7 +145,8 @@ export function RightPanel({
             </div>
 
             {/* Stats supplémentaires (optionnelles, affichées en petit) */}
-            {statistics.totalActs > 0 && (
+            {/* Masquée pour le moment */}
+            {/* {statistics.totalActs > 0 && (
               <div className="pt-2 border-t border-gray-200 text-xs text-gray-500 space-y-1">
                 <div className="flex justify-between">
                   <span>Actes</span>
@@ -163,14 +164,9 @@ export function RightPanel({
                     <span>{statistics.wordCount.toLocaleString()}</span>
                   </div>
                 )}
-                {statistics.estimatedDurationMinutes > 0 && (
-                  <div className="flex justify-between">
-                    <span>Durée estimée</span>
-                    <span>{statistics.estimatedDurationMinutes} min</span>
-                  </div>
-                )}
+                
               </div>
-            )}
+            )} */}
           </div>
         )}
       </div>

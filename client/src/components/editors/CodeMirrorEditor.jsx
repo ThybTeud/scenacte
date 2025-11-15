@@ -181,15 +181,22 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       const view = viewRef.current;
       const selection = view.state.selection.main;
 
+      // Insérer au début de la ligne contenant le curseur
+      const line = view.state.doc.lineAt(selection.from);
+      const insertPos = line.from;
+
       view.dispatch({
         changes: {
-          from: selection.from,
-          to: selection.to,
+          from: insertPos,
+          to: insertPos,
           insert: text
         },
+        // Garder le curseur à sa position logique initiale :
+        // on décale l'ancre de la sélection de la longueur du texte inséré
         selection: {
           anchor: selection.from + text.length
-        }
+        },
+        scrollIntoView: true
       });
 
       // Focus l'éditeur après insertion

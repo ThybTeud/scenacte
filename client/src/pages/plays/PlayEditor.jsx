@@ -365,8 +365,7 @@ export function PlayEditor() {
           {/* Preview - Desktop: visible, Mobile: caché ou toggle */}
           {showPreview && (
             <div className="hidden lg:block lg:flex-1 border-l border-gray-200 overflow-hidden">
-              <div className="h-full p-4 bg-gray-50 overflow-hidden flex flex-col">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu</h3>
+              <div className="h-full p-4 bg-gray-50 p-3 md:p-6 overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-hidden min-h-0">
                   <PlayPreview
                     content={content}
