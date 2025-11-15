@@ -160,22 +160,23 @@ export function PlayEditor() {
   }, [content]);
 
   /**
-   * Insérer un format dans l'éditeur à la position du curseur
+   * Toggle un format de ligne dans l'éditeur
    */
-  const insertFormat = useCallback((formatId) => {
-    if (!editorRef.current) return;
+  const toggleFormat = useCallback((formatId) => {
+    if (!editorRef.current || !editorRef.current.toggleLineFormat) return;
 
-    const formatMap = {
-      acte: '#Acte 1\n',
-      scene: '##Scène 1\n',
-      personnage: '@PERSONNAGE\n',
-      didascalie: '(didascalie)\n',
-      dialogue: '',
+    // Mapper les IDs des boutons vers les types de format
+    const formatTypeMap = {
+      acte: 'heading',
+      scene: 'heading',
+      personnage: 'personnage',
+      didascalie: 'didascalie',
+      dialogue: 'dialogue',
     };
 
-    const textToInsert = formatMap[formatId] || '';
-    if (textToInsert) {
-      editorRef.current.insertText(textToInsert);
+    const formatType = formatTypeMap[formatId];
+    if (formatType) {
+      editorRef.current.toggleLineFormat(formatType);
     }
   }, []);
 
@@ -219,7 +220,7 @@ export function PlayEditor() {
    * Hook pour les raccourcis clavier
    */
   useKeyboardShortcuts({
-    onInsertFormat: insertFormat,
+    onToggleFormat: toggleFormat,
   });
 
   if (isLoading) {
@@ -316,7 +317,7 @@ export function PlayEditor() {
               onSave={handleManualSave}
               onDownload={handleDownload}
               onTogglePreview={() => setShowPreview(!showPreview)}
-              onInsertFormat={insertFormat}
+              onToggleFormat={toggleFormat}
               onInsertCharacter={insertCharacter}
               characters={structure.personnages || []}
               canUndo={false}
