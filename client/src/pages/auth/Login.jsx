@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { AuthLayout } from '../../components/layout/AuthLayout';
@@ -10,11 +10,15 @@ export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [showSlowConnectionMessage, setShowSlowConnectionMessage] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
+  const loadingIntervalRef = useRef(null);
+  const cycleCountRef = useRef(0);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +27,53 @@ export function Login() {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
+
+  // Gérer la barre de chargement avec timer de 30 secondes
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingProgress(0);
+      cycleCountRef.current = 0;
+      setShowSlowConnectionMessage(false);
+
+      // Animation fluide : mise à jour toutes les 100ms pour atteindre 100% en 30 secondes
+      const increment = 100 / (30000 / 100); // 100% / (30s / 100ms)
+
+      loadingIntervalRef.current = setInterval(() => {
+        setLoadingProgress((prev) => {
+          const newProgress = prev + increment;
+
+          // Si on atteint 100%, recommencer le cycle
+          if (newProgress >= 100) {
+            cycleCountRef.current += 1;
+
+            // Afficher le message après le premier cycle complet
+            if (cycleCountRef.current === 1) {
+              setShowSlowConnectionMessage(true);
+            }
+
+            return 0; // Recommencer à 0%
+          }
+
+          return newProgress;
+        });
+      }, 100);
+    } else {
+      // Nettoyer quand le chargement se termine
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+      setLoadingProgress(0);
+      setShowSlowConnectionMessage(false);
+      cycleCountRef.current = 0;
+    }
+
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+      }
+    };
+  }, [isLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -89,6 +140,26 @@ export function Login() {
         >
           {isLoading ? 'Connexion...' : 'Se connecter'}
         </Button>
+
+        {/* Barre de chargement avec timer */}
+        {isLoading && (
+          <div className="space-y-2">
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-100 ease-linear"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            {showSlowConnectionMessage && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+                La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
+                <a href="mailto:scenacte@gmail.com" className="font-medium underline">
+                  scenacte@gmail.com
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         <p className="text-center text-sm text-gray-600">
           Pas encore de compte ?{' '}
