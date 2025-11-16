@@ -34,6 +34,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       },
       '.cm-content': {
         padding: '16px',
+        paddingLeft: '0',
         minHeight: '100%'
       },
       '.cm-line': {
@@ -41,15 +42,15 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         lineHeight: '1.6'
       },
       '.cm-activeLine': {
-        backgroundColor: '#f3f4f6'
+        backgroundColor: '#E8F2FF'
       },
       '.cm-activeLineGutter': {
         backgroundColor: '#e5e7eb'
       },
       '.cm-gutters': {
         backgroundColor: '#f9fafb',
-        color: '#9ca3af',
-        border: 'none'
+        color: '#9ca3af'
+        // border: 'none'
       }
     });
   }, []);

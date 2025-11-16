@@ -88,44 +88,37 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
         /* Styles pour le rendu de la pièce */
         .play-root {
           font-family: 'Georgia', 'Times New Roman', serif;
-          line-height: 1.8;
           color: #1f2937;
           text-align: center;
         }
 
         .acte {
-          font-weight: bold;
-          text-align: center;
-          margin: 3rem 0 2rem;
-          padding: 1rem;
+          font-weight: 900;
           text-transform: uppercase;
         }
 
         .scene {
           font-weight: 900;
-          margin: 2rem 0 1.5rem;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid #d1d5db;
-          color: #374151;
-        }
-
-        .personnage {
           text-transform: small-caps;
         }
 
+        .personnage {
+          margin: 1rem 0 1rem;
+          text-transform: uppercase;
+        }
+
         .didascalie {
+          margin: 2rem 0;
+          padding-left: 8rem;
           font-style: italic;
-          color: #6b7280;
-          margin: 0.5rem 0;
-          padding: 0.5rem 0;
+          text-align: right;
         }
 
         .dialogue {
-          margin: 0.5rem 0;
-          padding-left: 2rem;
-          color: #1f2937;
+          text-align: justify;
         }
 
+        /* Vérifier l'utilités des styles suivants */
         .text {
           margin: 0.75rem 0;
           color: #1f2937;
