@@ -6,7 +6,7 @@ export function LeftPanel({
   onSave,
   onDownload,
   onTogglePreview,
-  onInsertFormat,
+  onToggleFormat,
   onInsertCharacter,
   characters = [],
   canUndo = false,
@@ -114,7 +114,7 @@ export function LeftPanel({
           {formatButtons.map((format) => (
             <button
               key={format.id}
-              onClick={() => onInsertFormat(format.id)}
+              onClick={() => onToggleFormat(format.id)}
               className="w-full flex items-center justify-between px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 hover:border-gray-300 transition-colors"
             >
               <span className="flex items-center gap-2">
