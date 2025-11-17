@@ -28,10 +28,10 @@ export const NodeType = {
  * Expression régulière pour détecter les balises
  */
 const TAG_PATTERNS = {
-  acte: /^#\s*(?:Acte\s+)?(\d+|[IVXLCDM]+)?\s*$/gim,
-  scene: /^##\s*(?:Scène\s+)?(\d+|[ivxlcdm]+)?\s*$/gim,
-  personnage: /^@([A-ZÀ-ÿ\s\-']+)$/gim,
-  didascalie: /\(([^)]+)\)/g
+  acte: /^#(?!#)\s*(.+?)\s*$/i,
+  scene: /^##\s*(.+?)\s*$/mi,
+  personnage: /^@\s*(.+?)\s*$/mi,
+  didascalie: /^\(\s*(.+?)\s*\)$/i
 };
 
 /**
@@ -93,29 +93,31 @@ export class PlayParser {
       }
 
       // Vérifier acte (#)
-      const acteMatch = /^#\s*(?:Acte\s+)?(\d+|[IVXLCDM]+)?/i.exec(trimmedLine);
+      const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
       if (acteMatch) {
         const number = acteMatch[1] || '1';
         const node = new ASTNode(NodeType.ACTE, null, { number });
         node.position = { start: i, end: i };
+        node.value = acteMatch[1].trim();
         root.addChild(node);
         currentSpeaker = null;
         continue;
       }
 
       // Vérifier scène (##)
-      const sceneMatch = /^##\s*(?:Scène\s+)?(\d+|[ivxlcdm]+)?/i.exec(trimmedLine);
+      const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
       if (sceneMatch) {
         const number = sceneMatch[1] || '1';
         const node = new ASTNode(NodeType.SCENE, null, { number });
         node.position = { start: i, end: i };
+        node.value = sceneMatch[1].trim();
         root.addChild(node);
         currentSpeaker = null;
         continue;
       }
 
       // Vérifier personnage (@)
-      const personnageMatch = /^@([A-ZÀ-ÿ\s\-']+)$/i.exec(trimmedLine);
+      const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
       if (personnageMatch) {
         const name = personnageMatch[1].trim().toUpperCase();
         currentSpeaker = name;
@@ -125,6 +127,9 @@ export class PlayParser {
         continue;
       }
 
+      /*
+      J'ai l'impression qu'il manque le parsing de didascalies ici. 
+      */
       // Parser la ligne pour les didascalies et le dialogue
       const parsedLine = this.parseLine(trimmedLine, currentSpeaker, i);
       parsedLine.forEach(node => root.addChild(node));
@@ -232,10 +237,10 @@ export function astToHTML(ast) {
         return `<div class="play-root">${node.children.map(renderNode).join('')}</div>`;
 
       case NodeType.ACTE:
-        return `<h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">ACTE ${escapeHTML(node.attributes.number)}</h1>`;
+        return `<h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>`;
 
       case NodeType.SCENE:
-        return `<h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">Scène ${escapeHTML(node.attributes.number)}</h2>`;
+        return `<h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>`;
 
       case NodeType.PERSONNAGE:
         return `<h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>`;
@@ -286,14 +291,16 @@ export function extractStructure(ast) {
       case NodeType.ACTE:
         structure.actes.push({
           number: node.attributes.number,
-          position: node.position
+          position: node.position,
+          value: node.value
         });
         break;
 
       case NodeType.SCENE:
         structure.scenes.push({
           number: node.attributes.number,
-          position: node.position
+          position: node.position,
+          value: node.value
         });
         break;
 

@@ -56,8 +56,7 @@ export function RightPanel({
                     className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="text-orange-500">🎬</span>
-                      <span>Scène {scene.number || index + 1}</span>
+                      <span>{scene.value}</span>
                     </span>
                   </button>
                 ))}
@@ -72,8 +71,7 @@ export function RightPanel({
                   className="w-full text-left px-3 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <span>📖</span>
-                    <span>Acte {item.acte.number || acteIndex + 1}</span>
+                    <span>{item.acte.value}</span>
                   </span>
                 </button>
 
@@ -87,8 +85,7 @@ export function RightPanel({
                         className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
                       >
                         <span className="flex items-center gap-2">
-                          <span className="text-orange-500">🎬</span>
-                          <span>Scène {scene.number || sceneIndex + 1}</span>
+                          <span>{scene.value}</span>
                         </span>
                       </button>
                     ))}
@@ -107,8 +104,7 @@ export function RightPanel({
                     className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="text-orange-500">🎬</span>
-                      <span>Scène {scene.number || index + 1}</span>
+                      <span>{scene.value}</span>
                     </span>
                   </button>
                 ))}
