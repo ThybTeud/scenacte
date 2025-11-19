@@ -30,6 +30,8 @@ export function PlayEditor() {
   const [showPreview, setShowPreview] = useState(true);
   const [showLeftPanel, setShowLeftPanel] = useState(false); // Masqué par défaut sur mobile
   const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
+  const parseTimeoutRef = useRef(null);
+  const [isParsing, setIsParsing] = useState(false);
 
   // Référence à l'éditeur CodeMirror pour l'insertion de texte
   const editorRef = useRef(null);
@@ -107,7 +109,21 @@ export function PlayEditor() {
   const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
     setHasUnsavedChanges(true);
-  }, []);
+
+    setIsParsing(true);
+  
+    // Clear le timer précédent
+    if (parseTimeoutRef.current) {
+      clearTimeout(parseTimeoutRef.current);
+    }
+    
+    // Nouveau timer pour déclencher le re-parsing
+    parseTimeoutRef.current = setTimeout(() => {
+      setIsParsing(false);
+      // Le re-parsing se fera automatiquement via les useMemo
+      // qui dépendent de 'content'
+      }, 300); // 300ms de debounce
+    }, []);
 
   /**
    * Sauvegarde manuelle
@@ -127,6 +143,9 @@ export function PlayEditor() {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+      if (parseTimeoutRef.current) {
+      clearTimeout(parseTimeoutRef.current);
+    }
     };
   }, []);
 
@@ -274,6 +293,7 @@ export function PlayEditor() {
 
         {/* Indicateur de sauvegarde (visible sur desktop) */}
         <div className="hidden md:block text-sm mt-2">
+          {isParsing && <span className="text-blue-600">Analyse en cours...</span>}
           {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
           {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
           {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
@@ -339,6 +359,7 @@ export function PlayEditor() {
               {/* Mobile: Indicateur de sauvegarde + bouton sommaire */}
               <div className="md:hidden flex items-center justify-between mb-2">
                 <div className="text-xs">
+                  {isParsing && <span className="text-blue-600">Analyse...</span>}
                   {isSaving && <span className="text-primary-600">Sauvegarde...</span>}
                   {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Non sauvegardé</span>}
                   {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">✓</span>}
