@@ -47,7 +47,7 @@ services:
     runtime: static
     plan: free
     buildCommand: npm run install:client && cd client && npm run build
-    staticPublishPath: ./client/dist
+    staticPublishPath: ./dist
     pullRequestPreviewsEnabled: true
     routes:
       - type: rewrite
