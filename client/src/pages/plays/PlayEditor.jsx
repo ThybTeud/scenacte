@@ -20,6 +20,7 @@ export function PlayEditor() {
   const navigate = useNavigate();
   const [play, setPlay] = useState(null);
   const [content, setContent] = useState('');
+  const [debouncedContent, setDebouncedContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -32,6 +33,8 @@ export function PlayEditor() {
   const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
   const parseTimeoutRef = useRef(null);
   const [isParsing, setIsParsing] = useState(false);
+
+
 
   // Référence à l'éditeur CodeMirror pour l'insertion de texte
   const editorRef = useRef(null);
@@ -51,7 +54,9 @@ export function PlayEditor() {
     try {
       const response = await playsService.getPlay(id);
       setPlay(response.play);
-      setContent(response.play.rawContent || '');
+      const rawContent = response.play.rawContent || '';
+    setContent(rawContent);
+    setDebouncedContent(rawContent);
       setHasUnsavedChanges(false);
     } catch (error) {
       toast.error('Erreur lors du chargement de la pièce');
@@ -116,14 +121,12 @@ export function PlayEditor() {
     if (parseTimeoutRef.current) {
       clearTimeout(parseTimeoutRef.current);
     }
-    
     // Nouveau timer pour déclencher le re-parsing
     parseTimeoutRef.current = setTimeout(() => {
+      setDebouncedContent(newContent); // ← Mise à jour débounced
       setIsParsing(false);
-      // Le re-parsing se fera automatiquement via les useMemo
-      // qui dépendent de 'content'
-      }, 300); // 300ms de debounce
-    }, []);
+    }, 300); // 300ms de debounce
+  }, []);
 
   /**
    * Sauvegarde manuelle
@@ -153,30 +156,32 @@ export function PlayEditor() {
    * Extraire la structure (actes, scènes, personnages) du contenu
    */
   const structure = useMemo(() => {
-    if (!content) return { actes: [], scenes: [], personnages: [] };
+    if (!debouncedContent) return { actes: [], scenes: [], personnages: [] };
 
     try {
-      const ast = parser.parse(content);
+      const ast = parser.parse(debouncedContent);
       return extractStructure(ast);
     } catch (error) {
       console.error('Erreur lors de l\'extraction de la structure:', error);
       return { actes: [], scenes: [], personnages: [] };
     }
-  }, [content, parser]);
+  }, [debouncedContent, parser]);
 
   /**
    * Calculer les statistiques
    */
   const statistics = useMemo(() => {
-    if (!content) return null;
+    if (!debouncedContent) return null;
 
     try {
-      return calculatePlayStatistics(content);
+      return calculatePlayStatistics(debouncedContent);
     } catch (error) {
       console.error('Erreur lors du calcul des statistiques:', error);
       return null;
     }
-  }, [content]);
+  }, [debouncedContent]);
+
+  
 
   /**
    * Toggle un format de ligne dans l'éditeur
@@ -379,6 +384,7 @@ export function PlayEditor() {
                   onChange={handleContentChange}
                   onScroll={handleEditorScroll}
                   scrollSync={editorScrollRef}
+                  characters={structure.personnages || []}
                 />
               </div>
             </div>
@@ -390,7 +396,7 @@ export function PlayEditor() {
               <div className="h-full p-4 bg-gray-50 p-3 md:p-6 overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-hidden min-h-0">
                   <PlayPreview
-                    content={content}
+                    content={debouncedContent}
                     onScroll={handlePreviewScroll}
                     scrollSync={previewScrollRef}
                   />

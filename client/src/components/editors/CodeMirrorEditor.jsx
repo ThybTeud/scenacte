@@ -1,9 +1,11 @@
 import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { EditorState } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorState, RangeSetBuilder } from '@codemirror/state';
+import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
+
+// Utilisation d'un mode StreamLanguage pour le surlignage personnalisé (voir createPlayExtension)
 
 /**
  * Composant éditeur CodeMirror pour l'édition de pièces de théâtre
@@ -14,15 +16,50 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync }, ref) {
+export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
+
+  // StateEffect + StateField pour appliquer les décorations ligne (highlights)
+  // définis au niveau du module mais utilisés ici.
 
   /**
    * Crée l'extension personnalisée pour les balises théâtrales
    */
   const createPlayExtension = useCallback(() => {
-    return EditorView.theme({
+    // ViewPlugin qui construit des décorations de ligne basées sur des regex simples
+    const lineHighlighter = ViewPlugin.fromClass(class {
+      constructor(view) {
+        this.decorations = this.buildDeco(view);
+      }
+      update(update) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = this.buildDeco(update.view);
+        }
+      }
+      buildDeco(view) {
+        const builder = new RangeSetBuilder();
+        const { from, to } = view.viewport; // visible range for performance
+        let pos = from;
+        while (pos <= to) {
+          const line = view.state.doc.lineAt(pos);
+          const text = line.text;
+          if (/^##\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-scene' }));
+          } else if (/^#(?!#)\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-act' }));
+          } else if (/^@\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-character' }));
+          } else if (/^\([^\)]*\)\s*$/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-didascalie' }));
+          }
+          pos = line.to + 1;
+        }
+        return builder.finish();
+      }
+    }, { decorations: v => v.decorations });
+
+    return [lineHighlighter, EditorView.theme({
       '&': {
         height: '100%',
         fontSize: '14px',
@@ -50,9 +87,93 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       '.cm-gutters': {
         backgroundColor: '#f9fafb',
         color: '#9ca3af'
-        // border: 'none'
+      },
+      '.cm-tooltip-autocomplete': {
+        color: '#000',
+        border: '2px solid #000',
+        borderRadius: '4px',
+        boxShadow: '3px 3px 0px',
+        padding: '6px',
+        maxHeight: '260px',
+        overflow: 'auto',
+        minWidth: '100px',
+        zIndex: 50
+      },
+      '.cm-tooltip-autocomplete ul': { listStyle: 'none', margin: 0, padding: 0 },
+      '.cm-completion': {
+        display: 'flex',
+        gap: '8px',
+        alignItems: 'center',
+        padding: '8px 10px',
+        borderRadius: '6px',
+        cursor: 'pointer'
       }
-    });
+      ,
+      '.cm-tooltip-autocomplete .cm-completionIcon': {
+        display: 'none'
+      },
+      '.cm-completionIcon': {
+        display: 'none'
+      },
+      '.cm-tooltip-autocomplete .cm-completion': {
+        paddingLeft: '8px'
+      },
+      '.cm-completionMatchedText': { textDecoration: 'none' },
+      // Classes de surlignage pour les types de balises (StreamLanguage émettra des tokens cm-scene, cm-act, ...)
+      '.cm-act': {
+        color: '#fd7e14',
+        fontWeight: '700',
+      },
+      '.cm-scene': {
+        color: '#fd7e14',
+        fontWeight: '700',
+      },
+      '.cm-character': {
+        color: '#276ef1',
+        fontWeight: '700',
+      },
+      '.cm-didascalie': {
+        color: '#a8a8a8',
+        fontStyle: 'italic',
+      }
+    })];
+  }, []);
+
+  // Ref pour que la source d'autocomplétion puisse accéder aux personnages à jour
+  const charactersRef = useRef(characters);
+  useEffect(() => {
+    charactersRef.current = characters;
+  }, [characters]);
+
+  /**
+   * Crée l'extension d'autocomplétion pour les personnages (trigger sur '@')
+   */
+  const createCompletionExtension = useCallback(() => {
+    const source = (context) => {
+      // On cherche un token commençant par @ suivi de lettres/chiffres/_
+      const token = context.matchBefore(/^@.+/);
+      if (!token) return null;
+
+      // Si rien n'a été saisi après @, on affiche toute la liste
+      const query = token.text.slice(1).toUpperCase();
+
+      const chars = charactersRef.current || [];
+      const options = chars.map((name) => ({
+        label: name,
+        type: 'variable',
+        apply: name
+      })).filter(opt => {
+        if (!query) return true;
+        return opt.label.toUpperCase().startsWith(query);
+      });
+
+      return {
+        from: token.from + 1, // on remplace après le '@'
+        options
+      };
+    };
+
+    return autocompletion({ override: [source], activateOnTyping: true });
   }, []);
 
   /**
@@ -73,12 +194,14 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         history(),
         syntaxHighlighting(defaultHighlightStyle),
         closeBrackets(), // Autoclose des parenthèses
+        createCompletionExtension(),
         keymap.of([
           ...closeBracketsKeymap,
           ...defaultKeymap,
           ...historyKeymap
         ]),
-        playExtension,
+        // playExtension returns an array [mode, theme]
+        ...playExtension,
         EditorView.updateListener.of((update) => {
           if (update.docChanged && onChange) {
             onChange(update.state.doc.toString());
@@ -107,6 +230,8 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
     });
 
     viewRef.current = view;
+
+    // nothing: StreamLanguage handles inline token highlighting
 
     // Exposer la méthode de scroll via la ref (pour compatibilité)
     if (scrollSync) {
@@ -167,6 +292,8 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       }
     }
   }, [value]);
+
+  
 
   /**
    * Expose les méthodes via la ref
