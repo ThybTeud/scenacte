@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import sgMail from '@sendgrid/mail';
 import { config } from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Configuration du service d'email
@@ -16,9 +17,9 @@ const isDevelopment = config.server.env === 'development';
 const isSendGridConfigured = !!config.email.sendgridApiKey;
 if (!isDevelopment && isSendGridConfigured) {
   sgMail.setApiKey(config.email.sendgridApiKey);
-  console.log('[EMAIL] ✓ SendGrid API configuré (mode HTTP)');
-  console.log(`[EMAIL] 📧 Adresse d'expédition : ${config.email.from}`);
-  console.log('[EMAIL] ⚠️  Cette adresse doit être vérifiée sur SendGrid (Settings → Sender Authentication)');
+  logger.info('✓ SendGrid API configuré (mode HTTP)');
+  logger.info({ from: config.email.from }, '📧 Adresse d\'expédition');
+  logger.warn('⚠️  Cette adresse doit être vérifiée sur SendGrid (Settings → Sender Authentication)');
 }
 
 // Configuration SMTP (fallback)
@@ -40,13 +41,13 @@ if (!isDevelopment && !isSendGridConfigured && isSmtpConfigured) {
     greetingTimeout: 10000,    // 10 secondes max pour le greeting
     socketTimeout: 10000       // 10 secondes max pour les opérations socket
   });
-  console.log(`[EMAIL] ✓ Transporteur SMTP configuré (${config.smtp.host}:${config.smtp.port})`);
-  console.log(`[EMAIL] 📧 Adresse d'expédition : ${config.email.from}`);
+  logger.info({ host: config.smtp.host, port: config.smtp.port }, '✓ Transporteur SMTP configuré');
+  logger.info({ from: config.email.from }, '📧 Adresse d\'expédition');
 } else if (!isDevelopment && !isSendGridConfigured && !isSmtpConfigured) {
-  console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
-  console.warn('[EMAIL] 💡 Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
+  logger.warn('⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
+  logger.warn('💡 Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
 } else if (isDevelopment) {
-  console.log('[EMAIL] ✓ Mode développement : les emails seront affichés dans la console uniquement');
+  logger.info('✓ Mode développement : les emails seront affichés dans la console uniquement');
 }
 
 // Fonction interne pour envoyer via SendGrid
@@ -61,12 +62,12 @@ async function sendViaSendGrid(mailContent) {
 
   try {
     await sgMail.send(msg);
-    console.log('[EMAIL] ✓ Email envoyé via SendGrid à', mailContent.to);
+    logger.info({ to: mailContent.to }, '✓ Email envoyé via SendGrid');
   } catch (error) {
     // Erreurs SendGrid détaillées
     if (error.response) {
       const { statusCode, body } = error.response;
-      console.error('[EMAIL] ✗ Erreur SendGrid:', statusCode, body);
+      logger.error({ statusCode, body }, '✗ Erreur SendGrid');
 
       if (statusCode === 403) {
         throw new Error(`Erreur SendGrid (403 Forbidden): L'adresse email "${msg.from}" n'est pas vérifiée sur SendGrid. Allez dans Settings → Sender Authentication pour la vérifier.`);
@@ -90,7 +91,7 @@ async function sendViaSmtp(mailContent) {
     ...mailContent,
     from: mailContent.from || config.email.from
   });
-  console.log('[EMAIL] Email envoyé via SMTP à', mailContent.to);
+  logger.info({ to: mailContent.to }, 'Email envoyé via SMTP');
 }
 
 /**
@@ -141,10 +142,10 @@ L'équipe Scenacte`,
     } else if (isSmtpConfigured) {
       await sendViaSmtp(mailContent);
     } else {
-      console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : email de bienvenue non envoyé à', email);
+      logger.warn({ email }, '⚠️  Aucun service d\'email configuré : email de bienvenue non envoyé');
     }
   } catch (error) {
-    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de bienvenue:', error.message);
+    logger.error({ error: error.message }, 'Erreur lors de l\'envoi de l\'email de bienvenue');
     // Ne pas throw l'erreur pour ne pas bloquer l'inscription
   }
 }
@@ -217,7 +218,7 @@ L'équipe Scenacte`,
       throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
     }
   } catch (error) {
-    console.error('[EMAIL] Erreur lors de l\'envoi de l\'email de réinitialisation:', error.message);
+    logger.error({ error: error.message }, 'Erreur lors de l\'envoi de l\'email de réinitialisation');
     throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
   }
 }
@@ -227,30 +228,30 @@ L'équipe Scenacte`,
  */
 export async function verifyEmailConnection() {
   if (isDevelopment) {
-    console.log('[EMAIL] ✓ Mode développement activé (emails affichés dans la console)');
+    logger.info('✓ Mode développement activé (emails affichés dans la console)');
     return true;
   }
 
   // SendGrid : pas de vérification nécessaire (API key validée lors de l'envoi)
   if (isSendGridConfigured) {
-    console.log('[EMAIL] ✓ SendGrid configuré (vérification lors de l\'envoi)');
+    logger.info('✓ SendGrid configuré (vérification lors de l\'envoi)');
     return true;
   }
 
   // SMTP : vérifier la connexion
   if (!transporter) {
-    console.warn('[EMAIL] ⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
+    logger.warn('⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
     return false;
   }
 
   try {
     await transporter.verify();
-    console.log('[EMAIL] ✓ Connexion SMTP établie avec succès');
+    logger.info('✓ Connexion SMTP établie avec succès');
     return true;
   } catch (error) {
-    console.error('[EMAIL] ✗ Erreur de connexion SMTP:', error.message);
-    console.warn('[EMAIL] ⚠️  Les emails ne seront pas envoyés');
-    console.warn('[EMAIL] 💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
+    logger.error({ error: error.message }, '✗ Erreur de connexion SMTP');
+    logger.warn('⚠️  Les emails ne seront pas envoyés');
+    logger.warn('💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
     return false;
   }
 }

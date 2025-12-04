@@ -8,6 +8,13 @@ import {
 } from '../controllers/auth.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+import { validateBody } from '../middleware/validate.js';
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
+} from '../schemas/auth.schema.js';
 
 const router = express.Router();
 
@@ -16,32 +23,36 @@ const router = express.Router();
  * Inscription d'un nouvel utilisateur
  * Body: { email, username, password }
  * Rate limit: 5 requêtes / 15 minutes
+ * Validation: registerSchema
  */
-router.post('/register', authLimiter, register);
+router.post('/register', authLimiter, validateBody(registerSchema), register);
 
 /**
  * POST /api/auth/login
  * Connexion d'un utilisateur
  * Body: { email, password }
  * Rate limit: 5 requêtes / 15 minutes
+ * Validation: loginSchema
  */
-router.post('/login', authLimiter, login);
+router.post('/login', authLimiter, validateBody(loginSchema), login);
 
 /**
  * POST /api/auth/forgot-password
  * Demande de réinitialisation de mot de passe
  * Body: { email }
  * Rate limit: 5 requêtes / 15 minutes
+ * Validation: forgotPasswordSchema
  */
-router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), forgotPassword);
 
 /**
  * POST /api/auth/reset-password
  * Réinitialisation du mot de passe avec token
  * Body: { token, newPassword }
  * Rate limit: 5 requêtes / 15 minutes
+ * Validation: resetPasswordSchema
  */
-router.post('/reset-password', authLimiter, resetPassword);
+router.post('/reset-password', authLimiter, validateBody(resetPasswordSchema), resetPassword);
 
 /**
  * GET /api/auth/me

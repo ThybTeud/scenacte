@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { config } from './env.js';
+import { logger } from '../utils/logger.js';
 
 const { Pool } = pg;
 
@@ -26,7 +27,7 @@ export async function testConnection() {
     client.release();
     return true;
   } catch (error) {
-    console.error('[DATABASE] Erreur de connexion:', error);
+    logger.error({ error }, 'Erreur de connexion à la base de données');
     return false;
   }
 }
@@ -40,5 +41,5 @@ export async function closePool() {
 
 // Gestion des erreurs du pool
 pool.on('error', (err) => {
-  console.error('[DATABASE] Erreur inattendue du pool:', err);
+  logger.error({ error: err }, 'Erreur inattendue du pool de connexions');
 });

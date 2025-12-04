@@ -3,42 +3,43 @@ import { config } from './config/env.js';
 import { testConnection, closePool } from './config/database.js';
 import { verifyEmailConnection } from './services/email.service.js';
 import { initCleanupJob } from './jobs/cleanup.job.js';
+import { logger } from './utils/logger.js';
 
 /**
  * Démarrage du serveur
  */
 async function startServer() {
   try {
-    console.log('\n========================================');
-    console.log('🎭 Scenacte Backend - Démarrage');
-    console.log('========================================\n');
+    logger.info('\n========================================');
+    logger.info('🎭 Scenacte Backend - Démarrage');
+    logger.info('========================================\n');
 
     // 1. Vérification de la connexion à la base de données
-    console.log('[DATABASE] Connexion à PostgreSQL...');
+    logger.info('Connexion à PostgreSQL...');
     const dbConnected = await testConnection();
     if (!dbConnected) {
       throw new Error('Impossible de se connecter à la base de données');
     }
-    console.log('[DATABASE] ✓ Connexion établie avec succès\n');
+    logger.info('✓ Connexion établie avec succès\n');
 
     // 2. Vérification de la connexion SMTP (non bloquant - en arrière-plan)
-    console.log('[EMAIL] Vérification de la connexion SMTP en arrière-plan...');
+    logger.info('Vérification de la connexion email en arrière-plan...');
     // Ne pas attendre la vérification SMTP pour ne pas retarder le démarrage
     verifyEmailConnection().then(emailOk => {
       if (emailOk) {
-        console.log('[EMAIL] ✓ Connexion SMTP établie avec succès');
+        logger.info('✓ Connexion email établie avec succès');
       } else {
-        console.warn('[EMAIL] ⚠ Connexion SMTP échouée (les emails ne seront pas envoyés)');
+        logger.warn('⚠ Connexion email échouée (les emails ne seront pas envoyés)');
       }
     }).catch(error => {
-      console.error('[EMAIL] ⚠ Erreur lors de la vérification SMTP:', error.message);
+      logger.error({ error: error.message }, '⚠ Erreur lors de la vérification email');
     });
 
     // 3. Initialisation et démarrage du job de nettoyage
-    console.log('[CRON] Initialisation du job de nettoyage...');
+    logger.info('Initialisation du job de nettoyage...');
     const cleanupJob = initCleanupJob();
     cleanupJob.start();
-    console.log('[CRON] ✓ Job de nettoyage démarré (quotidien à 3h du matin)\n');
+    logger.info('✓ Job de nettoyage démarré (quotidien à 3h du matin)\n');
 
     // Pour test en développement : décommenter pour exécuter le cleanup immédiatement
     // if (config.server.env === 'development') {
@@ -50,39 +51,38 @@ async function startServer() {
     // Écouter sur 0.0.0.0 pour permettre les connexions externes (nécessaire pour Render, Docker, etc.)
     const host = config.server.env === 'production' ? '0.0.0.0' : 'localhost';
     const server = app.listen(config.server.port, host, () => {
-      console.log('========================================');
-      console.log(`🚀 Serveur démarré avec succès !`);
-      console.log(`📍 Host: ${host}`);
-      console.log(`📍 Port: ${config.server.port}`);
-      console.log(`🌍 Environnement: ${config.server.env}`);
-      console.log(`🔗 URL: http://localhost:${config.server.port}`);
-      console.log(`💚 Health check: http://localhost:${config.server.port}/api/health`);
-      console.log('========================================\n');
+      logger.info('========================================');
+      logger.info('🚀 Serveur démarré avec succès !');
+      logger.info({ host, port: config.server.port }, '📍 Configuration serveur');
+      logger.info({ env: config.server.env }, '🌍 Environnement');
+      logger.info(`🔗 URL: http://localhost:${config.server.port}`);
+      logger.info(`💚 Health check: http://localhost:${config.server.port}/api/health`);
+      logger.info('========================================\n');
     });
 
     // 5. Gestion du shutdown graceful
     const gracefulShutdown = async (signal) => {
-      console.log(`\n[${signal}] Signal reçu, arrêt en cours...`);
+      logger.info({ signal }, 'Signal reçu, arrêt en cours...');
 
       // Arrêter d'accepter de nouvelles connexions
       server.close(async () => {
-        console.log('[SERVER] Serveur HTTP fermé');
+        logger.info('Serveur HTTP fermé');
 
         // Arrêter le job de nettoyage
         cleanupJob.stop();
-        console.log('[CRON] Job de nettoyage arrêté');
+        logger.info('Job de nettoyage arrêté');
 
         // Fermer le pool de connexions PostgreSQL
         await closePool();
-        console.log('[DATABASE] Pool de connexions fermé');
+        logger.info('Pool de connexions fermé');
 
-        console.log('✓ Arrêt terminé proprement\n');
+        logger.info('✓ Arrêt terminé proprement\n');
         process.exit(0);
       });
 
       // Forcer l'arrêt après 10 secondes
       setTimeout(() => {
-        console.error('⚠ Forçage de l\'arrêt après timeout');
+        logger.error('⚠ Forçage de l\'arrêt après timeout');
         process.exit(1);
       }, 10000);
     };
@@ -92,7 +92,7 @@ async function startServer() {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
   } catch (error) {
-    console.error('✗ Erreur lors du démarrage du serveur:', error);
+    logger.error({ error }, '✗ Erreur lors du démarrage du serveur');
     await closePool();
     process.exit(1);
   }
@@ -100,11 +100,11 @@ async function startServer() {
 
 // Gestion des erreurs non capturées
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[UNHANDLED REJECTION]', reason);
+  logger.error({ reason }, 'UNHANDLED REJECTION');
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('[UNCAUGHT EXCEPTION]', error);
+  logger.error({ error }, 'UNCAUGHT EXCEPTION');
   process.exit(1);
 });
 
