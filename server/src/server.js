@@ -1,8 +1,9 @@
-import app from './app.js';
+import app, { registerRoutes } from './app.js';
 import { config } from './config/env.js';
 import { testConnection, closePool } from './config/database.js';
 import { verifyEmailConnection } from './services/email.service.js';
 import { initCleanupJob } from './jobs/cleanup.job.js';
+import { startQueue, stopQueue } from './services/queue.service.js';
 import { logger } from './utils/logger.js';
 
 /**
@@ -22,7 +23,17 @@ async function startServer() {
     }
     logger.info('✓ Connexion établie avec succès\n');
 
-    // 2. Vérification de la connexion SMTP (non bloquant - en arrière-plan)
+    // 2. Démarrage de la queue d'emails (AVANT l'import des routes)
+    logger.info('Démarrage de la queue d\'emails...');
+    await startQueue();
+    logger.info('✓ Queue d\'emails démarrée\n');
+
+    // 3. Enregistrement des routes API (APRÈS le démarrage de la queue)
+    logger.info('Enregistrement des routes API...');
+    await registerRoutes();
+    logger.info('✓ Routes API enregistrées\n');
+
+    // 4. Vérification de la connexion email (non bloquant - en arrière-plan)
     logger.info('Vérification de la connexion email en arrière-plan...');
     // Ne pas attendre la vérification SMTP pour ne pas retarder le démarrage
     verifyEmailConnection().then(emailOk => {
@@ -35,7 +46,7 @@ async function startServer() {
       logger.error({ error: error.message }, '⚠ Erreur lors de la vérification email');
     });
 
-    // 3. Initialisation et démarrage du job de nettoyage
+    // 5. Initialisation et démarrage du job de nettoyage
     logger.info('Initialisation du job de nettoyage...');
     const cleanupJob = initCleanupJob();
     cleanupJob.start();
@@ -47,7 +58,7 @@ async function startServer() {
     //   await cleanupJob.runNow();
     // }
 
-    // 4. Démarrage du serveur HTTP
+    // 6. Démarrage du serveur HTTP
     // Écouter sur 0.0.0.0 pour permettre les connexions externes (nécessaire pour Render, Docker, etc.)
     const host = config.server.env === 'production' ? '0.0.0.0' : 'localhost';
     const server = app.listen(config.server.port, host, () => {
@@ -60,7 +71,7 @@ async function startServer() {
       logger.info('========================================\n');
     });
 
-    // 5. Gestion du shutdown graceful
+    // 7. Gestion du shutdown graceful
     const gracefulShutdown = async (signal) => {
       logger.info({ signal }, 'Signal reçu, arrêt en cours...');
 
@@ -71,6 +82,10 @@ async function startServer() {
         // Arrêter le job de nettoyage
         cleanupJob.stop();
         logger.info('Job de nettoyage arrêté');
+
+        // Arrêter la queue d'emails
+        await stopQueue();
+        logger.info('Queue d\'emails arrêtée');
 
         // Fermer le pool de connexions PostgreSQL
         await closePool();

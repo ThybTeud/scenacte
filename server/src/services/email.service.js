@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import sgMail from '@sendgrid/mail';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { queueEmail, setEmailSenders } from './queue.service.js';
 
 /**
  * Configuration du service d'email
@@ -50,8 +51,12 @@ if (!isDevelopment && !isSendGridConfigured && isSmtpConfigured) {
   logger.info('✓ Mode développement : les emails seront affichés dans la console uniquement');
 }
 
+// Initialiser les fonctions d'envoi dans queue.service pour éviter les dépendances circulaires
+setEmailSenders({ sendViaSendGrid, sendViaSmtp });
+
 // Fonction interne pour envoyer via SendGrid
-async function sendViaSendGrid(mailContent) {
+// Exportée pour être utilisée par queue.service.js
+export async function sendViaSendGrid(mailContent) {
   const msg = {
     to: mailContent.to,
     from: mailContent.from || config.email.from,
@@ -82,7 +87,8 @@ async function sendViaSendGrid(mailContent) {
 }
 
 // Fonction interne pour envoyer via SMTP
-async function sendViaSmtp(mailContent) {
+// Exportée pour être utilisée par queue.service.js
+export async function sendViaSmtp(mailContent) {
   if (!transporter) {
     throw new Error('Transporteur SMTP non configuré');
   }
@@ -135,17 +141,25 @@ L'équipe Scenacte`,
     return;
   }
 
-  // Mode production : envoyer réellement
+  // Mode production : ajouter à la queue pour envoi asynchrone avec retry
   try {
     if (isSendGridConfigured) {
-      await sendViaSendGrid(mailContent);
+      await queueEmail({
+        ...mailContent,
+        service: 'sendgrid'
+      });
+      logger.info({ email }, 'Email de bienvenue ajouté à la queue (SendGrid)');
     } else if (isSmtpConfigured) {
-      await sendViaSmtp(mailContent);
+      await queueEmail({
+        ...mailContent,
+        service: 'smtp'
+      });
+      logger.info({ email }, 'Email de bienvenue ajouté à la queue (SMTP)');
     } else {
       logger.warn({ email }, '⚠️  Aucun service d\'email configuré : email de bienvenue non envoyé');
     }
   } catch (error) {
-    logger.error({ error: error.message }, 'Erreur lors de l\'envoi de l\'email de bienvenue');
+    logger.error({ error: error.message }, 'Erreur lors de l\'ajout de l\'email de bienvenue à la queue');
     // Ne pas throw l'erreur pour ne pas bloquer l'inscription
   }
 }
@@ -208,17 +222,25 @@ L'équipe Scenacte`,
     return;
   }
 
-  // Mode production : envoyer réellement
+  // Mode production : ajouter à la queue pour envoi asynchrone avec retry
   try {
     if (isSendGridConfigured) {
-      await sendViaSendGrid(mailContent);
+      await queueEmail({
+        ...mailContent,
+        service: 'sendgrid'
+      });
+      logger.info({ email }, 'Email de réinitialisation ajouté à la queue (SendGrid)');
     } else if (isSmtpConfigured) {
-      await sendViaSmtp(mailContent);
+      await queueEmail({
+        ...mailContent,
+        service: 'smtp'
+      });
+      logger.info({ email }, 'Email de réinitialisation ajouté à la queue (SMTP)');
     } else {
       throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
     }
   } catch (error) {
-    logger.error({ error: error.message }, 'Erreur lors de l\'envoi de l\'email de réinitialisation');
+    logger.error({ error: error.message }, 'Erreur lors de l\'ajout de l\'email de réinitialisation à la queue');
     throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
   }
 }

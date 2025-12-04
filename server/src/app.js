@@ -5,7 +5,6 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/env.js';
-import routes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // Pour obtenir __dirname en ES modules
@@ -93,8 +92,9 @@ if (config.server.env === 'development') {
 
 /**
  * Routes
+ * Note: Les routes sont enregistrées dynamiquement par registerRoutes()
+ * après le démarrage de la queue d'emails dans server.js
  */
-app.use('/api', routes);
 
 /**
  * Servir le frontend en production
@@ -134,5 +134,17 @@ if (config.server.env !== 'production') {
 
 // Gestionnaire d'erreurs global
 app.use(errorHandler);
+
+/**
+ * Enregistre les routes API
+ * Appelé depuis server.js après le démarrage de la queue d'emails
+ * Ceci évite les dépendances circulaires avec email.service.js qui utilise la queue
+ */
+export function registerRoutes() {
+  // Import dynamique des routes pour éviter l'initialisation avant la queue
+  import('./routes/index.js').then(({ default: routes }) => {
+    app.use('/api', routes);
+  });
+}
 
 export default app;
