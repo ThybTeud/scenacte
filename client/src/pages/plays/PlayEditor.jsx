@@ -15,6 +15,34 @@ import { PlayParser, astToHTML, extractStructure } from '../../utils/playParser'
 import { calculatePlayStatistics } from '../../utils/playStatistics';
 import toast from 'react-hot-toast';
 
+/**
+ * Détecte si le changement est mineur (moins de 3 lignes modifiées)
+ * @param {string} oldContent - Ancien contenu
+ * @param {string} newContent - Nouveau contenu
+ * @returns {boolean} - true si changement mineur
+ */
+function isMinorChange(oldContent, newContent) {
+  if (!oldContent || !newContent) return false;
+
+  const oldLines = oldContent.split('\n');
+  const newLines = newContent.split('\n');
+
+  // Si différence de longueur > 3, c'est un changement majeur
+  if (Math.abs(oldLines.length - newLines.length) > 3) return false;
+
+  // Compter les lignes différentes
+  let diffCount = 0;
+  const maxLen = Math.max(oldLines.length, newLines.length);
+
+  for (let i = 0; i < maxLen && diffCount < 3; i++) {
+    if (oldLines[i] !== newLines[i]) {
+      diffCount++;
+    }
+  }
+
+  return diffCount < 3;
+}
+
 export function PlayEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,6 +61,19 @@ export function PlayEditor() {
   const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
   const parseTimeoutRef = useRef(null);
   const [isParsing, setIsParsing] = useState(false);
+
+  // Cache intelligent pour éviter les recalculs inutiles
+  const cacheRef = useRef({
+    lastContent: null,
+    lastAST: null,
+    lastASTString: null, // Pour comparaison rapide
+    lastHTML: null,
+    lastStructure: null,
+    lastStatistics: null
+  });
+
+  // Ref pour stocker le contenu précédent (pour debounce adaptatif)
+  const previousContentRef = useRef('');
 
 
 
@@ -69,24 +110,33 @@ export function PlayEditor() {
 
   /**
    * Sauvegarde le contenu de la pièce
+   * Utilise le cache HTML si disponible pour éviter un re-parsing
    */
   const savePlay = useCallback(async () => {
     if (!play) return;
 
     setIsSaving(true);
     try {
-      // Générer le HTML à partir du contenu brut
+      const cache = cacheRef.current;
+
+      // Utiliser le HTML du cache si disponible, sinon générer (fallback)
       let htmlContent = '';
-      try {
-        const ast = parser.parse(content);
-        htmlContent = astToHTML(ast);
-      } catch (parseError) {
-        console.error('Erreur lors du parsing:', parseError);
-        htmlContent = '';
+      if (cache.lastHTML && cache.lastContent === content) {
+        // Utiliser le cache
+        htmlContent = cache.lastHTML;
+      } else {
+        // Fallback : générer le HTML
+        try {
+          const ast = parser.parse(content);
+          htmlContent = astToHTML(ast);
+        } catch (parseError) {
+          console.error('Erreur lors du parsing:', parseError);
+          htmlContent = '';
+        }
       }
 
-      // Calculer les statistiques
-      const statistics = calculatePlayStatistics(content);
+      // Utiliser les statistiques du cache ou recalculer
+      const saveStatistics = cache.lastStatistics || calculatePlayStatistics(content);
 
       // Préparer les données pour la sauvegarde
       const saveData = {
@@ -94,7 +144,7 @@ export function PlayEditor() {
         subtitle: play.subtitle || null,
         rawContent: content,
         htmlContent: htmlContent,
-        statistics: statistics
+        statistics: saveStatistics
       };
 
       await playsService.savePlay(id, saveData);
@@ -110,22 +160,27 @@ export function PlayEditor() {
 
   /**
    * Gère le changement de contenu dans l'éditeur
+   * Utilise un debounce adaptatif : 150ms pour petits changements, 300ms pour gros changements
    */
   const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
     setHasUnsavedChanges(true);
-
     setIsParsing(true);
-  
+
     // Clear le timer précédent
     if (parseTimeoutRef.current) {
       clearTimeout(parseTimeoutRef.current);
     }
+
+    // Debounce adaptatif : 150ms pour changements mineurs, 300ms pour majeurs
+    const debounceDelay = isMinorChange(previousContentRef.current, newContent) ? 150 : 300;
+
     // Nouveau timer pour déclencher le re-parsing
     parseTimeoutRef.current = setTimeout(() => {
-      setDebouncedContent(newContent); // ← Mise à jour débounced
+      setDebouncedContent(newContent);
       setIsParsing(false);
-    }, 300); // 300ms de debounce
+      previousContentRef.current = newContent; // Mettre à jour pour prochaine comparaison
+    }, debounceDelay);
   }, []);
 
   /**
@@ -153,33 +208,94 @@ export function PlayEditor() {
   }, []);
 
   /**
-   * Extraire la structure (actes, scènes, personnages) du contenu
+   * Parse le contenu et extrait structure, HTML et statistiques avec cache intelligent
+   * Étapes :
+   * 1. Vérifier si le contenu est identique au cache
+   * 2. Parser l'AST
+   * 3. Comparer l'AST (deep compare via JSON.stringify)
+   * 4. Si AST changé : générer nouveau HTML et structure
+   * 5. Si AST inchangé : réutiliser cache
+   * 6. Toujours recalculer les statistiques (léger)
+   * 7. En cas d'erreur : retourner cache ou valeurs par défaut
    */
-  const structure = useMemo(() => {
-    if (!debouncedContent) return { actes: [], scenes: [], personnages: [] };
+  const parsedData = useMemo(() => {
+    const cache = cacheRef.current;
+    const defaultValues = {
+      html: '',
+      structure: { actes: [], scenes: [], personnages: [] },
+      statistics: null
+    };
+
+    // Contenu vide
+    if (!debouncedContent) {
+      return defaultValues;
+    }
+
+    // Étape 1 : Vérifier si le contenu est identique au cache
+    if (debouncedContent === cache.lastContent && cache.lastHTML !== null) {
+      // Toujours recalculer les statistiques (opération légère)
+      const statistics = calculatePlayStatistics(debouncedContent);
+      return {
+        html: cache.lastHTML,
+        structure: cache.lastStructure,
+        statistics
+      };
+    }
 
     try {
+      // Étape 2 : Parser le contenu en AST
       const ast = parser.parse(debouncedContent);
-      return extractStructure(ast);
+      const astString = JSON.stringify(ast);
+
+      // Étape 3 : Comparer l'AST avec le cache
+      const astChanged = astString !== cache.lastASTString;
+
+      let html, structure;
+
+      if (astChanged) {
+        // Étape 4 : AST changé - générer nouveau HTML et structure
+        html = astToHTML(ast);
+        structure = extractStructure(ast);
+
+        // Mettre à jour le cache
+        cache.lastAST = ast;
+        cache.lastASTString = astString;
+        cache.lastHTML = html;
+        cache.lastStructure = structure;
+      } else {
+        // Étape 5 : AST inchangé - réutiliser le cache
+        html = cache.lastHTML;
+        structure = cache.lastStructure;
+      }
+
+      // Étape 6 : Toujours recalculer les statistiques (opération légère)
+      const statistics = calculatePlayStatistics(debouncedContent);
+
+      // Mettre à jour le cache du contenu
+      cache.lastContent = debouncedContent;
+      cache.lastStatistics = statistics;
+
+      return { html, structure, statistics };
     } catch (error) {
-      console.error('Erreur lors de l\'extraction de la structure:', error);
-      return { actes: [], scenes: [], personnages: [] };
+      // Étape 7 : En cas d'erreur, retourner le cache ou valeurs par défaut
+      console.error('Erreur lors du parsing:', error);
+
+      if (cache.lastHTML !== null) {
+        return {
+          html: cache.lastHTML,
+          structure: cache.lastStructure,
+          statistics: cache.lastStatistics
+        };
+      }
+
+      return defaultValues;
     }
   }, [debouncedContent, parser]);
 
-  /**
-   * Calculer les statistiques
-   */
-  const statistics = useMemo(() => {
-    if (!debouncedContent) return null;
-
-    try {
-      return calculatePlayStatistics(debouncedContent);
-    } catch (error) {
-      console.error('Erreur lors du calcul des statistiques:', error);
-      return null;
-    }
-  }, [debouncedContent]);
+  // Extraire les valeurs individuelles pour rétrocompatibilité
+  const structure = parsedData.structure;
+  const statistics = parsedData.statistics;
+  const precomputedHTML = parsedData.html;
 
   
 
@@ -397,6 +513,7 @@ export function PlayEditor() {
                 <div className="flex-1 overflow-hidden min-h-0">
                   <PlayPreview
                     content={debouncedContent}
+                    precomputedHTML={precomputedHTML}
                     onScroll={handlePreviewScroll}
                     scrollSync={previewScrollRef}
                   />
