@@ -40,6 +40,9 @@ export async function startQueue() {
     // Démarrer PgBoss
     await boss.start();
 
+    // Créer la queue explicitement avant d'enregistrer le worker
+    await boss.createQueue('send-email');
+
     // Enregistrer le worker pour traiter les emails
     await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
       const { to, from, subject, text, html, service } = job.data;
