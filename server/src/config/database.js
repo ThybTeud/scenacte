@@ -10,8 +10,10 @@ const { Pool } = pg;
 export const pool = new Pool({
   connectionString: config.database.url,
   max: 20, // Nombre maximum de connexions
+  min: 2, // Nombre minimum de connexions maintenues (améliore les temps de réponse)
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000, // Augmenté à 5s pour plus de fiabilité
+  application_name: 'scenacte-backend', // Identifie l'application dans les logs PostgreSQL
 });
 
 /**

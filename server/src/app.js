@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/env.js';
@@ -15,6 +17,17 @@ const app = express();
 /**
  * Middlewares globaux
  */
+
+// Sécurité - Protection avec Helmet
+// Configure les headers HTTP pour sécuriser l'application
+app.use(helmet({
+  contentSecurityPolicy: false, // Désactivé pour permettre le chargement du frontend
+  crossOriginEmbedderPolicy: false // Désactivé pour la compatibilité avec le frontend
+}));
+
+// Compression - Compression gzip des réponses HTTP
+// Réduit la taille des réponses pour améliorer les performances
+app.use(compression());
 
 // CORS - Autorise les requêtes depuis le frontend
 app.use(cors({
@@ -33,7 +46,11 @@ app.use(cors({
     ];
 
     // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
+    // SÉCURITÉ: Bloquer les requêtes sans origin en production
     if (!origin) {
+      if (config.server.env === 'production') {
+        return callback(null, false);
+      }
       return callback(null, true);
     }
 
