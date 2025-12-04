@@ -5,30 +5,60 @@ import { PlayParser, astToHTML } from '../../utils/playParser';
  * Composant preview pour afficher le rendu HTML d'une pièce de théâtre
  *
  * @param {Object} props
- * @param {string} props.content - Contenu brut à parser et afficher
+ * @param {string} props.content - Contenu brut à parser et afficher (rétrocompatibilité)
+ * @param {string|null} props.precomputedHTML - HTML pré-calculé (prioritaire si fourni)
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export function PlayPreview({ content = '', onScroll, scrollSync }) {
+export function PlayPreview({ content = '', precomputedHTML = null, onScroll, scrollSync }) {
   const previewRef = useRef(null);
   const parser = useMemo(() => new PlayParser(), []);
 
+  // Cache local pour éviter de re-parser si le contenu n'a pas changé
+  const lastContentRef = useRef(null);
+  const lastHTMLRef = useRef(null);
+
   /**
-   * Parse le contenu et génère le HTML
+   * Parse le contenu et génère le HTML avec système de priorité :
+   * 1. precomputedHTML si fourni
+   * 2. Cache local si contenu identique
+   * 3. Parsing complet sinon
    */
   const htmlContent = useMemo(() => {
-    if (!content) {
+    // Contenu vide
+    if (!content && !precomputedHTML) {
       return '<div class="empty-state">Commencez à écrire pour voir le rendu...</div>';
     }
 
+    // Priorité 1 : Utiliser le HTML pré-calculé si fourni
+    if (precomputedHTML !== null && precomputedHTML !== '') {
+      // Mettre à jour le cache
+      lastContentRef.current = content;
+      lastHTMLRef.current = precomputedHTML;
+      return precomputedHTML;
+    }
+
+    // Priorité 2 : Utiliser le cache local si le contenu n'a pas changé
+    if (content === lastContentRef.current && lastHTMLRef.current !== null) {
+      return lastHTMLRef.current;
+    }
+
+    // Priorité 3 : Parser le contenu et mettre en cache
     try {
       const ast = parser.parse(content);
-      return astToHTML(ast);
+      const html = astToHTML(ast);
+
+      // Mettre en cache
+      lastContentRef.current = content;
+      lastHTMLRef.current = html;
+
+      return html;
     } catch (error) {
+      // Fallback : En cas d'erreur, retourner message d'erreur
       console.error('Erreur lors du parsing:', error);
       return '<div class="error-state">Erreur lors du rendu du contenu</div>';
     }
-  }, [content, parser]);
+  }, [content, precomputedHTML, parser]);
 
   /**
    * Gère le scroll du preview
@@ -49,8 +79,9 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
 
     const previewElement = previewRef.current;
     if (previewElement) {
-      previewElement.addEventListener('scroll', handleScroll);
-      return () => previewElement.removeEventListener('scroll', handleScroll);
+      // { passive: true } pour optimiser les performances du scroll (navigateur)
+      previewElement.addEventListener('scroll', handleScroll, { passive: true });
+      return () => previewElement.removeEventListener('scroll', handleScroll, { passive: true });
     }
   }, [onScroll]);
 
