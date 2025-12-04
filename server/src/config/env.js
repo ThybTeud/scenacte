@@ -1,87 +1,115 @@
-import dotenv from 'dotenv';
+import { cleanEnv, str, port, url, email } from 'envalid';
 
-dotenv.config();
-
-// Validation des variables d'environnement critiques
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_SECRET'
-];
-
-// Variables d'email optionnelles (le serveur peut démarrer sans elles)
-const optionalEmailVars = [
-  'SENDGRID_API_KEY',   // Prioritaire : API SendGrid (recommandé pour Render.com)
-  'EMAIL_FROM',         // Adresse email d'expédition
-  'SMTP_HOST',          // Fallback : serveur SMTP
-  'SMTP_PORT',          // Port SMTP (2525 recommandé sur Render.com free tier)
-  'SMTP_USER',
-  'SMTP_PASSWORD'
-];
-
-// Vérifier les variables obligatoires
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Variable d'environnement manquante : ${envVar}`);
-  }
-}
-
-// Vérifier la configuration email (non-bloquant)
-const hasSendGrid = !!process.env.SENDGRID_API_KEY;
-const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD;
-
-if (!hasSendGrid && !hasSmtp) {
-  console.warn('⚠️  Aucun service d\'email configuré');
-  console.warn('⚠️  Configurez SENDGRID_API_KEY (recommandé) ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
-  console.warn('⚠️  Les fonctionnalités d\'email seront désactivées');
-} else if (hasSendGrid) {
-  console.log('✓ Service d\'email : SendGrid (API HTTP)');
-} else if (hasSmtp) {
-  console.log(`✓ Service d\'email : SMTP (${process.env.SMTP_HOST}:${process.env.SMTP_PORT || '2525'})`);
-}
-
-export const config = {
+/**
+ * Validation stricte des variables d'environnement avec envalid
+ * Le serveur crash immédiatement si une variable est invalide ou manquante
+ */
+const env = cleanEnv(process.env, {
   // Database
-  database: {
-    url: process.env.DATABASE_URL
-  },
+  DATABASE_URL: url({
+    desc: 'PostgreSQL connection string',
+    example: 'postgresql://user:password@localhost:5432/scenacte'
+  }),
 
   // JWT
-  jwt: {
-    secret: process.env.JWT_SECRET,
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-  },
+  JWT_SECRET: str({
+    desc: 'Secret key for JWT signing (min 32 characters)',
+    minLength: 32
+  }),
+  JWT_EXPIRES_IN: str({
+    desc: 'JWT expiration duration',
+    default: '7d'
+  }),
 
-  // Email (SendGrid ou SMTP)
-  email: {
-    // SendGrid (prioritaire)
-    sendgridApiKey: process.env.SENDGRID_API_KEY || '',
-    // Adresse d'expédition
-    from: process.env.EMAIL_FROM || process.env.SMTP_FROM || 'noreply@scenacte.com'
-  },
+  // Email configuration
+  SENDGRID_API_KEY: str({
+    desc: 'SendGrid API key (optional)',
+    default: ''
+  }),
+  EMAIL_FROM: email({
+    desc: 'Sender email address',
+    default: 'noreply@scenacte.com'
+  }),
 
-  // SMTP (fallback si SendGrid n'est pas configuré)
-  smtp: {
-    host: process.env.SMTP_HOST || '',
-    port: parseInt(process.env.SMTP_PORT, 10) || 2525, // 2525 par défaut (compatible Render free tier)
-    user: process.env.SMTP_USER || '',
-    password: process.env.SMTP_PASSWORD || ''
-  },
+  // SMTP configuration (fallback)
+  SMTP_HOST: str({
+    desc: 'SMTP server host',
+    default: ''
+  }),
+  SMTP_PORT: str({
+    desc: 'SMTP server port',
+    default: '2525'
+  }),
+  SMTP_USER: str({
+    desc: 'SMTP username',
+    default: ''
+  }),
+  SMTP_PASSWORD: str({
+    desc: 'SMTP password',
+    default: ''
+  }),
 
   // Server
-  server: {
-    port: parseInt(process.env.PORT, 10) || 3000,
-    env: process.env.NODE_ENV || 'development'
-  },
+  NODE_ENV: str({
+    desc: 'Node environment',
+    choices: ['development', 'production', 'test'],
+    default: 'development'
+  }),
+  PORT: port({
+    desc: 'Server port',
+    default: 3000
+  }),
 
   // Client
-  client: {
-    // Normaliser l'URL en retirant le trailing slash pour éviter les problèmes CORS
-    url: (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
-  },
+  CLIENT_URL: url({
+    desc: 'Frontend URL for CORS',
+    example: 'http://localhost:5173'
+  }),
 
   // Limits
+  MAX_CONTENT_SIZE_MB: str({
+    desc: 'Maximum content size in MB',
+    default: '10'
+  })
+});
+
+/**
+ * Configuration exportée avec la même structure que l'ancienne version
+ * Pour maintenir la compatibilité avec le code existant
+ */
+export const config = {
+  database: {
+    url: env.DATABASE_URL
+  },
+
+  jwt: {
+    secret: env.JWT_SECRET,
+    expiresIn: env.JWT_EXPIRES_IN
+  },
+
+  email: {
+    sendgridApiKey: env.SENDGRID_API_KEY,
+    from: env.EMAIL_FROM
+  },
+
+  smtp: {
+    host: env.SMTP_HOST,
+    port: parseInt(env.SMTP_PORT, 10),
+    user: env.SMTP_USER,
+    password: env.SMTP_PASSWORD
+  },
+
+  server: {
+    port: env.PORT,
+    env: env.NODE_ENV
+  },
+
+  client: {
+    url: env.CLIENT_URL.replace(/\/$/, '') // Retirer le trailing slash
+  },
+
   limits: {
-    maxContentSizeMB: parseInt(process.env.MAX_CONTENT_SIZE_MB, 10) || 10,
-    maxContentSizeBytes: (parseInt(process.env.MAX_CONTENT_SIZE_MB, 10) || 10) * 1024 * 1024
+    maxContentSizeMB: parseInt(env.MAX_CONTENT_SIZE_MB, 10),
+    maxContentSizeBytes: parseInt(env.MAX_CONTENT_SIZE_MB, 10) * 1024 * 1024
   }
 };

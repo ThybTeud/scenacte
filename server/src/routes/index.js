@@ -5,16 +5,20 @@ import playsRoutes from './plays.routes.js';
 import versionsRoutes from './versions.routes.js';
 import templatesRoutes from './templates.routes.js';
 import exportRoutes from './export.routes.js';
+import { testConnection } from '../config/database.js';
 
 const router = express.Router();
 
 /**
- * Route de santé (health check)
+ * Route de santé (health check) avec vérification de la base de données
  * GET /api/health
  */
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
+router.get('/health', async (req, res) => {
+  const dbOk = await testConnection();
+
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
+    database: dbOk,
     timestamp: new Date().toISOString(),
     service: 'Scenacte API'
   });

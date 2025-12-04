@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "psql $DATABASE_URL -f migrations/init.sql"
+    "db:migrate": "psql $DATABASE_URL -f migrations/init.sql",
+    "test": "NODE_ENV=test jest --runInBand",
+    "test:watch": "NODE_ENV=test jest --watch --runInBand",
+    "test:coverage": "NODE_ENV=test jest --coverage --runInBand"
   },
   "keywords": [
     "theatre",
@@ -22,6 +25,7 @@
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "envalid": "^8.1.1",
     "express": "^4.21.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
@@ -36,7 +40,10 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "@faker-js/faker": "^10.1.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.7",
+    "supertest": "^7.1.4"
   },
   "engines": {
     "node": ">=18.0.0"
