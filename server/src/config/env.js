@@ -23,9 +23,16 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 if (result.error) {
-  console.error('[ERROR] Failed to load .env file from:', envPath);
-  console.error('[ERROR]', result.error);
-  throw result.error;
+  // En production (Render), le fichier .env n'existe pas car les variables
+  // sont configurées via l'interface web - c'est normal, on continue
+  if (result.error.code === 'ENOENT') {
+    console.log('[INFO] No .env file found, using system environment variables');
+  } else {
+    // Autres erreurs (permissions, etc.) sont des vrais problèmes
+    console.error('[ERROR] Failed to load .env file from:', envPath);
+    console.error('[ERROR]', result.error);
+    throw result.error;
+  }
 }
 
 /**
