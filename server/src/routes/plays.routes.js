@@ -1,13 +1,15 @@
 import express from 'express';
-import { 
-  listPlays, 
-  createPlay, 
-  getPlay, 
-  savePlay, 
+import {
+  listPlays,
+  createPlay,
+  getPlay,
+  savePlay,
   deletePlay,
-  updatePlayStatus 
+  updatePlayStatus
 } from '../controllers/plays.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { validateBody } from '../middleware/validate.js';
+import { createPlaySchema, updatePlaySchema, updateStatusSchema } from '../schemas/play.schema.js';
 
 const router = express.Router();
 
@@ -27,8 +29,9 @@ router.get('/', listPlays);
  * Créer une nouvelle pièce
  * Body: { title, subtitle?, rawContent?, htmlContent?, statistics? }
  * Requiert: Authorization header avec Bearer token
+ * Validation: createPlaySchema
  */
-router.post('/', createPlay);
+router.post('/', validateBody(createPlaySchema), createPlay);
 
 /**
  * GET /api/plays/:id
@@ -42,8 +45,9 @@ router.get('/:id', getPlay);
  * Sauvegarder (mettre à jour) une pièce et créer une version
  * Body: { title, subtitle?, rawContent, htmlContent, statistics, versionType?, manualLabel? }
  * Requiert: Authorization header avec Bearer token
+ * Validation: updatePlaySchema
  */
-router.put('/:id', savePlay);
+router.put('/:id', validateBody(updatePlaySchema), savePlay);
 
 /**
  * DELETE /api/plays/:id
@@ -57,7 +61,8 @@ router.delete('/:id', deletePlay);
  * Changer le statut d'une pièce (draft, completed, archived)
  * Body: { status }
  * Requiert: Authorization header avec Bearer token
+ * Validation: updateStatusSchema
  */
-router.patch('/:id/status', updatePlayStatus);
+router.patch('/:id/status', validateBody(updateStatusSchema), updatePlayStatus);
 
 export default router;

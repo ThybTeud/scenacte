@@ -65,6 +65,8 @@ cd server
 psql -U scenacte_user -d scenacte_db -f migrations/init.sql
 ```
 
+> **Note** : pg-boss crée automatiquement ses tables (préfixées `pgboss_*`) au premier démarrage pour gérer la queue d'emails de manière fiable avec retry automatique.
+
 #### 3. Configuration du serveur
 
 ```bash
