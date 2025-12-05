@@ -91,7 +91,7 @@ export function PlayEditor() {
       // Préparer les données pour la sauvegarde
       const saveData = {
         title: play.title,
-        subtitle: play.subtitle || null,
+        subtitle: play.subtitle || undefined,
         rawContent: content,
         htmlContent: htmlContent,
         statistics: statistics
