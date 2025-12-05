@@ -25,165 +25,36 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
 
   /**
    * Crée l'extension personnalisée pour les balises théâtrales
-   * Optimisé avec cache de décorations par ligne et mise à jour incrémentale
    */
   const createPlayExtension = useCallback(() => {
-    // ViewPlugin avec cache de décorations par ligne
+    // ViewPlugin qui construit des décorations de ligne basées sur des regex simples
     const lineHighlighter = ViewPlugin.fromClass(class {
       constructor(view) {
-        // Cache des décorations par numéro de ligne
-        this.lineCache = new Map();
         this.decorations = this.buildDeco(view);
       }
-
-      /**
-       * Détermine la décoration d'une ligne selon son premier caractère
-       * Optimisé avec test préliminaire sur le premier caractère
-       * @param {string} text - Texte de la ligne
-       * @returns {Decoration|null} - Décoration ou null
-       */
-      getLineDecoration(text) {
-        if (!text || text.length === 0) return null;
-
-        // Test préliminaire rapide sur le premier caractère
-        const firstChar = text[0];
-
-        if (firstChar === '#') {
-          // Scène (##) a priorité sur acte (#)
-          if (text.startsWith('##')) {
-            return Decoration.line({ class: 'cm-scene' });
-          }
-          return Decoration.line({ class: 'cm-act' });
-        }
-
-        if (firstChar === '@') {
-          return Decoration.line({ class: 'cm-character' });
-        }
-
-        if (firstChar === '(' && text.endsWith(')')) {
-          return Decoration.line({ class: 'cm-didascalie' });
-        }
-
-        return null;
-      }
-
-      /**
-       * Compte le nombre de lignes modifiées
-       * @param {ViewUpdate} update
-       * @returns {Set<number>} - Set des numéros de lignes modifiées
-       */
-      getChangedLines(update) {
-        const changedLines = new Set();
-        update.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
-          // Lignes affectées dans le nouveau document
-          const startLine = update.state.doc.lineAt(fromB).number;
-          const endLine = update.state.doc.lineAt(Math.min(toB, update.state.doc.length)).number;
-          for (let i = startLine; i <= endLine; i++) {
-            changedLines.add(i);
-          }
-        });
-        return changedLines;
-      }
-
-      /**
-       * Mise à jour incrémentale des décorations (pour petits changements)
-       * @param {ViewUpdate} update
-       */
-      updateIncrementally(update) {
-        const view = update.view;
-        const changedLines = this.getChangedLines(update);
-        const builder = new RangeSetBuilder();
-        const { from, to } = view.viewport;
-        let pos = from;
-
-        while (pos <= to) {
-          const line = view.state.doc.lineAt(pos);
-          const lineNum = line.number;
-
-          let decoration;
-
-          if (changedLines.has(lineNum)) {
-            // Ligne modifiée : invalider le cache et recalculer
-            this.lineCache.delete(lineNum);
-            decoration = this.getLineDecoration(line.text);
-            if (decoration !== null) {
-              this.lineCache.set(lineNum, decoration);
-            }
-          } else if (this.lineCache.has(lineNum)) {
-            // Ligne non modifiée avec cache valide
-            decoration = this.lineCache.get(lineNum);
-          } else {
-            // Ligne non modifiée sans cache : calculer et mettre en cache
-            decoration = this.getLineDecoration(line.text);
-            if (decoration !== null) {
-              this.lineCache.set(lineNum, decoration);
-            }
-          }
-
-          if (decoration) {
-            builder.add(line.from, line.from, decoration);
-          }
-
-          pos = line.to + 1;
-        }
-
-        return builder.finish();
-      }
-
       update(update) {
-        const docChanged = update.docChanged;
-        const viewportChanged = update.viewportChanged;
-
-        // Rien ne change : ne rien faire
-        if (!docChanged && !viewportChanged) {
-          return;
-        }
-
-        if (docChanged) {
-          const changedLines = this.getChangedLines(update);
-
-          if (changedLines.size <= 5) {
-            // Petit changement : mise à jour incrémentale
-            this.decorations = this.updateIncrementally(update);
-          } else {
-            // Gros changement : rebuild complet (mais garder le cache utile)
-            this.decorations = this.buildDeco(update.view);
-          }
-        } else if (viewportChanged) {
-          // Scroll seulement : rebuild mais garder le cache
+        if (update.docChanged || update.viewportChanged) {
           this.decorations = this.buildDeco(update.view);
         }
       }
-
       buildDeco(view) {
         const builder = new RangeSetBuilder();
-        const { from, to } = view.viewport;
+        const { from, to } = view.viewport; // visible range for performance
         let pos = from;
-
         while (pos <= to) {
           const line = view.state.doc.lineAt(pos);
-          const lineNum = line.number;
-
-          let decoration;
-
-          // Utiliser le cache si disponible
-          if (this.lineCache.has(lineNum)) {
-            decoration = this.lineCache.get(lineNum);
-          } else {
-            // Calculer et mettre en cache
-            decoration = this.getLineDecoration(line.text);
-            if (decoration !== null) {
-              this.lineCache.set(lineNum, decoration);
-            }
+          const text = line.text;
+          if (/^##\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-scene' }));
+          } else if (/^#(?!#)\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-act' }));
+          } else if (/^@\s*/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-character' }));
+          } else if (/^\([^\)]*\)\s*$/.test(text)) {
+            builder.add(line.from, line.from, Decoration.line({ class: 'cm-didascalie' }));
           }
-
-          if (decoration) {
-            builder.add(line.from, line.from, decoration);
-          }
-
           pos = line.to + 1;
         }
-
         return builder.finish();
       }
     }, { decorations: v => v.decorations });

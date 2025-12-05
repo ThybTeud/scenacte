@@ -13,7 +13,8 @@ export function Header() {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="flex items-center justify-between py-4 px-6">
+      <div className="container-custom py-4">
+        <div className="flex items-center justify-between">
           {/* Logo à gauche */}
           <Link to="/plays" className="flex items-center space-x-2">
             <h1 className="text-2xl font-bold text-primary">#SCENACTE</h1>
@@ -22,24 +23,27 @@ export function Header() {
           {/* Navigation à droite */}
           {isAuthenticated && (
             <div className="flex items-center space-x-6">
+              {/* Lien Bibliothèque */}
+              <Link
+                to="/plays"
+                className="text-gray-700 hover:text-primary font-medium transition-colors"
+              >
+                Bibliothèque
+              </Link>
+
               {/* Dropdown Profil */}
               <Dropdown
                 trigger={
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors cursor-pointer">
+                  <button className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors">
                     <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-medium">
                       {user?.username?.charAt(0).toUpperCase()}
                     </div>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
                 }
               >
-                <DropdownItem
-                  onClick={() => navigate('/plays')}
-                  icon={
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library-big-icon lucide-library-big"><rect width="8" height="18" x="3" y="3" rx="1"/><path d="M7 3v18"/><path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z"/></svg>
-                  }
-                >
-                  Bibliothèque
-                </DropdownItem>
                 <DropdownItem
                   onClick={() => navigate('/profile')}
                   icon={
@@ -76,6 +80,7 @@ export function Header() {
             </div>
           )}
         </div>
+      </div>
     </header>
   );
 }
