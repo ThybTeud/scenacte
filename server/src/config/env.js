@@ -1,11 +1,20 @@
 import { cleanEnv, str, port, url, email } from 'envalid';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+/**
+ * Obtenir le répertoire racine du serveur (server/)
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const serverRoot = join(__dirname, '..', '..');
 
 /**
  * Charger le bon fichier .env selon l'environnement
  */
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: envFile });
+dotenv.config({ path: join(serverRoot, envFile) });
 
 /**
  * Validation stricte des variables d'environnement avec envalid
