@@ -34,12 +34,6 @@ const TAG_PATTERNS = {
   didascalie: /^\(\s*(.+?)\s*\)$/i
 };
 
-// Regex pré-compilé au niveau module pour les didascalies inline (flag g)
-const INLINE_DIDASCALIE_REGEX = /\(([^)]+)\)/g;
-
-// Element DOM réutilisable pour escapeHTML (côté client uniquement)
-const tempDiv = typeof document !== 'undefined' ? document.createElement('div') : null;
-
 /**
  * Classe représentant un nœud de l'AST
  */
@@ -79,7 +73,6 @@ export class PlayParser {
 
   /**
    * Parse le texte et retourne l'AST
-   * Optimisé avec test préliminaire sur le premier caractère
    * @param {string} text - Texte brut à parser
    * @returns {ASTNode} - Nœud racine de l'AST
    */
@@ -95,66 +88,49 @@ export class PlayParser {
       const line = lines[i];
       const trimmedLine = line.trim();
 
-      // 1. Ignorer les lignes vides
       if (!trimmedLine) {
+        continue; // Ignorer les lignes vides
+      }
+
+      // Vérifier acte (#)
+      const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
+      if (acteMatch) {
+        const number = acteMatch[1] || '1';
+        const node = new ASTNode(NodeType.ACTE, null, { number });
+        node.position = { start: i, end: i };
+        node.value = acteMatch[1].trim();
+        root.addChild(node);
+        currentSpeaker = null;
         continue;
       }
 
-      // 2. Test préliminaire rapide sur le premier caractère
-      const firstChar = trimmedLine[0];
-
-      // 3. Si '#' : tester d'abord scène (##), puis acte (#)
-      if (firstChar === '#') {
-        // Scène (##) a priorité sur acte (#)
-        const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
-        if (sceneMatch) {
-          const number = sceneMatch[1] || '1';
-          const node = new ASTNode(NodeType.SCENE, null, { number });
-          node.position = { start: i, end: i };
-          node.value = sceneMatch[1].trim();
-          root.addChild(node);
-          currentSpeaker = null;
-          continue;
-        }
-
-        // Acte (#)
-        const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
-        if (acteMatch) {
-          const number = acteMatch[1] || '1';
-          const node = new ASTNode(NodeType.ACTE, null, { number });
-          node.position = { start: i, end: i };
-          node.value = acteMatch[1].trim();
-          root.addChild(node);
-          currentSpeaker = null;
-          continue;
-        }
+      // Vérifier scène (##)
+      const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
+      if (sceneMatch) {
+        const number = sceneMatch[1] || '1';
+        const node = new ASTNode(NodeType.SCENE, null, { number });
+        node.position = { start: i, end: i };
+        node.value = sceneMatch[1].trim();
+        root.addChild(node);
+        currentSpeaker = null;
+        continue;
       }
 
-      // 4. Si '@' : tester personnage
-      if (firstChar === '@') {
-        const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
-        if (personnageMatch) {
-          const name = personnageMatch[1].trim().toUpperCase();
-          currentSpeaker = name;
-          const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
-          node.position = { start: i, end: i };
-          root.addChild(node);
-          continue;
-        }
+      // Vérifier personnage (@)
+      const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
+      if (personnageMatch) {
+        const name = personnageMatch[1].trim().toUpperCase();
+        currentSpeaker = name;
+        const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
+        node.position = { start: i, end: i };
+        root.addChild(node);
+        continue;
       }
 
-      // 5. NOUVEAU : Si '(' et fin par ')' : tester didascalie seule (ligne entière)
-      if (firstChar === '(' && trimmedLine.endsWith(')')) {
-        const didascalieMatch = TAG_PATTERNS.didascalie.exec(trimmedLine);
-        if (didascalieMatch) {
-          const node = new ASTNode(NodeType.DIDASCALIE, didascalieMatch[1].trim());
-          node.position = { start: i, end: i };
-          root.addChild(node);
-          continue;
-        }
-      }
-
-      // 6. Sinon : parser la ligne normalement avec parseLine()
+      /*
+      J'ai l'impression qu'il manque le parsing de didascalies ici. 
+      */
+      // Parser la ligne pour les didascalies et le dialogue
       const parsedLine = this.parseLine(trimmedLine, currentSpeaker, i);
       parsedLine.forEach(node => root.addChild(node));
     }
@@ -172,14 +148,12 @@ export class PlayParser {
   parseLine(line, speaker, lineNumber) {
     const nodes = [];
     let lastIndex = 0;
+    const didascalieRegex = /\(([^)]+)\)/g;
     let match;
-
-    // IMPORTANT : Réinitialiser lastIndex avant utilisation (flag g garde l'état)
-    INLINE_DIDASCALIE_REGEX.lastIndex = 0;
 
     // Extraire toutes les didascalies
     const didascalies = [];
-    while ((match = INLINE_DIDASCALIE_REGEX.exec(line)) !== null) {
+    while ((match = didascalieRegex.exec(line)) !== null) {
       didascalies.push({
         text: match[1].trim(),
         start: match.index,
@@ -249,7 +223,6 @@ export class PlayParser {
 
 /**
  * Convertit l'AST en HTML pour le rendu
- * Optimisé avec construction par tableau (plus performant que concaténation)
  * @param {ASTNode} ast - Nœud racine de l'AST
  * @returns {string} - HTML généré
  */
@@ -258,68 +231,46 @@ export function astToHTML(ast) {
     return '';
   }
 
-  const htmlParts = [];
-
   const renderNode = (node) => {
     switch (node.type) {
       case NodeType.ROOT:
-        htmlParts.push('<div class="play-root">');
-        node.children.forEach(renderNode);
-        htmlParts.push('</div>');
-        break;
+        return `<div class="play-root">${node.children.map(renderNode).join('')}</div>`;
 
       case NodeType.ACTE:
-        htmlParts.push(`<h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>`);
-        break;
+        return `<h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>`;
 
       case NodeType.SCENE:
-        htmlParts.push(`<h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>`);
-        break;
+        return `<h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>`;
 
       case NodeType.PERSONNAGE:
-        htmlParts.push(`<h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>`);
-        break;
+        return `<h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>`;
 
       case NodeType.DIDASCALIE:
-        htmlParts.push(`<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`);
-        break;
+        return `<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`;
 
       case NodeType.DIALOGUE:
-        htmlParts.push(`<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`);
-        break;
+        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`;
 
       case NodeType.TEXT:
-        htmlParts.push(`<p class="text">${escapeHTML(node.value)}</p>`);
-        break;
+        return `<p class="text">${escapeHTML(node.value)}</p>`;
+
+      default:
+        return '';
     }
   };
 
-  renderNode(ast);
-  return htmlParts.join('');
+  return renderNode(ast);
 }
 
 /**
  * Échappe les caractères HTML
- * Optimisé avec réutilisation d'un élément DOM (côté client) ou fallback manuel (SSR)
  * @param {string} text - Texte à échapper
  * @returns {string} - Texte échappé
  */
 function escapeHTML(text) {
-  if (text === null || text === undefined) return '';
-
-  // Utiliser le tempDiv pré-créé si disponible (côté client)
-  if (tempDiv) {
-    tempDiv.textContent = text;
-    return tempDiv.innerHTML;
-  }
-
-  // Fallback pour environnement serveur (SSR) ou si document non disponible
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**
@@ -373,8 +324,7 @@ export function extractStructure(ast) {
 
   return {
     ...structure,
-    // Trier les personnages par ordre alphabétique
-    personnages: Array.from(structure.personnages).sort()
+    personnages: Array.from(structure.personnages)
   };
 }
 
