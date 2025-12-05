@@ -14,7 +14,19 @@ const serverRoot = join(__dirname, '..', '..');
  * Charger le bon fichier .env selon l'environnement
  */
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: join(serverRoot, envFile) });
+const envPath = join(serverRoot, envFile);
+const result = dotenv.config({ path: envPath });
+
+// En mode développement, afficher le chemin chargé pour debug
+if (process.env.NODE_ENV === 'development') {
+  console.log('[ENV] Loaded environment from:', envPath);
+}
+
+if (result.error) {
+  console.error('[ERROR] Failed to load .env file from:', envPath);
+  console.error('[ERROR]', result.error);
+  throw result.error;
+}
 
 /**
  * Validation stricte des variables d'environnement avec envalid
