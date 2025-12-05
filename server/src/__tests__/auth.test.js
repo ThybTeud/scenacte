@@ -3,6 +3,21 @@ import { faker } from '@faker-js/faker';
 import app from '../app.js';
 import { pool } from '../config/database.js';
 
+/**
+ * Helper pour générer un nom d'utilisateur valide
+ * Conforme au regex: /^[a-zA-Z0-9_+-]+$/
+ */
+function generateValidUsername() {
+  // Générer un nom d'utilisateur aléatoire avec seulement des caractères autorisés
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_+-';
+  let username = '';
+  const length = faker.number.int({ min: 3, max: 20 });
+  for (let i = 0; i < length; i++) {
+    username += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return username;
+}
+
 // Helper pour nettoyer la base de données après chaque test
 afterEach(async () => {
   await pool.query('DELETE FROM users WHERE email LIKE $1', ['test_%']);
@@ -12,7 +27,7 @@ describe('POST /api/auth/register', () => {
   it('devrait créer un nouvel utilisateur', async () => {
     const userData = {
       email: `test_${faker.internet.email()}`,
-      username: faker.internet.username(),
+      username: generateValidUsername(),
       password: faker.internet.password({ length: 12 })
     };
 
@@ -31,7 +46,7 @@ describe('POST /api/auth/register', () => {
   it('devrait rejeter un email dupliqué', async () => {
     const userData = {
       email: `test_${faker.internet.email()}`,
-      username: faker.internet.username(),
+      username: generateValidUsername(),
       password: faker.internet.password({ length: 12 })
     };
 
@@ -46,7 +61,7 @@ describe('POST /api/auth/register', () => {
       .post('/api/auth/register')
       .send({
         ...userData,
-        username: faker.internet.username() // Username différent
+        username: generateValidUsername() // Username différent
       })
       .expect(400);
 
@@ -57,7 +72,7 @@ describe('POST /api/auth/register', () => {
   it('devrait rejeter un mot de passe trop court', async () => {
     const userData = {
       email: `test_${faker.internet.email()}`,
-      username: faker.internet.username(),
+      username: generateValidUsername(),
       password: '1234567' // 7 caractères (min: 8)
     };
 
@@ -75,7 +90,7 @@ describe('POST /api/auth/login', () => {
   it('devrait connecter un utilisateur avec des identifiants valides', async () => {
     const userData = {
       email: `test_${faker.internet.email()}`,
-      username: faker.internet.username(),
+      username: generateValidUsername(),
       password: faker.internet.password({ length: 12 })
     };
 
@@ -101,7 +116,7 @@ describe('POST /api/auth/login', () => {
   it('devrait rejeter un mauvais mot de passe', async () => {
     const userData = {
       email: `test_${faker.internet.email()}`,
-      username: faker.internet.username(),
+      username: generateValidUsername(),
       password: faker.internet.password({ length: 12 })
     };
 

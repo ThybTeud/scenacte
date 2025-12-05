@@ -2,15 +2,15 @@ import { z } from 'zod';
 
 /**
  * Schéma pour les statistiques d'une pièce
+ * Doit correspondre aux champs attendus par le contrôleur et la base de données
  */
 const statisticsSchema = z.object({
-  characterCount: z.number().int().nonnegative(),
-  wordCount: z.number().int().nonnegative(),
-  lineCount: z.number().int().nonnegative(),
-  sceneCount: z.number().int().nonnegative(),
-  actCount: z.number().int().nonnegative(),
-  pageCount: z.number().int().nonnegative(),
-  speakingCharacterCount: z.number().int().nonnegative()
+  totalActs: z.number().int().nonnegative('Le nombre d\'actes doit être >= 0'),
+  totalScenes: z.number().int().nonnegative('Le nombre de scènes doit être >= 0'),
+  totalCharacters: z.number().int().nonnegative('Le nombre de personnages doit être >= 0'),
+  totalLines: z.number().int().nonnegative('Le nombre de lignes doit être >= 0'),
+  wordCount: z.number().int().nonnegative('Le nombre de mots doit être >= 0'),
+  estimatedDurationMinutes: z.number().int().nonnegative('La durée estimée doit être >= 0')
 });
 
 /**
@@ -20,7 +20,10 @@ export const createPlaySchema = z.object({
   title: z
     .string({ required_error: 'Le titre est requis' })
     .min(1, 'Le titre ne peut pas être vide')
-    .max(255, 'Le titre ne peut pas dépasser 255 caractères'),
+    .max(255, 'Le titre ne peut pas dépasser 255 caractères')
+    .refine((val) => val && val.trim().length > 0, {
+      message: 'Le titre est requis et ne peut pas être vide'
+    }),
 
   subtitle: z
     .string()

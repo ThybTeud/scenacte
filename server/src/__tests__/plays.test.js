@@ -4,12 +4,26 @@ import app from '../app.js';
 import { pool } from '../config/database.js';
 
 /**
+ * Helper pour générer un nom d'utilisateur valide
+ * Conforme au regex: /^[a-zA-Z0-9_+-]+$/
+ */
+function generateValidUsername() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_+-';
+  let username = '';
+  const length = faker.number.int({ min: 3, max: 20 });
+  for (let i = 0; i < length; i++) {
+    username += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return username;
+}
+
+/**
  * Helper pour créer un utilisateur et récupérer son token
  */
 async function createUserAndGetToken() {
   const userData = {
     email: `test_${faker.internet.email()}`,
-    username: faker.internet.username(),
+    username: generateValidUsername(),
     password: faker.internet.password({ length: 12 })
   };
 
@@ -34,13 +48,12 @@ function createPlayData() {
     rawContent: faker.lorem.paragraphs(3),
     htmlContent: `<p>${faker.lorem.paragraphs(3)}</p>`,
     statistics: {
-      characterCount: 150,
-      wordCount: 50,
-      lineCount: 10,
-      sceneCount: 2,
-      actCount: 1,
-      pageCount: 1,
-      speakingCharacterCount: 3
+      totalActs: 1,
+      totalScenes: 2,
+      totalCharacters: 3,
+      totalLines: 50,
+      wordCount: 150,
+      estimatedDurationMinutes: 30
     }
   };
 }
