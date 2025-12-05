@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import routes from './routes/index.js';
 
 // Pour obtenir __dirname en ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -97,54 +98,66 @@ if (config.server.env === 'development') {
  */
 
 /**
- * Servir le frontend en production
- *
- * Note: Sur des plateformes comme Render, le frontend et le backend sont souvent
- * déployés séparément. Cette section ne sert que pour des déploiements monolithiques
- * (par exemple sur AlwaysData ou un VPS).
- *
- * Pour activer le service du frontend depuis le backend, définissez la variable
- * d'environnement SERVE_FRONTEND=true
- */
-if (config.server.env === 'production' && process.env.SERVE_FRONTEND === 'true') {
-  // Chemin vers le dossier de build Vite (depuis server/src/)
-  const buildPath = path.join(__dirname, '../../client/dist');
-
-  console.log('[STATIC] Serving frontend from:', buildPath);
-
-  // Servir les fichiers statiques
-  app.use(express.static(buildPath));
-
-  // Toutes les routes non-API redirigent vers index.html (pour React Router)
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-  });
-} else if (config.server.env === 'production') {
-  console.log('[STATIC] Frontend serving disabled (backend-only mode)');
-  console.log('[STATIC] Set SERVE_FRONTEND=true to enable static file serving');
-}
-
-/**
- * Gestion des erreurs (uniquement pour les routes API en production)
- */
-if (config.server.env !== 'production') {
-  // Route non trouvée (404) - en dev seulement
-  app.use(notFoundHandler);
-}
-
-// Gestionnaire d'erreurs global
-app.use(errorHandler);
-
-/**
  * Enregistre les routes API
  * Appelé depuis server.js après le démarrage de la queue d'emails
- * Ceci évite les dépendances circulaires avec email.service.js qui utilise la queue
+ * En mode test, les routes sont chargées directement au démarrage
  */
 export function registerRoutes() {
-  // Import dynamique des routes pour éviter l'initialisation avant la queue
-  import('./routes/index.js').then(({ default: routes }) => {
-    app.use('/api', routes);
-  });
+  // Les routes sont déjà importées, on les monte simplement
+  app.use('/api', routes);
+
+  // Les gestionnaires d'erreurs doivent être enregistrés APRÈS les routes
+  registerErrorHandlers();
+}
+
+/**
+ * Enregistre les gestionnaires d'erreurs
+ * Doit être appelé APRÈS les routes pour que Express les trouve
+ */
+function registerErrorHandlers() {
+  /**
+   * Servir le frontend en production
+   *
+   * Note: Sur des plateformes comme Render, le frontend et le backend sont souvent
+   * déployés séparément. Cette section ne sert que pour des déploiements monolithiques
+   * (par exemple sur AlwaysData ou un VPS).
+   *
+   * Pour activer le service du frontend depuis le backend, définissez la variable
+   * d'environnement SERVE_FRONTEND=true
+   */
+  if (config.server.env === 'production' && process.env.SERVE_FRONTEND === 'true') {
+    // Chemin vers le dossier de build Vite (depuis server/src/)
+    const buildPath = path.join(__dirname, '../../client/dist');
+
+    console.log('[STATIC] Serving frontend from:', buildPath);
+
+    // Servir les fichiers statiques
+    app.use(express.static(buildPath));
+
+    // Toutes les routes non-API redirigent vers index.html (pour React Router)
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(buildPath, 'index.html'));
+    });
+  } else if (config.server.env === 'production') {
+    console.log('[STATIC] Frontend serving disabled (backend-only mode)');
+    console.log('[STATIC] Set SERVE_FRONTEND=true to enable static file serving');
+  }
+
+  /**
+   * Gestion des erreurs (uniquement pour les routes API en production)
+   */
+  if (config.server.env !== 'production') {
+    // Route non trouvée (404) - en dev seulement
+    app.use(notFoundHandler);
+  }
+
+  // Gestionnaire d'erreurs global
+  app.use(errorHandler);
+}
+
+// En mode test, charger les routes immédiatement
+if (config.server.env === 'test') {
+  registerRoutes();
 }
 
 export default app;

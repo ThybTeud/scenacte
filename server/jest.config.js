@@ -4,4 +4,5 @@ export default {
   transform: {},
   collectCoverageFrom: ['src/**/*.js'],
   coveragePathIgnorePatterns: ['/node_modules/', '/__tests__/'],
+  globalTeardown: './src/__tests__/teardown.js'
 };

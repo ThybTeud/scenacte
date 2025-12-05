@@ -1,4 +1,11 @@
 import { cleanEnv, str, port, url, email } from 'envalid';
+import dotenv from 'dotenv';
+
+/**
+ * Charger le bon fichier .env selon l'environnement
+ */
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv.config({ path: envFile });
 
 /**
  * Validation stricte des variables d'environnement avec envalid

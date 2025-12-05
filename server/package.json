@@ -8,9 +8,9 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "db:migrate": "psql $DATABASE_URL -f migrations/init.sql",
-    "test": "NODE_ENV=test jest --runInBand",
-    "test:watch": "NODE_ENV=test jest --watch --runInBand",
-    "test:coverage": "NODE_ENV=test jest --coverage --runInBand"
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --runInBand",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --watch --runInBand",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --coverage --runInBand"
   },
   "keywords": [
     "theatre",

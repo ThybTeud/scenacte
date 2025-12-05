@@ -8,11 +8,6 @@ afterEach(async () => {
   await pool.query('DELETE FROM users WHERE email LIKE $1', ['test_%']);
 });
 
-// Fermer le pool après tous les tests
-afterAll(async () => {
-  await pool.end();
-});
-
 describe('POST /api/auth/register', () => {
   it('devrait créer un nouvel utilisateur', async () => {
     const userData = {

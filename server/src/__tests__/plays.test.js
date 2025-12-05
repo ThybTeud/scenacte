@@ -51,11 +51,6 @@ afterEach(async () => {
   await pool.query('DELETE FROM users WHERE email LIKE $1', ['test_%']);
 });
 
-// Fermer le pool après tous les tests
-afterAll(async () => {
-  await pool.end();
-});
-
 describe('GET /api/plays', () => {
   it('devrait retourner 401 sans token', async () => {
     const response = await request(app)
