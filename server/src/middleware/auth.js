@@ -1,6 +1,5 @@
 import { verifyToken } from '../utils/jwt.js';
 import { UnauthorizedError } from './errorHandler.js';
-import { pool } from '../config/database.js';
 
 /**
  * Middleware d'authentification JWT
@@ -24,20 +23,15 @@ export async function authMiddleware(req, res, next) {
       throw new UnauthorizedError('Token invalide ou expiré');
     }
 
-    // Vérification que l'utilisateur existe toujours en base
-    const query = `
-      SELECT id, email, username
-      FROM users
-      WHERE id = $1
-    `;
-    const result = await pool.query(query, [decoded.userId]);
-
-    if (result.rows.length === 0) {
-      throw new UnauthorizedError('Utilisateur non trouvé');
-    }
-
-    // Injection de l'utilisateur dans la requête
-    req.user = result.rows[0];
+    // Injection de l'utilisateur depuis le JWT vérifié
+    // Un JWT valide et non expiré garantit l'authenticité de l'utilisateur
+    // Note: Si des données fraîches sont nécessaires (ex: rôles modifiés),
+    // effectuer une requête spécifique dans le contrôleur concerné
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email,
+      username: decoded.username
+    };
 
     next();
   } catch (error) {
@@ -62,16 +56,12 @@ export async function optionalAuthMiddleware(req, res, next) {
     const decoded = verifyToken(token);
 
     if (decoded) {
-      const query = `
-        SELECT id, email, username
-        FROM users
-        WHERE id = $1
-      `;
-      const result = await pool.query(query, [decoded.userId]);
-
-      if (result.rows.length > 0) {
-        req.user = result.rows[0];
-      }
+      // Injection de l'utilisateur depuis le JWT vérifié
+      req.user = {
+        id: decoded.userId,
+        email: decoded.email,
+        username: decoded.username
+      };
     }
 
     next();
