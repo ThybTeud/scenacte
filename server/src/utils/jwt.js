@@ -31,7 +31,7 @@ export function verifyToken(token) {
  * @returns {string} Token de reset
  */
 export function generateResetToken(userId) {
-  return jwt.sign({ userId, type: 'reset' }, config.jwt.secret, {
+  return jwt.sign({ userId, type: 'reset' }, config.jwt.resetSecret, {
     expiresIn: '1h'
   });
 }
@@ -43,7 +43,7 @@ export function generateResetToken(userId) {
  */
 export function verifyResetToken(token) {
   try {
-    const decoded = jwt.verify(token, config.jwt.secret);
+    const decoded = jwt.verify(token, config.jwt.resetSecret);
     if (decoded.type !== 'reset') {
       return null;
     }
