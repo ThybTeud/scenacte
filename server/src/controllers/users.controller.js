@@ -1,16 +1,17 @@
 import prisma from '../db/index.js';
 import { hashPassword, comparePassword } from '../utils/hash.js';
-import { 
-  validateEmail, 
-  validateUsername, 
-  validatePassword 
+import {
+  validateEmail,
+  validateUsername,
+  validatePassword
 } from '../utils/validation.js';
-import { 
+import {
   BadRequestError,
   UnauthorizedError,
   ConflictError,
-  ValidationError 
+  ValidationError
 } from '../middleware/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 // Utilise le client pg via src/db/index.js
 
@@ -214,7 +215,7 @@ export async function deleteAccount(req, res, next) {
       where: { id: userId }
     });
 
-    console.log('[USER] Compte supprimé:', user.email, user.username);
+    logger.info({ email: user.email, username: user.username }, 'Compte supprimé');
 
     res.json({
       message: 'Compte supprimé avec succès'

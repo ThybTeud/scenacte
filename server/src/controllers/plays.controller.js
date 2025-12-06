@@ -14,6 +14,7 @@ import {
 } from '../middleware/errorHandler.js';
 import { config } from '../config/env.js';
 import { calculatePlayStatistics } from '../utils/playStatistics.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * GET /api/plays
@@ -481,7 +482,7 @@ export async function deletePlay(req, res, next) {
     const deleteQuery = `DELETE FROM plays WHERE id = $1`;
     await pool.query(deleteQuery, [id]);
 
-    console.log('[PLAY] Pièce supprimée:', play.title, 'par', req.user.username);
+    logger.info({ title: play.title, user: req.user.username }, 'Pièce supprimée');
 
     res.json({
       message: 'Pièce supprimée avec succès'

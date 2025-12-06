@@ -1,12 +1,13 @@
 import { pool } from '../config/database.js';
 import { validateUUID } from '../utils/validation.js';
 import { validateTemplateSettings } from '../services/pdf.service.js';
-import { 
+import {
   BadRequestError,
   NotFoundError,
   ForbiddenError,
-  ValidationError 
+  ValidationError
 } from '../middleware/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * GET /api/templates
@@ -358,7 +359,7 @@ export async function deleteTemplate(req, res, next) {
     const deleteQuery = `DELETE FROM export_templates WHERE id = $1`;
     await pool.query(deleteQuery, [id]);
 
-    console.log('[TEMPLATE] Template supprimé:', template.name, 'par', req.user.username);
+    logger.info({ name: template.name, user: req.user.username }, 'Template supprimé');
 
     res.json({
       message: 'Template supprimé avec succès'
