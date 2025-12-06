@@ -21,8 +21,37 @@ const app = express();
 // Sécurité - Protection avec Helmet
 // Configure les headers HTTP pour sécuriser l'application
 app.use(helmet({
-  contentSecurityPolicy: false, // Désactivé pour permettre le chargement du frontend
-  crossOriginEmbedderPolicy: false // Désactivé pour la compatibilité avec le frontend
+  // Content Security Policy (CSP) - Protection contre les attaques XSS
+  contentSecurityPolicy: {
+    directives: {
+      // Par défaut, autoriser uniquement les ressources du même domaine
+      defaultSrc: ["'self'"],
+
+      // Scripts : uniquement depuis le même domaine (bundles Vite)
+      scriptSrc: ["'self'"],
+
+      // Styles : même domaine + inline (nécessaire pour React et CodeMirror)
+      styleSrc: ["'self'", "'unsafe-inline'"],
+
+      // Images : même domaine + data URIs (base64) + blobs (pour les previews)
+      imgSrc: ["'self'", "data:", "blob:"],
+
+      // Connexions (fetch, XHR, WebSocket) : uniquement vers notre API
+      connectSrc: ["'self'"],
+
+      // Fonts : uniquement depuis le même domaine
+      fontSrc: ["'self'"],
+
+      // Objets/embeds : aucun autorisé (pas de Flash, etc.)
+      objectSrc: ["'none'"],
+
+      // Empêche l'intégration dans des iframes (protection clickjacking)
+      frameAncestors: ["'none'"]
+    }
+  },
+
+  // Désactivé pour la compatibilité avec le frontend
+  crossOriginEmbedderPolicy: false
 }));
 
 // Compression - Compression gzip des réponses HTTP
