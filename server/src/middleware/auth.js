@@ -1,5 +1,6 @@
 import { verifyToken } from '../utils/jwt.js';
 import { UnauthorizedError } from './errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Middleware d'authentification JWT
@@ -67,6 +68,7 @@ export async function optionalAuthMiddleware(req, res, next) {
     next();
   } catch (error) {
     // En cas d'erreur, on continue sans bloquer
+    logger.warn({ error: error.message }, 'Token JWT optionnel invalide');
     next();
   }
 }
