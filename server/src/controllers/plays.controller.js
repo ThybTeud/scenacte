@@ -1,19 +1,20 @@
 import { pool } from '../config/database.js';
-import { 
-  validateTitle, 
-  validateContent, 
+import {
+  validateTitle,
+  validateContent,
   validateUUID,
   validatePlayStatus,
   validatePagination,
   validateStatistics
 } from '../utils/validation.js';
-import { 
+import {
   BadRequestError,
   NotFoundError,
   ForbiddenError,
-  ValidationError 
+  ValidationError
 } from '../middleware/errorHandler.js';
 import { config } from '../config/env.js';
+import { calculatePlayStatistics } from '../utils/playStatistics.js';
 
 /**
  * GET /api/plays
@@ -136,20 +137,8 @@ export async function createPlay(req, res, next) {
       throw new ValidationError(`htmlContent: ${htmlValidation.message}`);
     }
 
-    // Validation des statistiques (optionnelles à la création)
-    const stats = statistics || {
-      totalActs: 0,
-      totalScenes: 0,
-      totalCharacters: 0,
-      totalLines: 0,
-      wordCount: 0,
-      estimatedDurationMinutes: 0
-    };
-
-    const statsValidation = validateStatistics(stats);
-    if (!statsValidation.valid) {
-      throw new ValidationError(statsValidation.message);
-    }
+    // Calcul des statistiques côté serveur (ignore les stats envoyées par le client pour sécurité)
+    const stats = calculatePlayStatistics(rawContent || '');
 
     // Calcul de la taille du fichier pour la version initiale
     const fileSizeBytes = Buffer.byteLength(rawContent || '', 'utf8') + 
@@ -347,10 +336,8 @@ export async function savePlay(req, res, next) {
       throw new ValidationError(`htmlContent: ${htmlValidation.message}`);
     }
 
-    const statsValidation = validateStatistics(statistics);
-    if (!statsValidation.valid) {
-      throw new ValidationError(statsValidation.message);
-    }
+    // Calcul des statistiques côté serveur (ignore les stats envoyées par le client pour sécurité)
+    const calculatedStats = calculatePlayStatistics(rawContent);
 
     const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
 
@@ -407,12 +394,12 @@ export async function savePlay(req, res, next) {
     `;
     const statsResult = await client.query(upsertStatsQuery, [
       id,
-      statistics.totalActs,
-      statistics.totalScenes,
-      statistics.totalCharacters,
-      statistics.totalLines,
-      statistics.wordCount,
-      statistics.estimatedDurationMinutes,
+      calculatedStats.totalActs,
+      calculatedStats.totalScenes,
+      calculatedStats.totalCharacters,
+      calculatedStats.totalLines,
+      calculatedStats.wordCount,
+      calculatedStats.estimatedDurationMinutes,
       newContentVersion
     ]);
 
@@ -423,12 +410,12 @@ export async function savePlay(req, res, next) {
     `;
     await client.query(insertVersionStatsQuery, [
       versionId,
-      statistics.totalActs,
-      statistics.totalScenes,
-      statistics.totalCharacters,
-      statistics.totalLines,
-      statistics.wordCount,
-      statistics.estimatedDurationMinutes
+      calculatedStats.totalActs,
+      calculatedStats.totalScenes,
+      calculatedStats.totalCharacters,
+      calculatedStats.totalLines,
+      calculatedStats.wordCount,
+      calculatedStats.estimatedDurationMinutes
     ]);
 
     await client.query('COMMIT');

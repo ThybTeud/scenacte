@@ -28,7 +28,7 @@ export const createPlaySchema = z.object({
   subtitle: z
     .string()
     .max(255, 'Le sous-titre ne peut pas dépasser 255 caractères')
-    .optional(),
+    .nullish(),
 
   rawContent: z
     .string({ required_error: 'Le contenu brut est requis' }),
@@ -36,7 +36,8 @@ export const createPlaySchema = z.object({
   htmlContent: z
     .string({ required_error: 'Le contenu HTML est requis' }),
 
-  statistics: statisticsSchema
+  // Statistics sont maintenant optionnelles car recalculées côté serveur
+  statistics: statisticsSchema.optional()
 });
 
 /**
@@ -51,7 +52,7 @@ export const updatePlaySchema = z.object({
   subtitle: z
     .string()
     .max(255, 'Le sous-titre ne peut pas dépasser 255 caractères')
-    .optional(),
+    .nullish(),
 
   rawContent: z
     .string({ required_error: 'Le contenu brut est requis' }),
@@ -59,7 +60,8 @@ export const updatePlaySchema = z.object({
   htmlContent: z
     .string({ required_error: 'Le contenu HTML est requis' }),
 
-  statistics: statisticsSchema
+  // Statistics sont maintenant optionnelles car recalculées côté serveur
+  statistics: statisticsSchema.optional()
 });
 
 /**
