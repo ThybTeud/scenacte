@@ -1,12 +1,13 @@
 import prisma from '../db/index.js';
 import { validateUUID } from '../utils/validation.js';
 import { generatePDF, generatePDFFilename } from '../services/pdf.service.js';
-import { 
+import {
   NotFoundError,
   ForbiddenError,
   ValidationError,
-  InternalServerError 
+  InternalServerError
 } from '../middleware/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 // Utilise le client pg via src/db/index.js
 
@@ -145,7 +146,7 @@ export async function exportPlayToPDF(req, res, next) {
     const filename = generatePDFFilename(contentToExport.title);
 
     // Log pour traçabilité
-    console.log('[EXPORT] PDF généré:', contentToExport.title, 'par', req.user.username);
+    logger.info({ title: contentToExport.title, user: req.user.username }, 'PDF généré');
 
     // Envoi du PDF en réponse
     res.setHeader('Content-Type', 'application/pdf');
