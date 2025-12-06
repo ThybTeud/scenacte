@@ -44,7 +44,9 @@ export async function cleanupOldVersions() {
     const playsQuery = `
       SELECT DISTINCT play_id
       FROM play_versions
-      WHERE version_type = 'auto' AND created_at < $1
+      WHERE version_type = 'auto'
+        AND created_at < $1
+        AND created_at < NOW() - INTERVAL '5 minutes'
     `;
     const playsResult = await client.query(playsQuery, [sevenDaysAgo]);
     console.log('[CLEANUP] Pièces avec anciennes auto-saves:', playsResult.rows.length);
@@ -62,6 +64,7 @@ export async function cleanupOldVersions() {
         WHERE play_id = $1
           AND version_type = 'auto'
           AND created_at < $2
+          AND created_at < NOW() - INTERVAL '5 minutes'
         ORDER BY created_at DESC
       `;
       const oldVersionsResult = await client.query(oldVersionsQuery, [playId, sevenDaysAgo]);
@@ -98,6 +101,7 @@ export async function cleanupOldVersions() {
       DELETE FROM play_versions
       WHERE version_type = 'auto'
         AND created_at < $1
+        AND created_at < NOW() - INTERVAL '5 minutes'
         AND preserved_reason IS NULL
     `;
     const deleteResult = await client.query(deleteQuery, [sevenDaysAgo]);
@@ -185,6 +189,7 @@ export async function getRetentionStats() {
       FROM play_versions
       WHERE version_type = 'auto'
         AND created_at < $1
+        AND created_at < NOW() - INTERVAL '5 minutes'
         AND preserved_reason IS NULL
     `;
     const eligibleResult = await pool.query(eligibleQuery, [sevenDaysAgo]);
