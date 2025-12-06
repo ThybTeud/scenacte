@@ -315,8 +315,10 @@ export async function savePlay(req, res, next) {
       throw new ValidationError(idValidation.message);
     }
 
-    // Vérifier que la pièce existe et appartient à l'utilisateur
-    const checkQuery = `SELECT id, user_id, content_version FROM plays WHERE id = $1`;
+    await client.query('BEGIN');
+
+    // Vérifier que la pièce existe et appartient à l'utilisateur (avec verrou pour éviter race condition)
+    const checkQuery = `SELECT id, user_id, content_version FROM plays WHERE id = $1 FOR UPDATE`;
     const checkResult = await client.query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
@@ -352,9 +354,7 @@ export async function savePlay(req, res, next) {
 
     const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
 
-    await client.query('BEGIN');
-
-    // Récupérer le prochain numéro de version
+    // Récupérer le prochain numéro de version (protégé par FOR UPDATE sur la table plays)
     const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_versions WHERE play_id = $1`;
     const maxVersionResult = await client.query(maxVersionQuery, [id]);
     const nextVersionNumber = maxVersionResult.rows[0].max_version + 1;
