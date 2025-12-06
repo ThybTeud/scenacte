@@ -80,7 +80,8 @@ export async function register(req, res, next) {
     // Génération du token JWT
     const token = generateToken({
       userId: user.id,
-      email: user.email
+      email: user.email,
+      username: user.username
     });
 
     // Envoi de l'email de bienvenue (non bloquant)
@@ -127,7 +128,8 @@ export async function login(req, res, next) {
     // Génération du token JWT
     const token = generateToken({
       userId: user.id,
-      email: user.email
+      email: user.email,
+      username: user.username
     });
 
     res.json({
