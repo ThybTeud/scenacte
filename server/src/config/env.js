@@ -55,6 +55,10 @@ const env = cleanEnv(process.env, {
     desc: 'JWT expiration duration',
     default: '7d'
   }),
+  RESET_TOKEN_SECRET: str({
+    desc: 'Secret key for password reset tokens (optional, defaults to JWT_SECRET)',
+    default: ''
+  }),
 
   // Email configuration
   SENDGRID_API_KEY: str({
@@ -119,7 +123,8 @@ export const config = {
 
   jwt: {
     secret: env.JWT_SECRET,
-    expiresIn: env.JWT_EXPIRES_IN
+    expiresIn: env.JWT_EXPIRES_IN,
+    resetSecret: env.RESET_TOKEN_SECRET || env.JWT_SECRET
   },
 
   email: {
