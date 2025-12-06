@@ -85,16 +85,13 @@ export function PlayEditor() {
         htmlContent = '';
       }
 
-      // Calculer les statistiques
-      const statistics = calculatePlayStatistics(content);
-
       // Préparer les données pour la sauvegarde
+      // Note: les statistiques sont recalculées automatiquement côté serveur
       const saveData = {
         title: play.title,
         subtitle: play.subtitle || null,
         rawContent: content,
-        htmlContent: htmlContent,
-        statistics: statistics
+        htmlContent: htmlContent
       };
 
       await playsService.savePlay(id, saveData);

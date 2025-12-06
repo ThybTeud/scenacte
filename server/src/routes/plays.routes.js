@@ -8,8 +8,6 @@ import {
   updatePlayStatus
 } from '../controllers/plays.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { validateBody } from '../middleware/validate.js';
-import { createPlaySchema, updatePlaySchema, updateStatusSchema } from '../schemas/play.schema.js';
 
 const router = express.Router();
 
@@ -27,11 +25,11 @@ router.get('/', listPlays);
 /**
  * POST /api/plays
  * Créer une nouvelle pièce
- * Body: { title, subtitle?, rawContent?, htmlContent?, statistics? }
+ * Body: { title, subtitle?, rawContent?, htmlContent? }
  * Requiert: Authorization header avec Bearer token
- * Validation: createPlaySchema
+ * Note: statistics sont recalculées côté serveur
  */
-router.post('/', validateBody(createPlaySchema), createPlay);
+router.post('/', createPlay);
 
 /**
  * GET /api/plays/:id
@@ -43,11 +41,11 @@ router.get('/:id', getPlay);
 /**
  * PUT /api/plays/:id
  * Sauvegarder (mettre à jour) une pièce et créer une version
- * Body: { title, subtitle?, rawContent, htmlContent, statistics, versionType?, manualLabel? }
+ * Body: { title, subtitle?, rawContent, htmlContent, versionType?, manualLabel? }
  * Requiert: Authorization header avec Bearer token
- * Validation: updatePlaySchema
+ * Note: statistics sont recalculées côté serveur
  */
-router.put('/:id', validateBody(updatePlaySchema), savePlay);
+router.put('/:id', savePlay);
 
 /**
  * DELETE /api/plays/:id
@@ -61,8 +59,7 @@ router.delete('/:id', deletePlay);
  * Changer le statut d'une pièce (draft, completed, archived)
  * Body: { status }
  * Requiert: Authorization header avec Bearer token
- * Validation: updateStatusSchema
  */
-router.patch('/:id/status', validateBody(updateStatusSchema), updatePlayStatus);
+router.patch('/:id/status', updatePlayStatus);
 
 export default router;

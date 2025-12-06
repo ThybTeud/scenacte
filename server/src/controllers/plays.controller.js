@@ -4,8 +4,7 @@ import {
   validateContent,
   validateUUID,
   validatePlayStatus,
-  validatePagination,
-  validateStatistics
+  validatePagination
 } from '../utils/validation.js';
 import {
   BadRequestError,
