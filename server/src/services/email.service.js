@@ -260,20 +260,24 @@ export async function verifyEmailConnection() {
     return true;
   }
 
-  // SMTP : vérifier la connexion
+  // SMTP : vérifier la connexion de manière non-bloquante
   if (!transporter) {
     logger.warn('⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
     return false;
   }
 
-  try {
-    await transporter.verify();
-    logger.info('✓ Connexion SMTP établie avec succès');
-    return true;
-  } catch (error) {
-    logger.error({ error: error.message }, '✗ Erreur de connexion SMTP');
-    logger.warn('⚠️  Les emails ne seront pas envoyés');
-    logger.warn('💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
-    return false;
-  }
+  // Lancer la vérification en arrière-plan sans bloquer le démarrage
+  transporter.verify()
+    .then(() => {
+      logger.info('✓ Connexion SMTP établie avec succès');
+    })
+    .catch((error) => {
+      logger.error({ error: error.message }, '✗ Erreur de connexion SMTP');
+      logger.warn('⚠️  Les emails ne seront pas envoyés');
+      logger.warn('💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
+    });
+
+  // Retourner immédiatement true pour ne pas bloquer le démarrage
+  logger.info('🔄 Vérification SMTP en cours (arrière-plan)...');
+  return true;
 }
