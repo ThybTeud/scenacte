@@ -1,15 +1,19 @@
 import express from 'express';
-import { 
-  getProfile, 
-  updateProfile, 
-  deleteAccount 
+import {
+  getProfile,
+  updateProfile,
+  deleteAccount
 } from '../controllers/users.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { apiLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Toutes les routes nécessitent l'authentification
 router.use(authMiddleware);
+
+// Rate limiting pour prévenir les abus
+router.use(apiLimiter);
 
 /**
  * GET /api/users/profile

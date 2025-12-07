@@ -1,6 +1,7 @@
 import express from 'express';
 import { exportPlayToPDF } from '../controllers/export.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { exportLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router({ mergeParams: true });
 
@@ -16,7 +17,8 @@ router.use(authMiddleware);
  * - Si versionId fourni : exporte cette version spécifique
  * - Sinon : exporte la version courante
  * Requiert: Authorization header avec Bearer token
+ * Rate limited: 5 exports/minute
  */
-router.post('/pdf', exportPlayToPDF);
+router.post('/pdf', exportLimiter, exportPlayToPDF);
 
 export default router;

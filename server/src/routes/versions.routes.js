@@ -1,16 +1,20 @@
 import express from 'express';
-import { 
-  listVersions, 
-  getVersion, 
+import {
+  listVersions,
+  getVersion,
   restoreVersion,
-  createManualVersion 
+  createManualVersion
 } from '../controllers/versions.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { apiLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router({ mergeParams: true });
 
 // Toutes les routes nécessitent l'authentification
 router.use(authMiddleware);
+
+// Rate limiting pour prévenir les abus
+router.use(apiLimiter);
 
 /**
  * GET /api/plays/:id/versions
