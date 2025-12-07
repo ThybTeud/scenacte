@@ -32,15 +32,14 @@ export const authLimiter = rateLimit({
  * Rate limiter général pour toutes les routes API
  * Limite raisonnable pour une utilisation normale
  * - 100 requêtes maximum par IP
- * - Fenêtre de 15 minutes
+ * - Fenêtre de 1 minute
  * - Désactivé en mode test
  */
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 60 * 1000, // 1 minute
   max: 100, // Limite à 100 requêtes par fenêtre
   message: {
-    error: 'Trop de requêtes, veuillez réessayer plus tard.',
-    retryAfter: '15 minutes'
+    error: 'Trop de requêtes, veuillez patienter.'
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -54,8 +53,31 @@ export const apiLimiter = rateLimit({
   handler: (req, res) => {
     console.warn(`[RATE LIMIT] ⚠️  Limite API dépassée sur ${req.path} depuis ${req.ip}`);
     res.status(429).json({
-      error: 'Trop de requêtes, veuillez réessayer plus tard.',
-      retryAfter: '15 minutes'
+      error: 'Trop de requêtes, veuillez patienter.'
+    });
+  }
+});
+
+/**
+ * Rate limiter spécifique pour les exports PDF
+ * Limite stricte car les exports sont coûteux en ressources
+ * - 5 requêtes maximum par IP
+ * - Fenêtre de 1 minute
+ * - Désactivé en mode test
+ */
+export const exportLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // Limite à 5 requêtes par fenêtre
+  message: {
+    error: 'Trop d\'exports, veuillez patienter.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => config.server.env === 'test',
+  handler: (req, res) => {
+    console.warn(`[RATE LIMIT] ⚠️  Limite d'export dépassée sur ${req.path} depuis ${req.ip}`);
+    res.status(429).json({
+      error: 'Trop d\'exports, veuillez patienter.'
     });
   }
 });

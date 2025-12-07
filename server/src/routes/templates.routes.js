@@ -1,17 +1,21 @@
 import express from 'express';
-import { 
-  listTemplates, 
-  createTemplate, 
-  getTemplate, 
-  updateTemplate, 
-  deleteTemplate 
+import {
+  listTemplates,
+  createTemplate,
+  getTemplate,
+  updateTemplate,
+  deleteTemplate
 } from '../controllers/templates.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { apiLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Toutes les routes nécessitent l'authentification
 router.use(authMiddleware);
+
+// Rate limiting pour prévenir les abus
+router.use(apiLimiter);
 
 /**
  * GET /api/templates
