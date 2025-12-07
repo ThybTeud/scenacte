@@ -59,12 +59,25 @@ export function validatePassword(password) {
     return { valid: false, message: 'Mot de passe requis' };
   }
 
-  if (password.length < 8) {
-    return { valid: false, message: 'Mot de passe trop court (min 8 caractères)' };
+  if (password.length < 12) {
+    return { valid: false, message: 'Mot de passe trop court (min 12 caractères)' };
   }
-
   if (password.length > 128) {
     return { valid: false, message: 'Mot de passe trop long (max 128 caractères)' };
+  }
+
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSymbol = /[^a-zA-Z0-9]/.test(password);
+
+  const complexity = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+
+  if (complexity < 3) {
+    return {
+      valid: false,
+      message: 'Mot de passe trop faible (nécessite 3 types parmi : minuscules, majuscules, chiffres, symboles)'
+    };
   }
 
   return { valid: true, message: '' };
