@@ -70,7 +70,7 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
       >
         {menuItems.map((item, index) => (
           <div key={index}>
-            {item.divider && <div className="border-t border-gray-200 my-1" />}
+            {item.divider && <div className="border-t-brutal border-black my-1" />}
             <DropdownItem onClick={item.onClick} icon={item.icon}>
               {item.label}
             </DropdownItem>

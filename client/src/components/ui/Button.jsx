@@ -26,7 +26,7 @@ export function Button({
   ...props
 }) {
   // Classes de base
-  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-brutal border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-brutal border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
 
   // Variantes de couleurs
   const variants = {

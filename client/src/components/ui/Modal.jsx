@@ -46,15 +46,15 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-lg shadow-xl w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
+        className={`bg-white border-brutal border-black rounded-brutal shadow-brutal w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b-brutal border-black bg-violet">
+            <h2 className="text-xl font-semibold font-ui text-white">{title}</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              className="text-white hover:text-orange focus:outline-none transition-colors"
               aria-label="Fermer"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,7 +69,7 @@ export function Modal({
         </div>
 
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+          <div className="px-6 py-4 border-t-brutal border-black bg-cream">
             {footer}
           </div>
         )}
