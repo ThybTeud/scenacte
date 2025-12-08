@@ -46,9 +46,9 @@ export function Button({
   // Gestion du border-radius pour les groupes
   const groupedStyles = {
     none: 'rounded',
-    left: 'rounded-l-brutal border-r-0',
+    left: 'rounded-l border-r-0',
     middle: 'rounded-none border-r-0',
-    right: 'rounded-r-brutal',
+    right: 'rounded-r',
   };
 
   // Effet hover/active
