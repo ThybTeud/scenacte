@@ -1,7 +1,7 @@
 /**
  * Button component - Composant de bouton neobrutalist
  * @param {Object} props
- * @param {'primary'|'secondary'|'ghost'} [props.variant='primary'] - Variante du bouton
+ * @param {'primary'|'secondary'|'ghost'|'danger'} [props.variant='primary'] - Variante du bouton
  * @param {'sm'|'md'|'lg'} [props.size='md'] - Taille du bouton
  * @param {React.ReactNode} [props.icon] - Icône à afficher
  * @param {string} [props.shortcut] - Raccourci clavier à afficher
@@ -33,6 +33,7 @@ export function Button({
     primary: 'bg-orange text-white hover:bg-accent-hover shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
     secondary: 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
     ghost: 'bg-transparent text-black border-0 shadow-none hover:bg-gray-100',
+    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
   };
 
   // Tailles

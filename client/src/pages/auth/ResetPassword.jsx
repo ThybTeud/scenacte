@@ -72,7 +72,7 @@ export function ResetPassword() {
     return (
       <AuthLayout title="Erreur">
         <div className="text-center space-y-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
             Token de réinitialisation manquant ou invalide
           </div>
           <Link to="/forgot-password">
@@ -92,7 +92,7 @@ export function ResetPassword() {
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
             {errors.general}
           </div>
         )}

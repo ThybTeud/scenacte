@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { usersService } from '../../services/users.service';
-import { Header } from '../../components/layout/Header';
+import HeaderGlobal from '../../components/layout/HeaderGlobal';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -28,6 +28,25 @@ export function UserProfile() {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
+
+  // Menu items pour le HeaderGlobal
+  const menuItems = [
+    {
+      label: 'Profil',
+      onClick: () => navigate('/profile'),
+    },
+    {
+      label: 'Préférences',
+      onClick: () => navigate('/preferences'),
+    },
+    {
+      label: 'Déconnexion',
+      onClick: () => {
+        logout();
+        navigate('/login');
+      },
+    },
+  ];
 
   useEffect(() => {
     fetchProfile();
@@ -138,8 +157,8 @@ export function UserProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
+      <div className="min-h-screen bg-cream">
+        <HeaderGlobal user={user} menuItems={menuItems} />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <Loader />
         </div>
@@ -148,20 +167,20 @@ export function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className="min-h-screen bg-cream">
+      <HeaderGlobal user={user} menuItems={menuItems} />
 
       <main className="container-custom py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Mon profil</h1>
+        <h1 className="text-3xl font-bold font-ui text-black mb-6">Mon profil</h1>
 
         <div className="max-w-2xl">
           <Card className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold font-ui text-black mb-4">
               Informations du compte
             </h2>
 
             {profile && (
-              <div className="mb-4 text-sm text-gray-600">
+              <div className="mb-4 text-sm text-black/70 font-ui">
                 <p>
                   Nombre de pièces : <strong>{profile.playsCount || 0}</strong>
                 </p>
@@ -176,7 +195,7 @@ export function UserProfile() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {errors.general && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
                   {errors.general}
                 </div>
               )}
@@ -203,9 +222,9 @@ export function UserProfile() {
                 disabled={isSaving}
               />
 
-              <hr className="my-6" />
+              <div className="my-6 border-t-brutal border-black"></div>
 
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold font-ui text-black">
                 Changer le mot de passe
               </h3>
 
@@ -255,11 +274,11 @@ export function UserProfile() {
             </form>
           </Card>
 
-          <Card className="border-red-200">
-            <h2 className="text-xl font-semibold text-red-600 mb-4">
+          <Card className="border-brutal border-red-500">
+            <h2 className="text-xl font-semibold font-ui text-red-600 mb-4">
               Zone de danger
             </h2>
-            <p className="text-gray-700 mb-4">
+            <p className="text-black font-ui mb-4">
               La suppression de votre compte est irréversible. Toutes vos pièces
               seront définitivement supprimées.
             </p>
@@ -297,7 +316,7 @@ export function UserProfile() {
         }
       >
         <div className="space-y-4">
-          <p className="text-gray-700">
+          <p className="text-black font-ui">
             Cette action est <strong>irréversible</strong>. Toutes vos pièces
             et données seront définitivement supprimées.
           </p>
