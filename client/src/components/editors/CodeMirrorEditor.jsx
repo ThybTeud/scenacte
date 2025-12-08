@@ -63,7 +63,8 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       '&': {
         height: '100%',
         fontSize: '14px',
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        backgroundColor: '#ffffff'
       },
       '.cm-scroller': {
         overflow: 'auto',
@@ -79,25 +80,27 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         lineHeight: '1.6'
       },
       '.cm-activeLine': {
-        backgroundColor: '#E8F2FF'
+        backgroundColor: '#fef5ed'
       },
       '.cm-activeLineGutter': {
-        backgroundColor: '#e5e7eb'
+        backgroundColor: '#fafafa'
       },
       '.cm-gutters': {
-        backgroundColor: '#f9fafb',
-        color: '#9ca3af'
+        backgroundColor: '#fafafa',
+        color: '#9ca3af',
+        borderRight: '1px solid #e5e5e5'
       },
       '.cm-tooltip-autocomplete': {
         color: '#000',
-        border: '2px solid #000',
+        border: '1px solid #d4d4d4',
         borderRadius: '4px',
-        boxShadow: '3px 3px 0px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         padding: '6px',
         maxHeight: '260px',
         overflow: 'auto',
         minWidth: '100px',
-        zIndex: 50
+        zIndex: 50,
+        backgroundColor: '#ffffff'
       },
       '.cm-tooltip-autocomplete ul': { listStyle: 'none', margin: 0, padding: 0 },
       '.cm-completion': {
@@ -105,10 +108,9 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         gap: '8px',
         alignItems: 'center',
         padding: '8px 10px',
-        borderRadius: '6px',
+        borderRadius: '4px',
         cursor: 'pointer'
-      }
-      ,
+      },
       '.cm-tooltip-autocomplete .cm-completionIcon': {
         display: 'none'
       },
@@ -119,21 +121,21 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         paddingLeft: '8px'
       },
       '.cm-completionMatchedText': { textDecoration: 'none' },
-      // Classes de surlignage pour les types de balises (StreamLanguage émettra des tokens cm-scene, cm-act, ...)
+      // Classes de surlignage adoucies pour les types de balises
       '.cm-act': {
-        color: '#fd7e14',
-        fontWeight: '700',
+        color: '#CC7A29',
+        fontWeight: '600',
       },
       '.cm-scene': {
-        color: '#fd7e14',
-        fontWeight: '700',
+        color: '#CC7A29',
+        fontWeight: '600',
       },
       '.cm-character': {
-        color: '#276ef1',
-        fontWeight: '700',
+        color: '#4A3680',
+        fontWeight: '600',
       },
       '.cm-didascalie': {
-        color: '#a8a8a8',
+        color: '#888888',
         fontStyle: 'italic',
       }
     })];
@@ -490,7 +492,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
   }), []);
 
   return (
-    <div className="h-full w-full overflow-hidden border border-gray-300 rounded-lg bg-white">
+    <div className="h-full w-full overflow-hidden border border-gray-200 rounded bg-white">
       <div ref={editorRef} className="h-full w-full" />
     </div>
   );

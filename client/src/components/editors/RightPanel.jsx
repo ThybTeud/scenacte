@@ -33,15 +33,15 @@ export function RightPanel({
   });
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 border-l border-gray-200">
+    <div className="h-full flex flex-col bg-white" style={{ borderLeft: '1px solid #e5e5e5' }}>
       {/* Sommaire */}
       <div className="flex-1 overflow-y-auto p-4">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
           Sommaire
         </h3>
 
         {structure.actes.length === 0 && structure.scenes.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-gray-500 italic font-ui">
             Aucune structure détectée
           </p>
         ) : (
@@ -53,7 +53,7 @@ export function RightPanel({
                   <button
                     key={`orphan-${index}`}
                     onClick={() => handleSectionClick(scene.position)}
-                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange rounded transition-colors font-ui"
                   >
                     <span className="flex items-center gap-2">
                       <span>{scene.value}</span>
@@ -68,7 +68,7 @@ export function RightPanel({
               <div key={acteIndex} className="space-y-1">
                 <button
                   onClick={() => handleSectionClick(item.acte.position)}
-                  className="w-full text-left px-3 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors"
+                  className="w-full text-left px-3 py-2 text-sm font-semibold text-orange bg-orange-50 hover:bg-orange-100 rounded transition-colors font-ui"
                 >
                   <span className="flex items-center gap-2">
                     <span>{item.acte.value}</span>
@@ -82,7 +82,7 @@ export function RightPanel({
                       <button
                         key={sceneIndex}
                         onClick={() => handleSectionClick(scene.position)}
-                        className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
+                        className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange rounded transition-colors font-ui"
                       >
                         <span className="flex items-center gap-2">
                           <span>{scene.value}</span>
@@ -101,7 +101,7 @@ export function RightPanel({
                   <button
                     key={index}
                     onClick={() => handleSectionClick(scene.position)}
-                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-100 hover:text-orange-700 rounded transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange rounded transition-colors font-ui"
                   >
                     <span className="flex items-center gap-2">
                       <span>{scene.value}</span>
@@ -115,27 +115,27 @@ export function RightPanel({
       </div>
 
       {/* Statistiques (sticky en bas) */}
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+      <div className="p-4 bg-white" style={{ borderTop: '1px solid #e5e5e5' }}>
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
           Statistiques
         </h3>
 
         {!statistics ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-gray-500 italic font-ui">
             Chargement...
           </p>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-              <span className="text-sm text-gray-600">Scènes</span>
-              <span className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between p-2 bg-cream rounded">
+              <span className="text-sm text-gray-600 font-ui">Scènes</span>
+              <span className="text-lg font-semibold text-gray-900 font-ui">
                 {statistics.totalScenes || 0}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-              <span className="text-sm text-gray-600">Répliques</span>
-              <span className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between p-2 bg-cream rounded">
+              <span className="text-sm text-gray-600 font-ui">Répliques</span>
+              <span className="text-lg font-semibold text-gray-900 font-ui">
                 {statistics.totalLines || 0}
               </span>
             </div>

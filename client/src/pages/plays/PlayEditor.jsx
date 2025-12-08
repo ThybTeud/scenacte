@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { playsService } from '../../services/plays.service';
-import { Header } from '../../components/layout/Header';
+import { useAuth } from '../../hooks/useAuth';
+import HeaderEditor from '../../components/layout/HeaderEditor';
 import { Button } from '../../components/ui/Button';
 import { Loader } from '../../components/ui/Loader';
 import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
@@ -18,6 +19,15 @@ import toast from 'react-hot-toast';
 export function PlayEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  // Menu items pour HeaderEditor
+  const menuItems = [
+    { label: 'Profil', onClick: () => navigate('/profile') },
+    { label: 'Préférences', onClick: () => navigate('/preferences') },
+    { label: 'Déconnexion', onClick: () => { logout(); navigate('/login'); } },
+  ];
+
   const [play, setPlay] = useState(null);
   const [content, setContent] = useState('');
   const [debouncedContent, setDebouncedContent] = useState('');
@@ -246,8 +256,14 @@ export function PlayEditor() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <Header />
+      <div className="min-h-screen bg-cream">
+        <HeaderEditor
+          playTitle="Chargement..."
+          user={user}
+          menuItems={menuItems}
+          onSettingsClick={() => {}}
+          onStatsClick={() => {}}
+        />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <Loader />
         </div>
@@ -260,45 +276,49 @@ export function PlayEditor() {
   }
 
   return (
-    <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <Header />
+    <div className="h-screen bg-cream flex flex-col overflow-hidden">
+      <HeaderEditor
+        playTitle={play.title}
+        user={user}
+        menuItems={menuItems}
+        onSettingsClick={() => setShowRightPanel(!showRightPanel)}
+        onStatsClick={() => setShowRightPanel(true)}
+      />
 
-      {/* Header avec titre et boutons de navigation */}
-      <div className="border-b border-gray-200 px-4 md:px-6 py-3 md:py-4">
+      {/* Barre d'état et boutons de navigation */}
+      <div className="border-b border-gray-200 px-4 md:px-6 py-2 md:py-3 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Bouton hamburger pour mobile */}
             <button
               onClick={() => setShowLeftPanel(!showLeftPanel)}
-              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded"
               aria-label="Toggle menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">{play.title}</h1>
+            {/* Indicateur de sauvegarde */}
+            <div className="text-sm font-ui">
+              {isParsing && <span className="text-blue-600">Analyse en cours...</span>}
+              {isSaving && <span className="text-orange">Sauvegarde en cours...</span>}
+              {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
+              {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">✓ Sauvegardé</span>}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/plays')}>
               Retour
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setShowVersions(true)}
             >
               Versions
             </Button>
           </div>
-        </div>
-
-        {/* Indicateur de sauvegarde (visible sur desktop) */}
-        <div className="hidden md:block text-sm mt-2">
-          {isParsing && <span className="text-blue-600">Analyse en cours...</span>}
-          {isSaving && <span className="text-primary-600">Sauvegarde en cours...</span>}
-          {!isSaving && hasUnsavedChanges && <span className="text-gray-500">Modifications non sauvegardées</span>}
-          {!isSaving && !hasUnsavedChanges && content && <span className="text-green-600">Sauvegardé</span>}
         </div>
       </div>
 
