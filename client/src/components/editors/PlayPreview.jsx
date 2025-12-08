@@ -82,12 +82,12 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
   return (
     <div
       ref={previewRef}
-      className="h-full w-full overflow-y-auto border border-gray-300 rounded-lg bg-white p-6"
+      className="h-full w-full overflow-y-auto border border-gray-200 rounded bg-white p-6"
     >
       <style>{`
         /* Styles pour le rendu de la pièce */
         .play-root {
-          font-family: 'Georgia', 'Times New Roman', serif;
+          font-family: var(--font-theater);
           color: #1f2937;
           text-align: center;
         }

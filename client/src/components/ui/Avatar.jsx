@@ -36,7 +36,7 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
               className="
                 w-10 h-10
                 rounded-full
-                border-brutal
+                border-2
                 border-black
                 bg-orange
                 text-white
@@ -70,7 +70,7 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
       >
         {menuItems.map((item, index) => (
           <div key={index}>
-            {item.divider && <div className="border-t border-gray-200 my-1" />}
+            {item.divider && <div className="border-t-2 border-black my-1" />}
             <DropdownItem onClick={item.onClick} icon={item.icon}>
               {item.label}
             </DropdownItem>

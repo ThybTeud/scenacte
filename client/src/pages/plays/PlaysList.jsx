@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playsService } from '../../services/plays.service';
-import { Header } from '../../components/layout/Header';
+import { useAuth } from '../../hooks/useAuth';
+import HeaderGlobal from '../../components/layout/HeaderGlobal';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Loader } from '../../components/ui/Loader';
@@ -12,6 +13,7 @@ import toast from 'react-hot-toast';
 
 export function PlaysList() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [plays, setPlays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -31,6 +33,25 @@ export function PlaysList() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
+
+  // Menu items pour le HeaderGlobal
+  const menuItems = [
+    {
+      label: 'Profil',
+      onClick: () => navigate('/profile'),
+    },
+    {
+      label: 'Préférences',
+      onClick: () => navigate('/preferences'),
+    },
+    {
+      label: 'Déconnexion',
+      onClick: () => {
+        logout();
+        navigate('/login');
+      },
+    },
+  ];
 
   useEffect(() => {
     fetchPlays();
@@ -137,9 +158,9 @@ export function PlaysList() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      draft: 'bg-yellow-100 text-yellow-800',
-      completed: 'bg-green-100 text-green-800',
-      archived: 'bg-gray-100 text-gray-800',
+      draft: 'bg-yellow-100 border-2 border-yellow-500 text-yellow-800',
+      completed: 'bg-green-100 border-2 border-green-500 text-green-800',
+      archived: 'bg-gray-100 border-2 border-gray-500 text-gray-800',
     };
 
     const labels = {
@@ -150,7 +171,7 @@ export function PlaysList() {
 
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
+        className={`px-2 py-1 rounded text-xs font-medium font-ui ${styles[status]}`}
       >
         {labels[status]}
       </span>
@@ -158,12 +179,12 @@ export function PlaysList() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <div className="min-h-screen bg-cream">
+      <HeaderGlobal user={user} menuItems={menuItems} />
 
       <main className="container-custom py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Mes pièces</h1>
+          <h1 className="text-3xl font-bold font-ui text-black">Mes pièces</h1>
           <Button onClick={() => setShowCreateModal(true)}>
             Créer une pièce
           </Button>
@@ -171,7 +192,7 @@ export function PlaysList() {
 
         <div className="mb-6 flex flex-wrap gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium font-ui text-black mb-2">
               Statut
             </label>
             <select
@@ -179,7 +200,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, status: e.target.value }))
               }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="">Tous</option>
               <option value="draft">Brouillon</option>
@@ -189,7 +210,7 @@ export function PlaysList() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium font-ui text-black mb-2">
               Trier par
             </label>
             <select
@@ -197,7 +218,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
               }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="updated_at">Dernière modification</option>
               <option value="created_at">Date de création</option>
@@ -206,7 +227,7 @@ export function PlaysList() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium font-ui text-black mb-2">
               Ordre
             </label>
             <select
@@ -214,7 +235,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortOrder: e.target.value }))
               }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="desc">Décroissant</option>
               <option value="asc">Croissant</option>
@@ -228,7 +249,7 @@ export function PlaysList() {
           </div>
         ) : plays.length === 0 ? (
           <Card className="text-center py-12">
-            <p className="text-gray-500 mb-4">Aucune pièce trouvée</p>
+            <p className="text-black font-ui mb-4">Aucune pièce trouvée</p>
             <Button onClick={() => setShowCreateModal(true)}>
               Créer votre première pièce
             </Button>
@@ -246,22 +267,22 @@ export function PlaysList() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-gray-900">
+                        <h3 className="text-xl font-semibold font-ui text-black">
                           {play.title}
                         </h3>
                         {getStatusBadge(play.status)}
                       </div>
                       {play.subtitle && (
-                        <p className="text-gray-600 mb-3">{play.subtitle}</p>
+                        <p className="text-black/70 font-ui mb-3">{play.subtitle}</p>
                       )}
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-black/60 font-ui">
                         Dernière modification : {formatDate(play.updatedAt)}
                       </p>
                     </div>
                     <div className="relative" ref={openMenuId === play.id ? menuRef : null}>
                       <button
                         onClick={(e) => toggleMenu(play.id, e)}
-                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-black hover:text-orange hover:bg-orange/10 rounded transition-colors border-2 border-transparent hover:border-black"
                         aria-label="Actions"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -269,16 +290,16 @@ export function PlaysList() {
                         </svg>
                       </button>
                       {openMenuId === play.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-brutal border-2 border-black py-1 z-10">
                           <button
                             onClick={(e) => handleVersionsClick(play, e)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                            className="w-full text-left px-4 py-2 text-sm font-ui text-black hover:bg-orange/10 transition-colors"
                           >
                             Versions
                           </button>
                           <button
                             onClick={(e) => handleDeleteClick(play, e)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            className="w-full text-left px-4 py-2 text-sm font-ui text-red-600 hover:bg-red-50 transition-colors"
                           >
                             Supprimer la pièce
                           </button>
@@ -364,7 +385,7 @@ export function PlaysList() {
           </div>
         }
       >
-        <p className="text-gray-700">
+        <p className="text-black font-ui">
           Êtes-vous sûr de vouloir supprimer la pièce{' '}
           <strong>{selectedPlay?.title}</strong> ? Cette action est
           irréversible.

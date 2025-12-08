@@ -19,7 +19,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
   return (
     <div className="flex items-center justify-center space-x-2 mt-6">
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -31,7 +31,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
         {pages.map((page, index) => {
           if (page === '...') {
             return (
-              <span key={`ellipsis-${index}`} className="px-3 py-2">
+              <span key={`ellipsis-${index}`} className="px-3 py-2 font-ui text-black">
                 ...
               </span>
             );
@@ -42,11 +42,11 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
               key={page}
               onClick={() => onPageChange(page)}
               className={`
-                px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                px-3 py-2 rounded text-sm font-medium font-ui transition-all border-2 border-black cursor-pointer
                 ${
                   currentPage === page
-                    ? 'bg-primary text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                    ? 'bg-orange text-white shadow-brutal'
+                    : 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:-translate-x-[1px] hover:-translate-y-[1px]'
                 }
               `}
             >
@@ -57,7 +57,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
       </div>
 
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}

@@ -158,15 +158,15 @@ export function Register() {
     <AuthLayout title="Créer un compte" subtitle="Commencez à écrire votre pièce">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 rounded font-ui">
             {errors.general}
           </div>
         )}
 
         {/* Critères de validation */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">Critères de validation</h3>
-          <ul className="text-xs text-blue-800 space-y-1">
+        <div className="bg-violet/10 border-2 border-violet rounded p-4">
+          <h3 className="text-sm font-semibold font-ui text-black mb-2">Critères de validation</h3>
+          <ul className="text-xs text-black font-ui space-y-1">
             <li className="flex items-start">
               <span className="mr-2">•</span>
               <span><strong>Email :</strong> Format valide (exemple@domaine.com)</span>
@@ -223,7 +223,7 @@ export function Register() {
           {formData.password && (
             <div className="mt-2">
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-gray-200 border-2 border-black rounded overflow-hidden">
                   <div
                     className={`h-full transition-all ${
                       passwordStrength === 'weak'
@@ -234,7 +234,7 @@ export function Register() {
                     }`}
                   />
                 </div>
-                <span className="text-xs font-medium">
+                <span className="text-xs font-medium font-ui">
                   {passwordStrength === 'weak' && <span className="text-red-600">Faible</span>}
                   {passwordStrength === 'medium' && <span className="text-yellow-600">Moyen</span>}
                   {passwordStrength === 'strong' && <span className="text-green-600">Fort</span>}
@@ -268,16 +268,16 @@ export function Register() {
         {/* Barre de chargement avec timer */}
         {isLoading && (
           <div className="space-y-2">
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 border-2 border-black rounded h-2 overflow-hidden">
               <div
-                className="bg-primary h-2 rounded-full transition-all duration-100 ease-linear"
+                className="bg-orange h-2 transition-all duration-100 ease-linear"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
             {showSlowConnectionMessage && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+              <div className="bg-yellow-50 border-2 border-yellow-500 text-yellow-800 px-4 py-3 rounded text-sm font-ui">
                 La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
-                <a href="mailto:scenacte@gmail.com" className="font-medium underline">
+                <a href="mailto:scenacte@gmail.com" className="font-medium underline hover:text-orange">
                   scenacte@gmail.com
                 </a>
               </div>
@@ -285,11 +285,11 @@ export function Register() {
           </div>
         )}
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm text-black font-ui">
           Déjà un compte ?{' '}
           <Link
             to="/login"
-            className="font-medium text-primary hover:text-primary-600"
+            className="font-medium text-black hover:text-orange transition-colors underline"
           >
             Se connecter
           </Link>

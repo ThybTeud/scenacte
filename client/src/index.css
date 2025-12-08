@@ -1,18 +1,44 @@
 @import "tailwindcss";
-@import "./styles/tokens.css";
 
 @theme {
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary: #3b82f6;
+  /* Couleurs du design system */
+  --color-cream: #F5E6D3;
+  --color-orange: #FF9933;
+  --color-accent-hover: #E68A2E;
+  --color-violet: #2D1B69;
+  --color-black: #1a1a1a;
+  --color-white: #FFFFFF;
+
+  /* Couleurs primary (legacy) */
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-200: #BFDBFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+  --color-primary-700: #1D4ED8;
+  --color-primary-800: #1E40AF;
+  --color-primary-900: #1E3A8A;
+  --color-primary: #3B82F6;
+
+  /* Typographie */
+  --font-ui: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+  --font-theater: 'Crimson Text', Georgia, serif;
+  --font-editor: 'Fira Code', ui-monospace, monospace;
+
+  /* Ombres brutales */
+  --shadow-brutal: 4px 4px 0 #1a1a1a;
+  --shadow-brutal-sm: 2px 2px 0 #1a1a1a;
+  --shadow-brutal-lg: 6px 6px 0 #1a1a1a;
+  --shadow-brutal-hover: 6px 6px 0 #1a1a1a;
+  --shadow-brutal-active: 2px 2px 0 #1a1a1a;
+
+  /* Border radius */
+  --radius-brutal: 4px;
+
+  /* Spacing */
+  --spacing-brutal-offset: 2px;
 }
 
 * {
@@ -22,8 +48,8 @@
 body {
   margin: 0;
   font-family: var(--font-ui);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background-color: var(--color-cream);
+  color: var(--color-black);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

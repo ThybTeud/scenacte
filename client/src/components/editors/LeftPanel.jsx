@@ -23,15 +23,15 @@ export function LeftPanel({
   ];
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 border-r border-gray-200">
+    <div className="h-full flex flex-col bg-white" style={{ borderRight: '1px solid #e5e5e5' }}>
       {/* Toolbar Section */}
-      <div className="p-4 border-b border-gray-200 space-y-3">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+      <div className="p-4 space-y-3" style={{ borderBottom: '1px solid #e5e5e5' }}>
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 font-ui">
           Actions
         </h3>
 
         {/* Groupe 1: Historique */}
-        <div className="flex gap-2 pb-3 border-b border-gray-200">
+        <div className="flex gap-2 pb-3" style={{ borderBottom: '1px solid #e5e5e5' }}>
           <Button
             variant="ghost"
             size="sm"
@@ -106,8 +106,8 @@ export function LeftPanel({
       </div>
 
       {/* Raccourcis de mise en page */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+      <div className="p-4 flex-shrink-0" style={{ borderBottom: '1px solid #e5e5e5' }}>
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
           Raccourcis de mise en page
         </h3>
         <div className="space-y-1.5">
@@ -115,7 +115,8 @@ export function LeftPanel({
             <button
               key={format.id}
               onClick={() => onToggleFormat(format.id)}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-2 text-sm text-left text-gray-700 bg-white rounded hover:bg-gray-50 transition-colors font-ui"
+              style={{ border: '1px solid #e5e5e5' }}
             >
               <span className="flex items-center gap-2">
                 <span className="text-base">{format.icon}</span>
@@ -129,11 +130,11 @@ export function LeftPanel({
 
       {/* Liste des personnages */}
       <div className="p-4 flex-1 overflow-y-auto">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
           Personnages
         </h3>
         {characters.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-gray-500 italic font-ui">
             Aucun personnage défini
           </p>
         ) : (
@@ -142,11 +143,12 @@ export function LeftPanel({
               <button
                 key={index}
                 onClick={() => onInsertCharacter(character)}
-                className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-colors"
+                className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white rounded hover:bg-orange-50 hover:text-orange-700 transition-colors font-ui"
+                style={{ border: '1px solid #e5e5e5' }}
                 title={`Insérer @${character}`}
               >
                 <span className="flex items-center gap-2">
-                  <span className="text-orange-500">@</span>
+                  <span className="text-orange">@</span>
                   <span className="font-medium">{character}</span>
                 </span>
               </button>

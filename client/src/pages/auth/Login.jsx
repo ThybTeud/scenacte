@@ -96,7 +96,7 @@ export function Login() {
     <AuthLayout title="Connexion" subtitle="Bienvenue sur Scenacte">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 rounded font-ui">
             {errors.general}
           </div>
         )}
@@ -126,7 +126,7 @@ export function Login() {
         <div className="flex items-center justify-between">
           <Link
             to="/forgot-password"
-            className="text-sm text-primary hover:text-primary-600"
+            className="text-sm text-black font-ui font-medium hover:text-orange transition-colors underline"
           >
             Mot de passe oublié ?
           </Link>
@@ -144,16 +144,16 @@ export function Login() {
         {/* Barre de chargement avec timer */}
         {isLoading && (
           <div className="space-y-2">
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 border-2 border-black rounded h-2 overflow-hidden">
               <div
-                className="bg-primary h-2 rounded-full transition-all duration-100 ease-linear"
+                className="bg-orange h-2 transition-all duration-100 ease-linear"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
             {showSlowConnectionMessage && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded text-sm">
+              <div className="bg-yellow-50 border-2 border-yellow-500 text-yellow-800 px-4 py-3 rounded text-sm font-ui">
                 La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
-                <a href="mailto:scenacte@gmail.com" className="font-medium underline">
+                <a href="mailto:scenacte@gmail.com" className="font-medium underline hover:text-orange">
                   scenacte@gmail.com
                 </a>
               </div>
@@ -161,11 +161,11 @@ export function Login() {
           </div>
         )}
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm text-black font-ui">
           Pas encore de compte ?{' '}
           <Link
             to="/register"
-            className="font-medium text-primary hover:text-primary-600"
+            className="font-medium text-black hover:text-orange transition-colors underline"
           >
             Créer un compte
           </Link>

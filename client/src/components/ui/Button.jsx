@@ -1,7 +1,7 @@
 /**
  * Button component - Composant de bouton neobrutalist
  * @param {Object} props
- * @param {'primary'|'secondary'|'ghost'} [props.variant='primary'] - Variante du bouton
+ * @param {'primary'|'secondary'|'ghost'|'danger'} [props.variant='primary'] - Variante du bouton
  * @param {'sm'|'md'|'lg'} [props.size='md'] - Taille du bouton
  * @param {React.ReactNode} [props.icon] - Icône à afficher
  * @param {string} [props.shortcut] - Raccourci clavier à afficher
@@ -26,13 +26,14 @@ export function Button({
   ...props
 }) {
   // Classes de base
-  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-brutal border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-2 border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
 
   // Variantes de couleurs
   const variants = {
     primary: 'bg-orange text-white hover:bg-accent-hover shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
     secondary: 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
     ghost: 'bg-transparent text-black border-0 shadow-none hover:bg-gray-100',
+    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active',
   };
 
   // Tailles
@@ -44,10 +45,10 @@ export function Button({
 
   // Gestion du border-radius pour les groupes
   const groupedStyles = {
-    none: 'rounded-brutal',
-    left: 'rounded-l-brutal border-r-0',
+    none: 'rounded',
+    left: 'rounded-l border-r-0',
     middle: 'rounded-none border-r-0',
-    right: 'rounded-r-brutal',
+    right: 'rounded-r',
   };
 
   // Effet hover/active
