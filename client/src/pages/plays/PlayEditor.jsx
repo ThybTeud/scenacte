@@ -10,6 +10,7 @@ import { CodeMirrorEditor } from '../../components/editors/CodeMirrorEditor';
 import { PlayPreview } from '../../components/editors/PlayPreview';
 import { LeftPanel } from '../../components/editors/LeftPanel';
 import { RightPanel } from '../../components/editors/RightPanel';
+import { PdfExportModal } from '../../components/export/PdfExportModal';
 import { useSyncScroll } from '../../hooks/useSyncScroll';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { PlayParser, astToHTML, extractStructure } from '../../utils/playParser';
@@ -35,6 +36,7 @@ export function PlayEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [showPdfExport, setShowPdfExport] = useState(false);
   const saveTimeoutRef = useRef(null);
 
   // États pour le responsive
@@ -263,6 +265,7 @@ export function PlayEditor() {
           menuItems={menuItems}
           onSettingsClick={() => {}}
           onStatsClick={() => {}}
+          onExportPdfClick={() => {}}
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <Loader />
@@ -283,6 +286,7 @@ export function PlayEditor() {
         menuItems={menuItems}
         onSettingsClick={() => setShowRightPanel(!showRightPanel)}
         onStatsClick={() => setShowRightPanel(true)}
+        onExportPdfClick={() => setShowPdfExport(true)}
       />
 
       {/* Barre d'état et boutons de navigation */}
@@ -466,6 +470,17 @@ export function PlayEditor() {
         onClose={() => setShowVersions(false)}
         playId={id}
         onRestore={fetchPlay}
+      />
+
+      <PdfExportModal
+        isOpen={showPdfExport}
+        onClose={() => setShowPdfExport(false)}
+        play={{
+          title: play.title,
+          author: user?.name || 'Auteur inconnu',
+          rawContent: content,
+          created_at: play.created_at
+        }}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import Avatar from '../ui/Avatar';
  * @param {Array<Object>} props.menuItems - Items du menu avatar
  * @param {Function} [props.onSettingsClick] - Callback pour le bouton Paramètres
  * @param {Function} [props.onStatsClick] - Callback pour le bouton Stats
+ * @param {Function} [props.onExportPdfClick] - Callback pour le bouton Export PDF
  * @param {string} [props.className] - Classes CSS additionnelles
  */
 export default function HeaderEditor({
@@ -18,6 +19,7 @@ export default function HeaderEditor({
   menuItems,
   onSettingsClick,
   onStatsClick,
+  onExportPdfClick,
   className = '',
 }) {
   return (
@@ -41,6 +43,32 @@ export default function HeaderEditor({
 
           {/* Groupe de boutons à droite */}
           <div className="flex items-center gap-3">
+            {/* Bouton Export PDF */}
+            {onExportPdfClick && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={onExportPdfClick}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                }
+              >
+                Exporter PDF
+              </Button>
+            )}
+
             <ButtonGroup>
               <Button
                 variant="secondary"

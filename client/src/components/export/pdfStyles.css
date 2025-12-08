@@ -1,0 +1,253 @@
+/**
+ * Styles CSS Paged Media pour l'export PDF avec PagedJS
+ * Gère le formatage d'impression des pièces de théâtre
+ */
+
+/* Import de la police Crimson Text */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+
+/* Configuration de la page */
+@page {
+  size: A4;
+  margin: 20mm 25mm;
+
+  /* Numéro de page en bas au centre */
+  @bottom-center {
+    content: counter(page);
+    font-family: 'Crimson Text', serif;
+    font-size: 10pt;
+    color: #333;
+  }
+}
+
+/* Page de titre sans numéro */
+@page title-page {
+  @bottom-center {
+    content: none;
+  }
+}
+
+/* Page de contenu avec numéro */
+@page content-page {
+  @bottom-center {
+    content: counter(page);
+    font-family: 'Crimson Text', serif;
+    font-size: 10pt;
+    color: #333;
+  }
+}
+
+/* Styles généraux du document PDF */
+.pdf-document {
+  font-family: 'Crimson Text', serif;
+  color: #000;
+  line-height: 1.6;
+}
+
+/* Page de titre */
+.title-page {
+  page: title-page;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.title-page h1 {
+  font-family: 'Crimson Text', serif;
+  font-size: 32pt;
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.title-page .author {
+  font-size: 18pt;
+  font-weight: 400;
+  margin: 2rem 0 1rem 0;
+  color: #333;
+}
+
+.title-page .date {
+  font-size: 12pt;
+  font-weight: 400;
+  margin: 1rem 0;
+  color: #666;
+  font-style: italic;
+}
+
+/* Contenu de la pièce */
+.play-content {
+  page: content-page;
+  font-family: 'Crimson Text', serif;
+  font-size: 12pt;
+  line-height: 1.6;
+}
+
+/* Actes : saut de page avant + style */
+.act {
+  page-break-before: always;
+  font-size: 18pt;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 3rem 0 2rem 0;
+  letter-spacing: 0.05em;
+}
+
+/* Premier acte : pas de saut de page */
+.act:first-child {
+  page-break-before: avoid;
+}
+
+/* Scènes */
+.scene {
+  font-size: 14pt;
+  font-weight: 600;
+  text-align: center;
+  margin: 2rem 0 1.5rem 0;
+  font-variant: small-caps;
+}
+
+/* Éviter les scènes orphelines en bas de page */
+.scene {
+  page-break-after: avoid;
+}
+
+/* Personnages */
+.character {
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 1.5rem 0 0.5rem 0;
+  font-size: 11pt;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* Éviter les personnages orphelins */
+.character {
+  page-break-after: avoid;
+}
+
+/* Dialogues */
+.dialogue {
+  margin: 0 0 0.75rem 0;
+  text-align: justify;
+  text-indent: 0;
+  hyphens: auto;
+}
+
+/* Didascalies (indications scéniques) */
+.stage-direction {
+  font-style: italic;
+  color: #555;
+  margin: 1rem 0;
+  text-align: right;
+  padding-right: 2rem;
+}
+
+/* Didascalies dans le dialogue */
+.stage-direction.inline {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+/* Texte général */
+.text {
+  margin: 0.75rem 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* Éviter les veuves et orphelines */
+p {
+  orphans: 3;
+  widows: 3;
+}
+
+/* Éviter les sauts de page dans les éléments critiques */
+.character + .dialogue,
+.character + .stage-direction {
+  page-break-before: avoid;
+}
+
+/* Style de la preview dans la modale */
+.pagedjs_pages {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pagedjs_page {
+  margin: 0 auto 1rem auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Masquer les éléments PagedJS lors de l'impression */
+@media print {
+  .pagedjs_pages {
+    margin: 0;
+    width: auto;
+  }
+
+  .pagedjs_page {
+    margin: 0;
+    box-shadow: none;
+  }
+}
+
+/* Styles pour les nodes AST du parser */
+.play-root h1.acte {
+  page-break-before: always;
+  font-size: 18pt;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 3rem 0 2rem 0;
+}
+
+.play-root h1.acte:first-child {
+  page-break-before: avoid;
+}
+
+.play-root h2.scene {
+  font-size: 14pt;
+  font-weight: 600;
+  text-align: center;
+  margin: 2rem 0 1.5rem 0;
+  font-variant: small-caps;
+  page-break-after: avoid;
+}
+
+.play-root h3.personnage {
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 1.5rem 0 0.5rem 0;
+  font-size: 11pt;
+  text-align: center;
+  page-break-after: avoid;
+}
+
+.play-root p.didascalie {
+  font-style: italic;
+  color: #555;
+  margin: 1rem 0;
+  text-align: right;
+  padding-right: 2rem;
+}
+
+.play-root p.dialogue {
+  margin: 0 0 0.75rem 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.play-root p.text {
+  margin: 0.75rem 0;
+  text-align: justify;
+  hyphens: auto;
+}
