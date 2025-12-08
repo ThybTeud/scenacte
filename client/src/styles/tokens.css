@@ -1,0 +1,79 @@
+/**
+ * Design System Tokens - Scenacte Neobrutalist
+ * Variables CSS pour le design system neobrutalist de Scenacte
+ */
+
+:root {
+  /* ===========================
+     Couleurs de base
+     =========================== */
+  --color-cream: #F5E6D3;
+  --color-orange: #FF9933;
+  --color-violet: #2D1B69;
+  --color-black: #1a1a1a;
+  --color-white: #FFFFFF;
+
+  /* ===========================
+     Couleurs sémantiques
+     =========================== */
+  --color-bg-primary: var(--color-cream);
+  --color-accent: var(--color-orange);
+  --color-accent-hover: #E68A2E;
+  --color-text-primary: var(--color-black);
+  --color-surface: var(--color-white);
+
+  /* ===========================
+     Typographie
+     =========================== */
+  --font-ui: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+  --font-theater: 'Crimson Text', Georgia, serif;
+  --font-editor: 'Fira Code', ui-monospace, monospace;
+
+  /* ===========================
+     Neobrutalist - Bordures
+     =========================== */
+  --border-width: 2px;
+  --border-color: var(--color-black);
+
+  /* ===========================
+     Neobrutalist - Ombres
+     =========================== */
+  --shadow-brutal: 4px 4px 0 var(--color-black);
+  --shadow-brutal-sm: 2px 2px 0 var(--color-black);
+  --shadow-brutal-lg: 6px 6px 0 var(--color-black);
+  --shadow-brutal-active: 2px 2px 0 var(--color-black);
+
+  /* ===========================
+     Radius
+     =========================== */
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-lg: 8px;
+
+  /* ===========================
+     Espacements (échelle 4px)
+     =========================== */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-7: 1.75rem;  /* 28px */
+  --space-8: 2rem;     /* 32px */
+
+  /* ===========================
+     Transitions
+     =========================== */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ===========================
+     Z-index
+     =========================== */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-modal: 1030;
+  --z-tooltip: 1040;
+}

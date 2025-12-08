@@ -1,17 +1,31 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 @theme {
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary: #3b82f6;
+  /* Couleurs */
+  --color-cream: #F5E6D3;
+  --color-orange: #FF9933;
+  --color-violet: #2D1B69;
+  --color-black: #1a1a1a;
+  --color-white: #FFFFFF;
+
+  /* Couleurs sémantiques */
+  --color-bg-primary: var(--color-cream);
+  --color-accent: var(--color-orange);
+  --color-accent-hover: #E68A2E;
+  --color-text-primary: var(--color-black);
+  --color-surface: var(--color-white);
+
+  /* Neobrutalist */
+  --border-width: 2px;
+  --shadow-brutal: 4px 4px 0 var(--color-black);
+  --shadow-brutal-sm: 2px 2px 0 var(--color-black);
+  --shadow-brutal-lg: 6px 6px 0 var(--color-black);
+
+  /* Radius */
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-lg: 8px;
 }
 
 * {
@@ -20,7 +34,9 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-ui);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
