@@ -26,7 +26,7 @@ export function Button({
   ...props
 }) {
   // Classes de base
-  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-brutal border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-ui font-medium border-2 border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
 
   // Variantes de couleurs
   const variants = {
@@ -45,7 +45,7 @@ export function Button({
 
   // Gestion du border-radius pour les groupes
   const groupedStyles = {
-    none: 'rounded-brutal',
+    none: 'rounded',
     left: 'rounded-l-brutal border-r-0',
     middle: 'rounded-none border-r-0',
     right: 'rounded-r-brutal',

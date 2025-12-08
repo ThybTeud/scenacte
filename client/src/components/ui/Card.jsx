@@ -14,9 +14,9 @@ export function Card({ children, header, className = '', onClick, hover = false 
     <div
       className={`
         bg-white
-        border-brutal
+        border-2
         border-black
-        rounded-brutal
+        rounded
         shadow-brutal
         overflow-hidden
         ${isClickable ? 'cursor-pointer hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal-hover transition-all' : ''}
@@ -25,7 +25,7 @@ export function Card({ children, header, className = '', onClick, hover = false 
       onClick={onClick}
     >
       {header && (
-        <div className="bg-violet text-white px-6 py-3 font-ui font-semibold border-b-brutal border-black">
+        <div className="bg-violet text-white px-6 py-3 font-ui font-semibold border-b-2 border-black">
           {typeof header === 'string' ? <h3 className="text-lg">{header}</h3> : header}
         </div>
       )}

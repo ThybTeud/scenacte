@@ -81,7 +81,7 @@ export function ForgotPassword() {
     return (
       <AuthLayout title="Email envoyé">
         <div className="text-center space-y-4">
-          <div className="bg-green-50 border-brutal border-green-500 text-green-700 px-4 py-3 rounded-brutal font-ui">
+          <div className="bg-green-50 border-2 border-green-500 text-green-700 px-4 py-3 rounded font-ui">
             Un email de réinitialisation a été envoyé à <strong>{email}</strong>.
             Veuillez vérifier votre boîte de réception.
           </div>
@@ -123,14 +123,14 @@ export function ForgotPassword() {
         {/* Barre de chargement avec timer */}
         {isLoading && (
           <div className="space-y-2">
-            <div className="w-full bg-gray-200 border-brutal border-black rounded-brutal h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 border-2 border-black rounded h-2 overflow-hidden">
               <div
                 className="bg-orange h-2 transition-all duration-100 ease-linear"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
             {showSlowConnectionMessage && (
-              <div className="bg-yellow-50 border-brutal border-yellow-500 text-yellow-800 px-4 py-3 rounded-brutal text-sm font-ui">
+              <div className="bg-yellow-50 border-2 border-yellow-500 text-yellow-800 px-4 py-3 rounded text-sm font-ui">
                 La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
                 <a href="mailto:scenacte@gmail.com" className="font-medium underline hover:text-orange">
                   scenacte@gmail.com

@@ -46,11 +46,11 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`bg-white border-brutal border-black rounded-brutal shadow-brutal w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
+        className={`bg-white border-2 border-black rounded shadow-brutal w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b-brutal border-black bg-violet">
+          <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black bg-violet">
             <h2 className="text-xl font-semibold font-ui text-white">{title}</h2>
             <button
               onClick={onClose}
@@ -69,7 +69,7 @@ export function Modal({
         </div>
 
         {footer && (
-          <div className="px-6 py-4 border-t-brutal border-black bg-cream">
+          <div className="px-6 py-4 border-t-2 border-black bg-cream">
             {footer}
           </div>
         )}

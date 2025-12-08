@@ -158,13 +158,13 @@ export function Register() {
     <AuthLayout title="Créer un compte" subtitle="Commencez à écrire votre pièce">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
-          <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
+          <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 rounded font-ui">
             {errors.general}
           </div>
         )}
 
         {/* Critères de validation */}
-        <div className="bg-violet/10 border-brutal border-violet rounded-brutal p-4">
+        <div className="bg-violet/10 border-2 border-violet rounded p-4">
           <h3 className="text-sm font-semibold font-ui text-black mb-2">Critères de validation</h3>
           <ul className="text-xs text-black font-ui space-y-1">
             <li className="flex items-start">
@@ -223,7 +223,7 @@ export function Register() {
           {formData.password && (
             <div className="mt-2">
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-gray-200 border-brutal border-black rounded-brutal overflow-hidden">
+                <div className="flex-1 h-2 bg-gray-200 border-2 border-black rounded overflow-hidden">
                   <div
                     className={`h-full transition-all ${
                       passwordStrength === 'weak'
@@ -268,14 +268,14 @@ export function Register() {
         {/* Barre de chargement avec timer */}
         {isLoading && (
           <div className="space-y-2">
-            <div className="w-full bg-gray-200 border-brutal border-black rounded-brutal h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 border-2 border-black rounded h-2 overflow-hidden">
               <div
                 className="bg-orange h-2 transition-all duration-100 ease-linear"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
             {showSlowConnectionMessage && (
-              <div className="bg-yellow-50 border-brutal border-yellow-500 text-yellow-800 px-4 py-3 rounded-brutal text-sm font-ui">
+              <div className="bg-yellow-50 border-2 border-yellow-500 text-yellow-800 px-4 py-3 rounded text-sm font-ui">
                 La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
                 <a href="mailto:scenacte@gmail.com" className="font-medium underline hover:text-orange">
                   scenacte@gmail.com

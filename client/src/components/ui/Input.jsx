@@ -51,8 +51,8 @@ export function Input({
         disabled={disabled}
         className={`
           w-full px-3 py-2
-          border-brutal border-black
-          rounded-brutal
+          border-2 border-black
+          rounded
           text-black placeholder-gray-400
           font-ui
           focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2

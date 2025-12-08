@@ -96,7 +96,7 @@ export function Login() {
     <AuthLayout title="Connexion" subtitle="Bienvenue sur Scenacte">
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
-          <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
+          <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 rounded font-ui">
             {errors.general}
           </div>
         )}
@@ -144,14 +144,14 @@ export function Login() {
         {/* Barre de chargement avec timer */}
         {isLoading && (
           <div className="space-y-2">
-            <div className="w-full bg-gray-200 border-brutal border-black rounded-brutal h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 border-2 border-black rounded h-2 overflow-hidden">
               <div
                 className="bg-orange h-2 transition-all duration-100 ease-linear"
                 style={{ width: `${loadingProgress}%` }}
               />
             </div>
             {showSlowConnectionMessage && (
-              <div className="bg-yellow-50 border-brutal border-yellow-500 text-yellow-800 px-4 py-3 rounded-brutal text-sm font-ui">
+              <div className="bg-yellow-50 border-2 border-yellow-500 text-yellow-800 px-4 py-3 rounded text-sm font-ui">
                 La connexion au serveur est plus lente que d'habitude. Tentez de recharger la page. Si l'erreur persiste, vous pouvez contacter{' '}
                 <a href="mailto:scenacte@gmail.com" className="font-medium underline hover:text-orange">
                   scenacte@gmail.com

@@ -158,9 +158,9 @@ export function PlaysList() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      draft: 'bg-yellow-100 border-brutal border-yellow-500 text-yellow-800',
-      completed: 'bg-green-100 border-brutal border-green-500 text-green-800',
-      archived: 'bg-gray-100 border-brutal border-gray-500 text-gray-800',
+      draft: 'bg-yellow-100 border-2 border-yellow-500 text-yellow-800',
+      completed: 'bg-green-100 border-2 border-green-500 text-green-800',
+      archived: 'bg-gray-100 border-2 border-gray-500 text-gray-800',
     };
 
     const labels = {
@@ -171,7 +171,7 @@ export function PlaysList() {
 
     return (
       <span
-        className={`px-2 py-1 rounded-brutal text-xs font-medium font-ui ${styles[status]}`}
+        className={`px-2 py-1 rounded text-xs font-medium font-ui ${styles[status]}`}
       >
         {labels[status]}
       </span>
@@ -200,7 +200,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, status: e.target.value }))
               }
-              className="border-brutal border-black rounded-brutal px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="">Tous</option>
               <option value="draft">Brouillon</option>
@@ -218,7 +218,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
               }
-              className="border-brutal border-black rounded-brutal px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="updated_at">Dernière modification</option>
               <option value="created_at">Date de création</option>
@@ -235,7 +235,7 @@ export function PlaysList() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortOrder: e.target.value }))
               }
-              className="border-brutal border-black rounded-brutal px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
+              className="border-2 border-black rounded px-3 py-2 font-ui bg-white focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               <option value="desc">Décroissant</option>
               <option value="asc">Croissant</option>
@@ -282,7 +282,7 @@ export function PlaysList() {
                     <div className="relative" ref={openMenuId === play.id ? menuRef : null}>
                       <button
                         onClick={(e) => toggleMenu(play.id, e)}
-                        className="p-2 text-black hover:text-orange hover:bg-orange/10 rounded-brutal transition-colors border-brutal border-transparent hover:border-black"
+                        className="p-2 text-black hover:text-orange hover:bg-orange/10 rounded transition-colors border-2 border-transparent hover:border-black"
                         aria-label="Actions"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -290,7 +290,7 @@ export function PlaysList() {
                         </svg>
                       </button>
                       {openMenuId === play.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-brutal shadow-brutal border-brutal border-black py-1 z-10">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-brutal border-2 border-black py-1 z-10">
                           <button
                             onClick={(e) => handleVersionsClick(play, e)}
                             className="w-full text-left px-4 py-2 text-sm font-ui text-black hover:bg-orange/10 transition-colors"

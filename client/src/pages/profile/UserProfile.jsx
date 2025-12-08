@@ -195,7 +195,7 @@ export function UserProfile() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {errors.general && (
-                <div className="bg-red-50 border-brutal border-red-500 text-red-700 px-4 py-3 rounded-brutal font-ui">
+                <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-3 rounded font-ui">
                   {errors.general}
                 </div>
               )}
@@ -222,7 +222,7 @@ export function UserProfile() {
                 disabled={isSaving}
               />
 
-              <div className="my-6 border-t-brutal border-black"></div>
+              <div className="my-6 border-t-2 border-black"></div>
 
               <h3 className="text-lg font-semibold font-ui text-black">
                 Changer le mot de passe
@@ -274,7 +274,7 @@ export function UserProfile() {
             </form>
           </Card>
 
-          <Card className="border-brutal border-red-500">
+          <Card className="border-2 border-red-500">
             <h2 className="text-xl font-semibold font-ui text-red-600 mb-4">
               Zone de danger
             </h2>

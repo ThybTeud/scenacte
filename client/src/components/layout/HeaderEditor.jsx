@@ -24,7 +24,7 @@ export default function HeaderEditor({
     <header
       className={`
         bg-cream
-        border-b-brutal
+        border-b-2
         border-black
         sticky
         top-0
