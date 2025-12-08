@@ -1,0 +1,60 @@
+/**
+ * Design System Neobrutalist - Scenacte
+ * Variables CSS pour l'identité visuelle et les tokens de design
+ */
+
+:root {
+  /* ==================== COULEURS ==================== */
+
+  /* Palette principale */
+  --color-cream: #F5E6D3;
+  --color-orange: #FF9933;
+  --color-violet: #2D1B69;
+  --color-black: #1a1a1a;
+  --color-white: #FFFFFF;
+
+  /* Couleurs sémantiques */
+  --color-bg-primary: var(--color-cream);
+  --color-accent: var(--color-orange);
+  --color-accent-hover: #E68A2E;
+  --color-text-primary: var(--color-black);
+  --color-surface: var(--color-white);
+
+  /* ==================== TYPOGRAPHIE ==================== */
+
+  /* Familles de polices */
+  --font-ui: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+  --font-theater: 'Crimson Text', Georgia, serif;
+  --font-editor: 'Fira Code', ui-monospace, monospace;
+
+  /* ==================== NEOBRUTALIST ==================== */
+
+  /* Bordures */
+  --border-width: 2px;
+  --border-color: var(--color-black);
+
+  /* Ombres brutales */
+  --shadow-brutal: 4px 4px 0 var(--color-black);
+  --shadow-brutal-sm: 2px 2px 0 var(--color-black);
+  --shadow-brutal-lg: 6px 6px 0 var(--color-black);
+
+  /* Rayon de bordure */
+  --radius: 4px;
+
+  /* ==================== ESPACEMENTS ==================== */
+
+  /* Échelle de 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+
+  /* ==================== TRANSITIONS ==================== */
+
+  --transition-base: 150ms ease-in-out;
+  --transition-shadow: transform 150ms ease-in-out, box-shadow 150ms ease-in-out;
+}
