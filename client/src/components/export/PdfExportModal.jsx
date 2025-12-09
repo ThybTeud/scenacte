@@ -35,17 +35,29 @@ export function PdfExportModal({ isOpen, onClose, play }) {
 
     const renderPreview = async () => {
       try {
+        // Vérifier que les refs sont disponibles
+        const source = contentRef.current;
+        const preview = previewContainerRef.current;
+
+        if (!source || !preview) {
+          console.error('Refs non disponibles');
+          return;
+        }
+
+        // Vider le conteneur preview
+        preview.innerHTML = '';
+
         // Créer une nouvelle instance du previewer
         const paged = new Previewer();
 
-        // Cloner le contenu pour le preview
-        const content = contentRef.current.cloneNode(true);
+        // Cloner le contenu pour le preview (PagedJS modifie le DOM)
+        const content = source.cloneNode(true);
 
         // Rendre la preview
         const flow = await paged.preview(
-          content,
-          [],
-          previewContainerRef.current
+          content,           // Contenu à paginer (élément DOM)
+          [],                // Styles externes (on utilise les styles inline)
+          preview            // Où rendre le résultat
         );
 
         if (isMounted) {
@@ -175,8 +187,14 @@ export function PdfExportModal({ isOpen, onClose, play }) {
 
   return (
     <>
-      {/* Contenu source caché pour PagedJS */}
-      <div style={{ display: 'none' }}>
+      {/* Contenu source hors écran mais dans le DOM - PagedJS a besoin de mesurer les éléments */}
+      <div style={{
+        position: 'absolute',
+        left: '-9999px',
+        top: '-9999px',
+        visibility: 'hidden',
+        pointerEvents: 'none'
+      }}>
         <div ref={contentRef}>
           <PdfTemplate play={play} />
         </div>
