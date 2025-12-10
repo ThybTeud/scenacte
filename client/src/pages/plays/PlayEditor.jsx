@@ -10,6 +10,7 @@ import { CodeMirrorEditor } from '../../components/editors/CodeMirrorEditor';
 import { PlayPreview } from '../../components/editors/PlayPreview';
 import { LeftPanel } from '../../components/editors/LeftPanel';
 import { RightPanel } from '../../components/editors/RightPanel';
+import { PdfExportModal } from '../../components/pdf/PdfExportModal';
 import { useSyncScroll } from '../../hooks/useSyncScroll';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { PlayParser, astToHTML, extractStructure } from '../../utils/playParser';
@@ -35,6 +36,7 @@ export function PlayEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [showPdfExport, setShowPdfExport] = useState(false);
   const saveTimeoutRef = useRef(null);
 
   // États pour le responsive
@@ -187,6 +189,21 @@ export function PlayEditor() {
       return null;
     }
   }, [debouncedContent]);
+
+  /**
+   * Générer le HTML pour le PDF export
+   */
+  const htmlContent = useMemo(() => {
+    if (!debouncedContent) return '';
+
+    try {
+      const ast = parser.parse(debouncedContent);
+      return astToHTML(ast);
+    } catch (error) {
+      console.error('Erreur lors de la génération HTML:', error);
+      return '';
+    }
+  }, [debouncedContent, parser]);
 
   
 
@@ -358,6 +375,7 @@ export function PlayEditor() {
               onRedo={() => {}} // TODO: Implémenter avec CodeMirror history
               onSave={handleManualSave}
               onDownload={handleDownload}
+              onExportPdf={() => setShowPdfExport(true)}
               onTogglePreview={() => setShowPreview(!showPreview)}
               onToggleFormat={toggleFormat}
               onInsertCharacter={insertCharacter}
@@ -466,6 +484,15 @@ export function PlayEditor() {
         onClose={() => setShowVersions(false)}
         playId={id}
         onRestore={fetchPlay}
+      />
+
+      <PdfExportModal
+        isOpen={showPdfExport}
+        onClose={() => setShowPdfExport(false)}
+        playTitle={play.title}
+        playSubtitle={play.subtitle}
+        htmlContent={htmlContent}
+        rawContent={content}
       />
     </div>
   );
