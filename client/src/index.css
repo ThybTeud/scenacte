@@ -2,12 +2,13 @@
 
 @theme {
   /* Couleurs du design system */
-  --color-cream: #F5E6D3;
+  --color-cream: #f8f5f2;
   --color-orange: #FF9933;
   --color-accent-hover: #E68A2E;
   --color-violet: #2D1B69;
   --color-black: #1a1a1a;
   --color-white: #FFFFFF;
+  --color-white-smoke: #fffffe;
 
   /* Couleurs primary (legacy) */
   --color-primary-50: #EFF6FF;

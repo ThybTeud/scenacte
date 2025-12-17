@@ -273,7 +273,7 @@ export function PlayEditor() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-cream">
+      <div className="min-h-screen">
         <HeaderEditor
           playTitle="Chargement..."
           user={user}
@@ -349,7 +349,7 @@ export function PlayEditor() {
           {/* Overlay backdrop (mobile/tablet) */}
           {showLeftPanel && (
             <div
-              className="absolute inset-0 bg-black bg-opacity-50 lg:hidden"
+              className="absolute inset-0 bg-black/50 lg:hidden"
               onClick={() => setShowLeftPanel(false)}
             />
           )}

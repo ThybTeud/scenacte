@@ -27,15 +27,12 @@ export function LeftPanel({
     <div className="h-full flex flex-col bg-white" style={{ borderRight: '1px solid #e5e5e5' }}>
       {/* Toolbar Section */}
       <div className="p-4 space-y-3" style={{ borderBottom: '1px solid #e5e5e5' }}>
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 font-ui">
-          Actions
-        </h3>
 
         {/* Groupe 1: Historique */}
-        <div className="flex gap-2 pb-3" style={{ borderBottom: '1px solid #e5e5e5' }}>
+        <div className="flex w-40" >
           <Button
             variant="ghost"
-            size="sm"
+            // size="sm"
             onClick={onUndo}
             disabled={!canUndo}
             title="Annuler (Ctrl+Z)"
@@ -44,11 +41,10 @@ export function LeftPanel({
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
-            Annuler
           </Button>
           <Button
             variant="ghost"
-            size="sm"
+            // size="sm"
             onClick={onRedo}
             disabled={!canRedo}
             title="Rétablir (Ctrl+Y)"
@@ -57,7 +53,6 @@ export function LeftPanel({
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
             </svg>
-            Rétablir
           </Button>
         </div>
 

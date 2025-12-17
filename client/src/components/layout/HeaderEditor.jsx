@@ -23,6 +23,7 @@ export default function HeaderEditor({
   return (
     <header
       className={`
+        bg-cream
         border-b-2
         border-black
         sticky
@@ -40,7 +41,7 @@ export default function HeaderEditor({
 
           {/* Groupe de boutons à droite */}
           <div className="flex items-center gap-3">
-            <ButtonGroup>
+            {/* <ButtonGroup>
               <Button
                 variant="secondary"
                 size="md"
@@ -93,7 +94,7 @@ export default function HeaderEditor({
               >
                 Stats
               </Button>
-            </ButtonGroup>
+            </ButtonGroup> */}
 
             <Avatar user={user} menuItems={menuItems} />
           </div>

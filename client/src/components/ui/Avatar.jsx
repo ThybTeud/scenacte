@@ -38,13 +38,12 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
                 rounded-full
                 border-2
                 border-black
-                bg-orange
-                text-white
+                bg-orange-500                
                 flex items-center justify-center
                 font-ui font-bold
-                text-sm
+                text-s
                 transition-transform
-                group-hover:scale-105
+                cursor-pointer
               "
             >
               {user?.avatar ? (
@@ -57,14 +56,7 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
                 <span>{initials}</span>
               )}
             </div>
-            <svg
-              className="w-4 h-4 transition-transform group-hover:translate-y-0.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            
           </button>
         }
       >

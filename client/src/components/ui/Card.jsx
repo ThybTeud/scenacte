@@ -13,7 +13,7 @@ export function Card({ children, header, className = '', onClick, hover = false 
   return (
     <div
       className={`
-        bg-white
+        bg-white-smoke
         border-2
         border-black
         rounded
