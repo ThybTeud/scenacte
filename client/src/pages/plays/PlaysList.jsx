@@ -179,7 +179,7 @@ export function PlaysList() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen">
       <HeaderGlobal user={user} menuItems={menuItems} />
 
       <main className="container-custom py-8">

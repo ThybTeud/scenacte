@@ -99,12 +99,12 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
 
         .scene {
           font-weight: 900;
-          text-transform: small-caps;
+          font-variant-caps: small-caps;
         }
 
         .personnage {
           margin: 1rem 0 1rem;
-          text-transform: uppercase;
+          font-variant-caps: small-caps;
         }
 
         .didascalie {

@@ -119,7 +119,7 @@ export class PlayParser {
       // Vérifier personnage (@)
       const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
       if (personnageMatch) {
-        const name = personnageMatch[1].trim().toUpperCase();
+        const name = personnageMatch[1].trim();
         currentSpeaker = name;
         const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
         node.position = { start: i, end: i };

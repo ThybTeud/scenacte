@@ -13,7 +13,6 @@ export default function HeaderGlobal({ user, menuItems, className = '' }) {
   return (
     <header
       className={`
-        bg-cream
         border-b-2
         border-black
         sticky
@@ -25,7 +24,7 @@ export default function HeaderGlobal({ user, menuItems, className = '' }) {
       <div className="container-custom py-4">
         <div className="flex items-center justify-between">
           {/* Logo à gauche */}
-          <Link to="/plays" className="flex items-center hover:opacity-80 transition-opacity">
+          <Link to="/plays" className="flex items-center hover:opacity-80 hover:-translate-1 transition">
             <Logo variant="full" />
           </Link>
 
