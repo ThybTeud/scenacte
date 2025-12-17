@@ -293,7 +293,7 @@ export function PlayEditor() {
   }
 
   return (
-    <div className="h-screen bg-cream flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden">
       <HeaderEditor
         playTitle={play.title}
         user={user}

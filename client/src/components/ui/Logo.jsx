@@ -9,7 +9,7 @@ export default function Logo({ variant = 'full', playTitle, className = '' }) {
   if (variant === 'short') {
     return (
       <div className={`flex items-center font-ui font-bold text-2xl ${className}`}>
-        <span className="text-orange" style={{ textShadow: '2px 2px 0 #1a1a1a' }}>#</span>
+        <img src="/logo_short.png" alt="Scenacte Logo" className="h-10 w-auto" />
         <span className="text-black">{playTitle || 'Titre'}</span>
       </div>
     );
@@ -18,8 +18,7 @@ export default function Logo({ variant = 'full', playTitle, className = '' }) {
   // Variant 'full' par défaut
   return (
     <div className={`flex items-center font-ui font-bold text-2xl ${className}`}>
-      <span className="text-orange" style={{ textShadow: '2px 2px 0 #1a1a1a' }}>#</span>
-      <span className="text-black">Scenacte</span>
+      <img src="/logo_long.png" alt="Scenacte Logo" className="h-10 w-auto" />
     </div>
   );
 }

@@ -23,7 +23,6 @@ export default function HeaderEditor({
   return (
     <header
       className={`
-        bg-cream
         border-b-2
         border-black
         sticky
