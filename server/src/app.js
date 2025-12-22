@@ -196,7 +196,7 @@ function registerErrorHandlers() {
     /**
      * Gestion des erreurs (uniquement pour les routes API en production)
      */
-    if (config.server.env !== "production") {
+    if (!['production', 'staging'].includes(config.server.env)) {
         // Route non trouvée (404) - en dev seulement
         app.use(notFoundHandler);
     }
