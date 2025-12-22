@@ -79,7 +79,7 @@ app.use(
             // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
             // SÉCURITÉ: Bloquer les requêtes sans origin en production
             if (!origin) {
-                if (config.server.env === "production") {
+                if (['production', 'staging'].includes(config.server.env)) {
                     return callback(null, false);
                 }
                 return callback(null, true);
