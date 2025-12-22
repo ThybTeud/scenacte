@@ -60,7 +60,7 @@ async function startServer() {
 
     // 6. Démarrage du serveur HTTP
     // Écouter sur 0.0.0.0 pour permettre les connexions externes (nécessaire pour Render, Docker, etc.)
-    const host = config.server.env === 'production' ? '0.0.0.0' : 'localhost';
+    const host = ['production', 'staging'].includes(config.server.env) ? '0.0.0.0' : 'localhost';
     const server = app.listen(config.server.port, host, () => {
       logger.info('========================================');
       logger.info('🚀 Serveur démarré avec succès !');
