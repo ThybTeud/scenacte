@@ -3,7 +3,7 @@ import { EditorState, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap, autocompletion } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } from '@codemirror/autocomplete';
 
 // Utilisation d'un mode StreamLanguage pour le surlignage personnalisé (voir createPlayExtension)
 
@@ -50,7 +50,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-act' }));
           } else if (/^@\s*/.test(text)) {
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-character' }));
-          } else if (/^\([^\)]*\)\s*$/.test(text)) {
+          } else if (/^\([^\)]*\)\s*$/.test(text)) { // Vérifie que l'échappement '\' est nécessaire pour les didascalies.
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-didascalie' }));
           }
           pos = line.to + 1;
@@ -80,10 +80,10 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         lineHeight: '1.6'
       },
       '.cm-activeLine': {
-        backgroundColor: '#fef5ed'
+        backgroundColor: 'oklch(97% 0.014 254.604)'
       },
       '.cm-activeLineGutter': {
-        backgroundColor: '#fafafa'
+        backgroundColor: 'oklch(93% 0.034 272.788)'
       },
       '.cm-gutters': {
         backgroundColor: '#fafafa',
@@ -123,19 +123,19 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       '.cm-completionMatchedText': { textDecoration: 'none' },
       // Classes de surlignage adoucies pour les types de balises
       '.cm-act': {
-        color: '#CC7A29',
+        color: 'oklch(64.6% 0.222 41.116)',
         fontWeight: '600',
       },
       '.cm-scene': {
-        color: '#CC7A29',
+        color: 'oklch(64.6% 0.222 41.116)',
         fontWeight: '600',
       },
       '.cm-character': {
-        color: '#4A3680',
+        color: 'oklch(54.6% 0.245 262.881)',
         fontWeight: '600',
       },
       '.cm-didascalie': {
-        color: '#888888',
+        color: 'oklch(44.6% 0.03 256.802)',
         fontStyle: 'italic',
       }
     })];
@@ -153,7 +153,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
   const createCompletionExtension = useCallback(() => {
     const source = (context) => {
       // On cherche un token commençant par @ suivi de lettres/chiffres/_
-      const token = context.matchBefore(/^@.+/);
+      const token = context.matchBefore(/^@.*/);
       if (!token) return null;
 
       // Si rien n'a été saisi après @, on affiche toute la liste
@@ -200,7 +200,8 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         keymap.of([
           ...closeBracketsKeymap,
           ...defaultKeymap,
-          ...historyKeymap
+          ...historyKeymap,
+          { key: 'Tab', run: acceptCompletion }
         ]),
         // playExtension returns an array [mode, theme]
         ...playExtension,

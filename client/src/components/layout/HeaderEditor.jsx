@@ -1,6 +1,8 @@
-import Logo from '../ui/Logo';
-import { Button, ButtonGroup } from '../ui/Button';
-import Avatar from '../ui/Avatar';
+import { useState } from "react";
+import Logo from "../ui/Logo";
+import { Button, ButtonGroup } from "../ui/Button";
+import Avatar from "../ui/Avatar";
+import { Link } from "react-router-dom";
 
 /**
  * HeaderEditor component - En-tête pour l'éditeur de pièce avec style neobrutalist
@@ -10,38 +12,62 @@ import Avatar from '../ui/Avatar';
  * @param {Array<Object>} props.menuItems - Items du menu avatar
  * @param {Function} [props.onSettingsClick] - Callback pour le bouton Paramètres
  * @param {Function} [props.onStatsClick] - Callback pour le bouton Stats
- * @param {string} [props.className] - Classes CSS additionnelles
+ * @param {Function} [props.onVersionsClick] - Callback pour le bouton Versions
  */
 export default function HeaderEditor({
-  playTitle,
-  user,
-  menuItems,
-  onSettingsClick,
-  onStatsClick,
-  className = '',
+    playTitle,
+    user,
+    menuItems,
+    onSettingsClick,
+    onStatsClick,
+    onVersionsClick,
+    isParsing = false,
+    isSaving = false,
+    hasUnsavedChanges = false,
+    content = "",
 }) {
-  return (
-    <header
-      className={`
-        bg-cream
-        border-b-2
-        border-black
-        sticky
-        top-0
-        z-50
-        ${className}
-      `.trim()}
-    >
-      <div className="container-custom py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo à gauche avec titre de la pièce */}
-          <div className="flex items-center">
-            <Logo variant="short" playTitle={playTitle} />
-          </div>
+    return (
+        <header className="bg-slate-200 border-b-2 border-slate-900 sticky top-0 z-50 px-8 py-4 flex items-center justify-between">
+            {/* Bloc de gauche dans le header : logo + trait + titre + indicateur de sauvegarde*/}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <Link to="/plays">
+                        <Logo variant="short" />
+                    </Link>
+                    <div className="w-1 h-6 bg-slate-900 mx-4 rounded"></div>
+                    <div className="border-2 bg-white rounded px-2 py-1 max-w-md line-clamp-1 break-all">
+                        <span className="text-slate-900 text-xl font-mono font-bold">
+                            {playTitle || "Titre"}
+                        </span>
+                    </div>
+                </div>
 
-          {/* Groupe de boutons à droite */}
-          <div className="flex items-center gap-3">
-            {/* <ButtonGroup>
+                {/* Indicateur de sauvegarde */}
+                <div className="text-sm font-ui mx-4">
+                    {isParsing && (
+                        <span className="text-blue-600">
+                            Analyse en cours...
+                        </span>
+                    )}
+                    {isSaving && (
+                        <span className="text-orange">
+                            Sauvegarde en cours...
+                        </span>
+                    )}
+                    {!isSaving && hasUnsavedChanges && (
+                        <span className="text-gray-500">
+                            Modifications non sauvegardées
+                        </span>
+                    )}
+                    {!isSaving && !hasUnsavedChanges && content && (
+                        <span className="text-green-600">✓ Sauvegardé</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Bloc de droite dans le header : boutons + avatar */}
+            <div className="flex items-center gap-3">
+                {/* <ButtonGroup>
               <Button
                 variant="secondary"
                 size="md"
@@ -95,11 +121,12 @@ export default function HeaderEditor({
                 Stats
               </Button>
             </ButtonGroup> */}
+                <Button variant="secondary" size="sm" onClick={onVersionsClick}>
+                    Versions
+                </Button>
 
-            <Avatar user={user} menuItems={menuItems} />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+                <Avatar user={user} menuItems={menuItems} />
+            </div>
+        </header>
+    );
 }

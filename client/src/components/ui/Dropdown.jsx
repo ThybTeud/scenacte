@@ -36,7 +36,7 @@ export function DropdownItem({ onClick, children, icon }) {
   return (
     <button
       onClick={onClick}
-      className="w-full px-4 py-2 text-left text-sm font-ui text-black hover:bg-orange/10 flex items-center space-x-2 transition-colors"
+      className="w-full px-4 py-2 text-left text-sm font-ui text-black hover:bg-slate-600/10 flex items-center space-x-2 transition-colors cursor-pointer"
     >
       {icon && <span className="w-5 h-5">{icon}</span>}
       <span>{children}</span>

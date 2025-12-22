@@ -3,10 +3,10 @@
 @theme {
   /* Couleurs du design system */
   --color-cream: #f8f5f2;
-  --color-orange: #FF9933;
+  --color-orange: oklch(64.6% 0.222 41.116);
   --color-accent-hover: #E68A2E;
   --color-violet: #2D1B69;
-  --color-black: #1a1a1a;
+  --color-black: #0f172a;
   --color-white: #FFFFFF;
   --color-white-smoke: #fffffe;
 
@@ -29,11 +29,11 @@
   --font-editor: 'Fira Code', ui-monospace, monospace;
 
   /* Ombres brutales */
-  --shadow-brutal: 4px 4px 0 #1a1a1a;
-  --shadow-brutal-sm: 2px 2px 0 #1a1a1a;
-  --shadow-brutal-lg: 6px 6px 0 #1a1a1a;
-  --shadow-brutal-hover: 6px 6px 0 #1a1a1a;
-  --shadow-brutal-active: 2px 2px 0 #1a1a1a;
+  --shadow-brutal: 4px 4px 0 #0f172a;
+  --shadow-brutal-sm: 2px 2px 0 #0f172a;
+  --shadow-brutal-lg: 6px 6px 0 #0f172a;
+  --shadow-brutal-hover: 6px 6px 0 #0f172a;
+  --shadow-brutal-active: 2px 2px 0 #0f172a;
 
   /* Border radius */
   --radius-brutal: 4px;
