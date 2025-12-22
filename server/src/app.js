@@ -70,8 +70,7 @@ app.use(cors({
       'http://localhost:3000', // Dev local alternatif
       'https://supreme-doodle-xjqw6r6x9f6799-5173.app.github.dev/', //Dev local CodeSpaces
       'https://scenacte.vercel.app', // Déploiement Vercel
-      'https://scenacte-frontend.onrender.com', // Déploiement Render (backup)
-      'https://scenacte.onrender.com', // Déploiement Render (principal)
+      'https://scenacte-staging.onrender.com' // Déploiement Render (staging)
     ];
 
     // Autoriser les requêtes sans origin (Postman, curl, mobile apps, etc.)
