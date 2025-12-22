@@ -91,7 +91,7 @@ const env = cleanEnv(process.env, {
   // Server
   NODE_ENV: str({
     desc: 'Node environment',
-    choices: ['development', 'production', 'test'],
+    choices: ['development', 'production', 'test', 'staging'],
     default: 'development'
   }),
   PORT: port({
