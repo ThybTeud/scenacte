@@ -1,4 +1,4 @@
-import { Button } from "../ui/Button";
+import { Button, ButtonGroup } from "../ui/Button";
 
 export function LeftPanel({
     onUndo,
@@ -28,12 +28,12 @@ export function LeftPanel({
             {/* Toolbar Section */}
             <div className="p-4 space-y-3">
                 {/* Groupe 1: Historique */}
-                <div className="flex w-40">
+                <ButtonGroup className="flex">
                     <Button
                         variant="secondary"
-                        size="sm"
+                        square={true}
                         onClick={onUndo}
-                        disabled={!canUndo}
+                        // disabled={!canUndo}
                         title="Annuler (Ctrl+Z)"
                         className="flex-1"
                     >
@@ -53,9 +53,9 @@ export function LeftPanel({
                     </Button>
                     <Button
                         variant="secondary"
-                        // size="sm"
+                        square={true}
                         onClick={onRedo}
-                        disabled={!canRedo}
+                        // disabled={!canRedo}
                         title="Rétablir (Ctrl+Y)"
                         className="flex-1"
                     >
@@ -73,13 +73,13 @@ export function LeftPanel({
                             />
                         </svg>
                     </Button>
-                </div>
+                </ButtonGroup>
 
                 {/* Groupe 2: Fichier & Aperçu */}
                 <div className="space-y-2">
                     <Button
                         variant="secondary"
-                        size="sm"
+                        size="md"
                         onClick={onSave}
                         disabled={isSaving}
                         className="w-full"

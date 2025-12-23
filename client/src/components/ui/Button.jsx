@@ -24,14 +24,16 @@ export function Button({
 }) {
     // Classes de base
     const baseStyles =
-        "inline-flex items-center justify-center font-ui font-medium border-2 border-black transition-all focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+        "inline-flex items-center z-10 rounded justify-center font-ui font-medium border-2 border-black transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-x-[4px] disabled:translate-y-[4px]";
 
     // Variantes de couleurs
     const variants = {
-        primary: "bg-orange text-white hover:bg-orange/90 shadow-brutal",
-        secondary: "bg-white text-black hover:bg-gray-50 shadow-brutal",
-        ghost: "bg-white text-black hover:bg-gray-100 shadow-none",
-        danger: "bg-red-500 text-white hover:bg-red-600 shadow-brutal",
+        primary:
+            "bg-orange text-white enabled:hover:bg-orange/90 enabled:shadow-brutal",
+        secondary:
+            "bg-white text-black enabled:hover:bg-gray-50 enabled:shadow-brutal",
+        ghost: "bg-white text-black enabled:hover:bg-gray-100 shadow-none",
+        danger: "bg-red-500 text-white enabled:hover:bg-red-600 enabled:shadow-brutal",
     };
 
     // Tailles
@@ -44,7 +46,7 @@ export function Button({
     // Effet hover/active (sauf ghost)
     const interactionStyles =
         variant !== "ghost"
-            ? "hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px]"
+            ? "enabled:hover:z-10 enabled:hover:-translate-x-[2px] enabled:hover:-translate-y-[2px] enabled:hover:shadow-brutal-hover enabled:active:translate-x-[2px] enabled:active:translate-y-[2px] enabled:active:shadow-brutal-active"
             : "";
 
     // Largeur
@@ -55,7 +57,9 @@ export function Button({
             type={type}
             disabled={disabled}
             onClick={onClick}
-            className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${interactionStyles} ${widthStyles} rounded ${className}`.trim().replace(/\s+/g, ' ')}
+            className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${interactionStyles} ${widthStyles} ${className}`
+                .trim()
+                .replace(/\s+/g, " ")}
             {...props}
         >
             {children}
@@ -71,7 +75,9 @@ export function Button({
  */
 export function ButtonGroup({ children, className = "" }) {
     return (
-        <div className={`inline-flex [&>button]:rounded-none [&>button:first-child]:rounded-l [&>button:last-child]:rounded-r [&>button:not(:last-child)]:border-r-0 ${className}`}>
+        <div
+            className={`inline-flex [&>button]:rounded-none [&>button:first-child]:rounded-l [&>button:last-child]:rounded-r [&>button:not(:last-child)]:border-r-1 [&>button:not(:first-child)]:border-l-1 ${className}`}
+        >
             {children}
         </div>
     );
