@@ -4,7 +4,7 @@ import { playsService } from '../../services/plays.service';
 import { useAuth } from '../../hooks/useAuth';
 import HeaderGlobal from '../../components/layout/HeaderGlobal';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
+import { CardPlays } from '../../components/ui/CardPlays';
 import { Loader } from '../../components/ui/Loader';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
@@ -248,17 +248,17 @@ export function PlaysList() {
             <Loader />
           </div>
         ) : plays.length === 0 ? (
-          <Card className="text-center py-12">
+          <CardPlays className="text-center py-12">
             <p className="text-black font-ui mb-4">Aucune pièce trouvée</p>
             <Button onClick={() => setShowCreateModal(true)}>
               Créer votre première pièce
             </Button>
-          </Card>
+          </CardPlays>
         ) : (
           <>
             <div className="grid gap-4">
               {plays.map((play) => (
-                <Card
+                <CardPlays
                   key={play.id}
                   hover
                   onClick={() => navigate(`/plays/${play.id}`)}
@@ -307,7 +307,7 @@ export function PlaysList() {
                       )}
                     </div>
                   </div>
-                </Card>
+                </CardPlays>
               ))}
             </div>
 

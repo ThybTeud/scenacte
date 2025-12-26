@@ -1,7 +1,7 @@
 /**
  * Button component - Composant de bouton neobrutalist
  * @param {Object} props
- * @param {'primary'|'secondary'|'ghost'|'danger'} [props.variant='primary'] - Variante du bouton
+ * @param {'primary'|'secondary'|'ghost'|'danger'|'custom'} [props.variant='primary'] - Variante du bouton
  * @param {'sm'|'md'|'lg'} [props.size='md'] - Taille du bouton
  * @param {boolean} [props.square=false] - Bouton carré (padding égal)
  * @param {boolean} [props.fullWidth=false] - Bouton pleine largeur
@@ -24,7 +24,7 @@ export function Button({
 }) {
     // Classes de base
     const baseStyles =
-        "inline-flex items-center z-10 rounded justify-center font-ui font-medium border-2 border-black transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-x-[4px] disabled:translate-y-[4px]";
+        "inline-flex items-center z-10 rounded justify-center font-ui font-medium border-2 border-black transition-[background-color,transform] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-x-[4px] disabled:translate-y-[4px]";
 
     // Variantes de couleurs
     const variants = {
@@ -34,6 +34,7 @@ export function Button({
             "bg-white text-black enabled:hover:bg-gray-50 enabled:shadow-brutal",
         ghost: "bg-white text-black enabled:hover:bg-gray-100 shadow-none",
         danger: "bg-red-500 text-white enabled:hover:bg-red-600 enabled:shadow-brutal",
+        custom: "text-white", // Pas de background par défaut, à définir via className
     };
 
     // Tailles

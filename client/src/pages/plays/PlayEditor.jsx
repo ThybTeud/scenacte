@@ -270,7 +270,7 @@ export function PlayEditor() {
     );
 
     /**
-     * Télécharger le contenu brut
+     * Télécharger le contenu brut --> bouton supprimé sur le LeftPanel
      */
     const handleDownload = useCallback(() => {
         const blob = new Blob([content], { type: "text/plain" });
@@ -314,7 +314,7 @@ export function PlayEditor() {
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden bg-orange-100">
+        <div className="h-dvh flex flex-col overflow-hidden bg-orange-100">
             <HeaderEditor
                 playTitle={play.title}
                 user={user}
@@ -485,7 +485,9 @@ export function PlayEditor() {
                     {/* Preview - Desktop: visible, Mobile: caché ou toggle */}
                     {showPreview && (
                         <div className="hidden lg:block lg:flex-1 overflow-hidden">
-                            <div className="h-full aspect-70/99 p-4 p-3 md:p-6 overflow-hidden flex flex-col"> {/* Ratio pour A4 en dur */}
+                            <div className="h-full aspect-70/99 p-4 p-3 md:p-6 overflow-hidden flex flex-col">
+                                {" "}
+                                {/* Ratio pour A4 en dur */}
                                 <div className="flex-1 overflow-hidden min-h-0 border-2 rounded-lg shadow-brutal">
                                     <PlayPreview
                                         content={debouncedContent}

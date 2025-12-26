@@ -4,11 +4,13 @@
   /* Couleurs du design system */
   --color-cream: #f8f5f2;
   --color-orange: oklch(64.6% 0.222 41.116);
+  --color-blue: oklch(54.6% 0.245 262.881);
   --color-accent-hover: #E68A2E;
   --color-violet: #2D1B69;
   --color-black: #0f172a;
   --color-white: #FFFFFF;
   --color-white-smoke: #fffffe;
+  --color-gray: oklch(44.6% 0.03 256.802);
 
   /* Couleurs primary (legacy) */
   --color-primary-50: #EFF6FF;
@@ -26,7 +28,7 @@
   /* Typographie */
   --font-ui: 'Inter', 'Space Grotesk', system-ui, sans-serif;
   --font-theater: 'Crimson Text', Georgia, serif;
-  --font-editor: 'Fira Code', ui-monospace, monospace;
+  --font-editor: 'Source Code Pro', 'Fira Code', ui-monospace, monospace;
 
   /* Ombres brutales */
   --shadow-brutal: 4px 4px 0 #0f172a;
@@ -55,13 +57,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.container-custom {
+/* A supprimer (ainsi que dans @media plus bas*/
+/* .container-custom {
   max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
-}
+} */
 
 @media (min-width: 640px) {
   .container-custom {
