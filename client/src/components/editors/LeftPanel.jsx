@@ -196,9 +196,6 @@ export function LeftPanel({
 
             {/* Raccourcis de mise en page */}
             <div className="flex-shrink-0">
-                {/* <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
-                    Raccourcis de mise en page
-                </h3> */}
                 <div className="flex flex-col gap-y-4">
                     {formatButtons.map((format) => (
                         <EditorButton
@@ -224,15 +221,15 @@ export function LeftPanel({
                         </p>
                     </div>
                 ) : (
-                    <ul>
+                    <ul className="">
                         {characters.map((character, index) => (
                             <li
                                 key={index}
                                 onClick={() => onInsertCharacter(character)}
-                                className="px-4 py-1 text-sm hover:bg-blue-400 text-blue hover:text-white active:bg-blue cursor-pointer rounded"
+                                className="px-2 py-1 text-base hover:bg-blue-400 text-blue hover: hover:text-white active:bg-blue cursor-pointer rounded"
                                 title={`Insérer @${character}`}
                             >
-                                <span className="font-mono font-bold">
+                                <span className="font-mono font-bold line-clamp-1 break-all">
                                     @{character}
                                 </span>
                             </li>

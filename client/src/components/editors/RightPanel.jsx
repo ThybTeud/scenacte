@@ -88,9 +88,9 @@ export function RightPanel({
     // Classes pour surbrillance
     const activeActeClass = "bg-orange-200 text-black";
     const activeSceneClass = "bg-orange-400 text-white font-semibold";
-    const defaultActeClass = "hover:bg-orange-400 hover:text-white";
+    const defaultActeClass = "hover:bg-orange-100 hover:text-white";
     const defaultSceneClass =
-        "text-gray-700 hover:bg-orange-400 hover:text-white hover:font-bold";
+        "text-gray-700 hover:bg-orange-200 hover:text-white hover:font-bold";
 
     return (
         <div className="h-full flex flex-col w-60 px-6 py-8 bg-cyan-100/50 gap-y-8">
@@ -164,15 +164,15 @@ export function RightPanel({
                     </p>
                 ) : (
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-cream rounded">
+                        <div className="flex items-center justify-between p-2">
                             <span className="text-sm text-gray-600 font-ui">
                                 Scènes
                             </span>
-                            <span className="text-lg font-semibold text-gray-900 font-ui">
+                            <span className="text-lg font-semibold text-orange font-ui">
                                 {statistics.totalScenes || 0}
                             </span>
                         </div>
-                        <div className="flex items-center justify-between p-2 bg-cream rounded">
+                        <div className="flex items-center justify-between p-2">
                             <span className="text-sm text-gray-600 font-ui">
                                 Répliques
                             </span>
