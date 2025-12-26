@@ -217,24 +217,28 @@ export function LeftPanel({
 
             {/* Liste des personnages */}
             <Card header="Personnages" size="sm" heightMax="flex-1">
-                    {characters.length === 0 ? (
-                        <p className="text-xs text-gray-500 italic font-ui">
-                            Entrez un personnage dans l'éditeur avec '@'
+                {characters.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full px-3">
+                        <p className="text-center text-xs text-gray-500 italic font-ui">
+                            Ecrivez le nom d'un personnage avec '@'
                         </p>
-                    ) : (
-                        <ul className="">
-                            {characters.map((character, index) => (
-                                <li
-                                    key={index}
-                                    onClick={() => onInsertCharacter(character)}
-                                    className="px-4 py-1 text-sm hover:bg-blue-400 text-blue hover:text-white active:bg-blue cursor-pointer rounded transition-colors"
-                                    title={`Insérer @${character}`}
-                                >
-                                    <span className="font-mono font-bold">@{character}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                    </div>
+                ) : (
+                    <ul>
+                        {characters.map((character, index) => (
+                            <li
+                                key={index}
+                                onClick={() => onInsertCharacter(character)}
+                                className="px-4 py-1 text-sm hover:bg-blue-400 text-blue hover:text-white active:bg-blue cursor-pointer rounded"
+                                title={`Insérer @${character}`}
+                            >
+                                <span className="font-mono font-bold">
+                                    @{character}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </Card>
         </div>
     );

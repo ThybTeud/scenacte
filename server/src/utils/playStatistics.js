@@ -329,6 +329,8 @@ export function calculatePlayStatistics(rawContent) {
   }
 }
 
+export { PlayParser, ASTNode, NodeType };
+
 export default {
   calculatePlayStatistics,
   countWords

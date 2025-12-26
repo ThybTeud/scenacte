@@ -1,4 +1,4 @@
-import { PlayParser, NodeType } from './playParser';
+import { PlayParser, NodeType } from './playParser.js';
 
 /**
  * Calcule les statistiques d'une pièce de théâtre à partir du contenu brut

@@ -5,7 +5,8 @@ import {
   getPlay,
   savePlay,
   deletePlay,
-  updatePlayStatus
+  updatePlayStatus,
+  getPlayAST
 } from '../controllers/plays.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { apiLimiter } from '../middleware/rateLimiter.js';
@@ -34,6 +35,14 @@ router.get('/', listPlays);
  * Note: statistics sont recalculées côté serveur
  */
 router.post('/', createPlay);
+
+/**
+ * GET /api/plays/:id/ast
+ * Récupérer l'AST (Abstract Syntax Tree) d'une pièce en JSON
+ * Requiert: Authorization header avec Bearer token
+ * Note: Endpoint temporaire pour consultation et debugging
+ */
+router.get('/:id/ast', getPlayAST);
 
 /**
  * GET /api/plays/:id
