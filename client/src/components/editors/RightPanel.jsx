@@ -93,7 +93,7 @@ export function RightPanel({
         "text-gray-700 hover:bg-orange-200 hover:text-white hover:font-bold";
 
     return (
-        <div className="h-full flex flex-col w-60 px-6 py-8 bg-cyan-100/50 gap-y-8">
+        <div className="h-full flex flex-col w-60 px-6 py-8 gap-y-8">
             <Card header="Sommaire" size="sm" heightMax="flex-1">
                 {isEmpty ? (
                     <div className="flex flex-col items-center justify-center h-full px-3">

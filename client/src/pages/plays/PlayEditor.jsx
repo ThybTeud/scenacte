@@ -1,24 +1,23 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { playsService } from "../../services/plays.service";
+import { cn } from "../../utils/cn";
 import { useAuth } from "../../hooks/useAuth";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { usePlayParsing } from "../../hooks/usePlayParsing";
+import { useSyncScroll } from "../../hooks/useSyncScroll";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import HeaderEditor from "../../components/layout/HeaderEditor";
-import { Button } from "../../components/ui/Button";
 import { Loader } from "../../components/ui/Loader";
+import { SidePanel } from "../../components/ui/SidePanel";
 import { VersionsSidebar } from "../../components/plays/VersionsSidebar";
 import { CodeMirrorEditor } from "../../components/editors/CodeMirrorEditor";
 import { PlayPreview } from "../../components/editors/PlayPreview";
 import { LeftPanel } from "../../components/editors/LeftPanel";
 import { RightPanel } from "../../components/editors/RightPanel";
 import { PdfExportModal } from "../../components/pdf/PdfExportModal";
-import { useSyncScroll } from "../../hooks/useSyncScroll";
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
-import {
-    PlayParser,
-    astToHTML,
-    extractStructure,
-} from "../../utils/playParser";
-import { calculatePlayStatistics } from "../../utils/playStatistics";
+import { MenuIcon } from "../../components/icons/MenuIcon";
+import { PlayParser } from "../../utils/playParser";
 import toast from "react-hot-toast";
 
 export function PlayEditor() {
@@ -27,21 +26,23 @@ export function PlayEditor() {
     const { user, logout } = useAuth();
 
     // Menu items pour HeaderEditor
-    const menuItems = [
-        { label: "Profil", onClick: () => navigate("/profile") },
-        { label: "Préférences", onClick: () => navigate("/preferences") },
-        {
-            label: "Déconnexion",
-            onClick: () => {
-                logout();
-                navigate("/login");
+    const menuItems = useMemo(
+        () => [
+            { label: "Profil", onClick: () => navigate("/profile") },
+            { label: "Préférences", onClick: () => navigate("/preferences") },
+            {
+                label: "Déconnexion",
+                onClick: () => {
+                    logout();
+                    navigate("/login");
+                },
             },
-        },
-    ];
+        ],
+        [navigate, logout]
+    );
 
     const [play, setPlay] = useState(null);
     const [content, setContent] = useState("");
-    const [debouncedContent, setDebouncedContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -51,10 +52,8 @@ export function PlayEditor() {
 
     // États pour le responsive
     const [showPreview, setShowPreview] = useState(true);
-    const [showLeftPanel, setShowLeftPanel] = useState(false); // Masqué par défaut sur mobile
-    const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
-    const parseTimeoutRef = useRef(null);
-    const [isParsing, setIsParsing] = useState(false);
+    const [showLeftPanel, setShowLeftPanel] = useState(false);
+    const [showRightPanel, setShowRightPanel] = useState(false);
     const [currentLine, setCurrentLine] = useState(0);
 
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
@@ -71,6 +70,18 @@ export function PlayEditor() {
     // Parser pour générer le HTML
     const parser = useMemo(() => new PlayParser(), []);
 
+    // Debounce du contenu pour optimiser le parsing
+    const debouncedContent = useDebouncedValue(content, 300);
+
+    // Dérivation directe : parsing en cours si le contenu n'est pas encore debounced
+    const isParsing = content !== debouncedContent;
+
+    // Parse l'AST une seule fois et dérive toutes les valeurs nécessaires
+    const { structure, statistics, htmlContent } = usePlayParsing(
+        debouncedContent,
+        parser
+    );
+
     useEffect(() => {
         fetchPlay();
     }, [id]);
@@ -82,7 +93,6 @@ export function PlayEditor() {
             setPlay(response.play);
             const rawContent = response.play.rawContent || "";
             setContent(rawContent);
-            setDebouncedContent(rawContent);
             setHasUnsavedChanges(false);
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
@@ -101,18 +111,7 @@ export function PlayEditor() {
 
         setIsSaving(true);
         try {
-            // Générer le HTML à partir du contenu brut
-            let htmlContent = "";
-            try {
-                const ast = parser.parse(content);
-                htmlContent = astToHTML(ast);
-            } catch (parseError) {
-                console.error("Erreur lors du parsing:", parseError);
-                htmlContent = "";
-            }
-
             // Préparer les données pour la sauvegarde
-            // Note: les statistiques sont recalculées automatiquement côté serveur
             const saveData = {
                 title: play.title,
                 subtitle: play.subtitle || null,
@@ -129,7 +128,7 @@ export function PlayEditor() {
         } finally {
             setIsSaving(false);
         }
-    }, [id, content, play, parser]);
+    }, [id, content, htmlContent, play]);
 
     /**
      * Gère le changement de contenu dans l'éditeur
@@ -137,18 +136,6 @@ export function PlayEditor() {
     const handleContentChange = useCallback((newContent) => {
         setContent(newContent);
         setHasUnsavedChanges(true);
-
-        setIsParsing(true);
-
-        // Clear le timer précédent
-        if (parseTimeoutRef.current) {
-            clearTimeout(parseTimeoutRef.current);
-        }
-        // Nouveau timer pour déclencher le re-parsing
-        parseTimeoutRef.current = setTimeout(() => {
-            setDebouncedContent(newContent); // ← Mise à jour débounced
-            setIsParsing(false);
-        }, 300); // 300ms de debounce
     }, []);
 
     /**
@@ -176,59 +163,8 @@ export function PlayEditor() {
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
-            if (parseTimeoutRef.current) {
-                clearTimeout(parseTimeoutRef.current);
-            }
         };
     }, []);
-
-    /**
-     * Extraire la structure (actes, scènes, personnages) du contenu
-     */
-    const structure = useMemo(() => {
-        if (!debouncedContent)
-            return { items: [], orphanScenes: [], personnages: [] };
-
-        try {
-            const ast = parser.parse(debouncedContent);
-            return extractStructure(ast);
-        } catch (error) {
-            console.error(
-                "Erreur lors de l'extraction de la structure:",
-                error
-            );
-            return { items: [], orphanScenes: [], personnages: [] };
-        }
-    }, [debouncedContent, parser]);
-
-    /**
-     * Calculer les statistiques
-     */
-    const statistics = useMemo(() => {
-        if (!debouncedContent) return null;
-
-        try {
-            return calculatePlayStatistics(debouncedContent);
-        } catch (error) {
-            console.error("Erreur lors du calcul des statistiques:", error);
-            return null;
-        }
-    }, [debouncedContent]);
-
-    /**
-     * Générer le HTML pour le PDF export
-     */
-    const htmlContent = useMemo(() => {
-        if (!debouncedContent) return "";
-
-        try {
-            const ast = parser.parse(debouncedContent);
-            return astToHTML(ast);
-        } catch (error) {
-            console.error("Erreur lors de la génération HTML:", error);
-            return "";
-        }
-    }, [debouncedContent, parser]);
 
     /**
      * Toggle un format de ligne dans l'éditeur
@@ -267,7 +203,6 @@ export function PlayEditor() {
             if (!editorRef.current || !position) return;
 
             // Utiliser la fonction de scroll de l'éditeur
-            // position.start est 0-indexed, mais scrollToLine attend 1-indexed
             if (
                 editorScrollRef.current &&
                 editorScrollRef.current.scrollToLine
@@ -279,7 +214,7 @@ export function PlayEditor() {
     );
 
     /**
-     * Télécharger le contenu brut --> bouton supprimé sur le LeftPanel
+     * Télécharger le contenu brut
      */
     const handleDownload = useCallback(() => {
         const blob = new Blob([content], { type: "text/plain" });
@@ -337,86 +272,15 @@ export function PlayEditor() {
                 content={content}
             />
 
-            {/* Barre d'état et boutons de navigation */}
-
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    {/* Bouton hamburger pour mobile */}
-                    <button
-                        onClick={() => setShowLeftPanel(!showLeftPanel)}
-                        className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded"
-                        aria-label="Toggle menu"
-                    >
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        </svg>
-                    </button>
-                </div>
-                <div className="flex items-center gap-2"></div>
-            </div>
-
-            {/* Layout principal : 3 colonnes */}
-            <div className="flex-1 flex overflow-hidden min-h-0">
-                {/* Panneau gauche - Desktop: visible, Mobile/Tablet: overlay */}
-                <div
-                    className={`
-          ${
-              showLeftPanel
-                  ? "fixed inset-0 z-40 lg:relative lg:z-auto"
-                  : "hidden"
-          }
-          lg:block lg:w-72 xl:w-80
-        `}
-                >
-                    {/* Overlay backdrop (mobile/tablet) */}
-                    {showLeftPanel && (
-                        <div
-                            className="absolute inset-0 bg-black/50 lg:hidden"
-                            onClick={() => setShowLeftPanel(false)}
-                        />
-                    )}
-
-                    {/* Panneau */}
-                    <div
-                        className={`
-            relative lg:relative h-full w-72 xl:w-80 bg-white lg:bg-transparent
-            ${showLeftPanel ? "shadow-xl" : ""}
-          `}
-                    >
-                        {/* Bouton fermer (mobile/tablet) */}
-                        <button
-                            onClick={() => setShowLeftPanel(false)}
-                            className="lg:hidden absolute top-4 right-4 z-10 p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                            aria-label="Fermer"
-                        >
-                            <svg
-                                className="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
-
+            {/* Layout principal : Container centré avec max-width global */}
+            <div className="flex-1 flex justify-center overflow-hidden">
+                {/* Groupe des 3 colonnes - pas de gap, collées ensemble */}
+                <div className="flex overflow-hidden">
+                    {/* Left Panel - hidden mobile, visible desktop */}
+                    <div className="hidden lg:block flex-shrink-0 h-full">
                         <LeftPanel
-                            onUndo={() => {}} // TODO: Implémenter avec CodeMirror history
-                            onRedo={() => {}} // TODO: Implémenter avec CodeMirror history
+                            onUndo={() => {}}
+                            onRedo={() => {}}
                             onSave={handleManualSave}
                             onDownload={handleDownload}
                             onExportPdf={() => setShowPdfExport(true)}
@@ -430,133 +294,71 @@ export function PlayEditor() {
                             isSaving={isSaving}
                         />
                     </div>
-                </div>
 
-                {/* Zone centrale : Éditeur + Preview */}
-                <div className="flex-1 flex overflow-hidden min-w-0">
-                    {/* Éditeur CodeMirror */}
-                    <div
-                        className={`
-            ${showPreview ? "flex-1" : "w-full"}
-            flex flex-col overflow-hidden min-w-0
-          `}
-                    >
-                        <div className="flex-1 p-3 md:p-6 overflow-hidden flex flex-col min-h-0">
-                            {/* Mobile: Indicateur de sauvegarde + bouton sommaire */}
-                            <div className="md:hidden flex items-center justify-between mb-2">
-                                <div className="text-xs">
-                                    {isParsing && (
-                                        <span className="text-blue-600">
-                                            Analyse...
-                                        </span>
-                                    )}
-                                    {isSaving && (
-                                        <span className="text-primary-600">
-                                            Sauvegarde...
-                                        </span>
-                                    )}
-                                    {!isSaving && hasUnsavedChanges && (
-                                        <span className="text-gray-500">
-                                            Non sauvegardé
-                                        </span>
-                                    )}
-                                    {!isSaving &&
-                                        !hasUnsavedChanges &&
-                                        content && (
-                                            <span className="text-green-600">
-                                                ✓
-                                            </span>
-                                        )}
+                    {/* Zone centrale - contraintes min/max */}
+                    <div className="flex-1 min-w-0 lg:min-w-[600px] lg:max-w-[900px] flex overflow-hidden">
+                        {/* Éditeur CodeMirror */}
+                        <div
+                            className={cn(
+                                "flex flex-col overflow-hidden min-w-0",
+                                showPreview ? "flex-1" : "w-full"
+                            )}
+                        >
+                            <div className="flex-1 p-4 md:p-8 overflow-hidden flex flex-col min-h-0">
+                                {/* Mobile: boutons hamburger et sommaire */}
+                                <div className="lg:hidden flex items-center justify-between mb-2">
+                                    <button
+                                        onClick={() =>
+                                            setShowLeftPanel(!showLeftPanel)
+                                        }
+                                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                                        aria-label="Toggle menu"
+                                    >
+                                        <MenuIcon />
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            setShowRightPanel(!showRightPanel)
+                                        }
+                                        className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md"
+                                    >
+                                        Sommaire
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() =>
-                                        setShowRightPanel(!showRightPanel)
-                                    }
-                                    className="lg:hidden px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md"
-                                >
-                                    Sommaire
-                                </button>
-                            </div>
 
-                            <div className="flex-1 overflow-hidden border-2 rounded-lg shadow-brutal">
-                                <CodeMirrorEditor
-                                    ref={editorRef}
-                                    value={content}
-                                    onChange={handleContentChange}
-                                    onCursorChange={handleCursorChange}
-                                    onScroll={handleEditorScroll}
-                                    scrollSync={editorScrollRef}
-                                    characters={structure.personnages || []}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Preview - Desktop: visible, Mobile: caché ou toggle */}
-                    {showPreview && (
-                        <div className="hidden lg:block lg:flex-1 overflow-hidden">
-                            <div className="h-full aspect-70/99 p-4 p-3 md:p-6 overflow-hidden flex flex-col">
-                                {" "}
-                                {/* Ratio pour A4 en dur */}
-                                <div className="flex-1 overflow-hidden min-h-0 border-2 rounded-lg shadow-brutal">
-                                    <PlayPreview
-                                        content={debouncedContent}
-                                        onScroll={handlePreviewScroll}
-                                        scrollSync={previewScrollRef}
+                                <div className="flex-1 overflow-hidden border-2 rounded-lg shadow-brutal">
+                                    <CodeMirrorEditor
+                                        ref={editorRef}
+                                        value={content}
+                                        onChange={handleContentChange}
+                                        onCursorChange={handleCursorChange}
+                                        onScroll={handleEditorScroll}
+                                        scrollSync={editorScrollRef}
+                                        characters={structure.personnages || []}
                                     />
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {/* Panneau droit - Desktop: visible, Mobile/Tablet: overlay */}
-                <div
-                    className={`
-          ${
-              showRightPanel
-                  ? "fixed inset-y-0 right-0 z-40 lg:relative lg:z-auto"
-                  : "hidden"
-          }
-          lg:block lg:w-72 xl:w-80
-        `}
-                >
-                    {/* Overlay backdrop (mobile/tablet) */}
-                    {showRightPanel && (
-                        <div
-                            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden"
-                            onClick={() => setShowRightPanel(false)}
-                        />
-                    )}
+                        {/* Preview - Desktop: visible, Mobile: caché */}
+                        {showPreview && (
+                            <div className="hidden lg:flex lg:flex-1 overflow-hidden justify-center items-start">
+                                <div className="h-full aspect-70/99 max-w-full p-4 md:p-8 overflow-hidden flex flex-col">
+                                    <div className="flex-1 overflow-hidden min-h-0 border-2 rounded-lg shadow-brutal">
+                                        <PlayPreview
+                                            content={debouncedContent}
+                                            onScroll={handlePreviewScroll}
+                                            scrollSync={previewScrollRef}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Panneau */}
-                    <div
-                        className={`
-            relative h-full w-72 xl:w-80 bg-white lg:bg-transparent
-            ${showRightPanel ? "shadow-xl" : ""}
-          `}
-                    >
-                        {/* Bouton fermer (mobile/tablet) */}
-                        <button
-                            onClick={() => setShowRightPanel(false)}
-                            className="lg:hidden absolute top-4 right-4 z-10 p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-                            aria-label="Fermer"
-                        >
-                            <svg
-                                className="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
-
+                    {/* Right Panel - hidden mobile, visible desktop */}
+                    <div className="hidden lg:block flex-shrink-0 h-full">
                         <RightPanel
                             structure={structure}
                             statistics={statistics}
@@ -566,6 +368,44 @@ export function PlayEditor() {
                     </div>
                 </div>
             </div>
+
+            {/* SidePanels mobile en overlay - séparés du layout principal */}
+            <SidePanel
+                isOpen={showLeftPanel}
+                onClose={() => setShowLeftPanel(false)}
+                position="left"
+                className="lg:hidden"
+            >
+                <LeftPanel
+                    onUndo={() => {}}
+                    onRedo={() => {}}
+                    onSave={handleManualSave}
+                    onDownload={handleDownload}
+                    onExportPdf={() => setShowPdfExport(true)}
+                    onTogglePreview={() => setShowPreview(!showPreview)}
+                    onToggleFormat={toggleFormat}
+                    onInsertCharacter={insertCharacter}
+                    characters={structure.personnages || []}
+                    canUndo={false}
+                    canRedo={false}
+                    showPreview={showPreview}
+                    isSaving={isSaving}
+                />
+            </SidePanel>
+
+            <SidePanel
+                isOpen={showRightPanel}
+                onClose={() => setShowRightPanel(false)}
+                position="right"
+                className="lg:hidden"
+            >
+                <RightPanel
+                    structure={structure}
+                    statistics={statistics}
+                    onNavigateToSection={navigateToSection}
+                    currentLine={currentLine}
+                />
+            </SidePanel>
 
             <VersionsSidebar
                 isOpen={showVersions}

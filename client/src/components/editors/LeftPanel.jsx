@@ -59,7 +59,7 @@ export function LeftPanel({
     ];
 
     return (
-        <div className="h-full flex flex-col w-60 px-6 py-8 bg-cyan-100/50 gap-y-8">
+        <div className="h-full flex flex-col w-60 px-6 py-8 gap-y-8">
             {/* Toolbar Section */}
             <div className="flex items-center justify-between">
                 {/* Groupe 1: Historique */}
