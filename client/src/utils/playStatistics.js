@@ -11,7 +11,7 @@ export function calculatePlayStatistics(rawContent) {
       totalActs: 0,
       totalScenes: 0,
       totalCharacters: 0,
-      totalLines: 0,
+      totalRepliques: 0,
       wordCount: 0,
       estimatedDurationMinutes: 0
     };
@@ -24,7 +24,8 @@ export function calculatePlayStatistics(rawContent) {
     let totalActs = 0;
     let totalScenes = 0;
     const characters = new Set();
-    let totalLines = 0;
+    let totalRepliques = 0;
+    let lastSpeaker = null;
     let wordCount = 0;
 
     /**
@@ -33,21 +34,23 @@ export function calculatePlayStatistics(rawContent) {
     const traverse = (node) => {
       switch (node.type) {
         case NodeType.ACTE:
-          totalActs++;
-          break;
-
         case NodeType.SCENE:
-          totalScenes++;
+          totalActs += node.type === NodeType.ACTE ? 1 : 0;
+          totalScenes += node.type === NodeType.SCENE ? 1 : 0;
+          lastSpeaker = null; // Reset au changement de section
           break;
 
         case NodeType.PERSONNAGE:
           if (node.attributes && node.attributes.name) {
+            if (lastSpeaker !== node.attributes.name) {
+              totalRepliques++;
+              lastSpeaker = node.attributes.name;
+            }
             characters.add(node.attributes.name);
           }
           break;
 
         case NodeType.DIALOGUE:
-          totalLines++;
           if (node.attributes && node.attributes.speaker) {
             characters.add(node.attributes.speaker);
           }
@@ -78,7 +81,7 @@ export function calculatePlayStatistics(rawContent) {
       totalActs,
       totalScenes,
       totalCharacters: characters.size,
-      totalLines,
+      totalRepliques,
       wordCount,
       estimatedDurationMinutes
     };
@@ -89,7 +92,7 @@ export function calculatePlayStatistics(rawContent) {
       totalActs: 0,
       totalScenes: 0,
       totalCharacters: 0,
-      totalLines: 0,
+      totalRepliques: 0,
       wordCount: countWords(rawContent),
       estimatedDurationMinutes: Math.ceil(countWords(rawContent) / 150)
     };

@@ -55,6 +55,7 @@ export function PlayEditor() {
     const [showRightPanel, setShowRightPanel] = useState(false); // Masqué par défaut sur mobile
     const parseTimeoutRef = useRef(null);
     const [isParsing, setIsParsing] = useState(false);
+    const [currentLine, setCurrentLine] = useState(0);
 
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
     const editorRef = useRef(null);
@@ -151,6 +152,13 @@ export function PlayEditor() {
     }, []);
 
     /**
+     * Gère le changement de position du curseur
+     */
+    const handleCursorChange = useCallback((line) => {
+        setCurrentLine(line);
+    }, []);
+
+    /**
      * Sauvegarde manuelle
      */
     const handleManualSave = useCallback(() => {
@@ -179,7 +187,7 @@ export function PlayEditor() {
      */
     const structure = useMemo(() => {
         if (!debouncedContent)
-            return { actes: [], scenes: [], personnages: [] };
+            return { items: [], orphanScenes: [], personnages: [] };
 
         try {
             const ast = parser.parse(debouncedContent);
@@ -189,7 +197,7 @@ export function PlayEditor() {
                 "Erreur lors de l'extraction de la structure:",
                 error
             );
-            return { actes: [], scenes: [], personnages: [] };
+            return { items: [], orphanScenes: [], personnages: [] };
         }
     }, [debouncedContent, parser]);
 
@@ -259,11 +267,12 @@ export function PlayEditor() {
             if (!editorRef.current || !position) return;
 
             // Utiliser la fonction de scroll de l'éditeur
+            // position.start est 0-indexed, mais scrollToLine attend 1-indexed
             if (
                 editorScrollRef.current &&
                 editorScrollRef.current.scrollToLine
             ) {
-                editorScrollRef.current.scrollToLine(position.start);
+                editorScrollRef.current.scrollToLine(position.start + 1);
             }
         },
         [editorScrollRef]
@@ -474,6 +483,7 @@ export function PlayEditor() {
                                     ref={editorRef}
                                     value={content}
                                     onChange={handleContentChange}
+                                    onCursorChange={handleCursorChange}
                                     onScroll={handleEditorScroll}
                                     scrollSync={editorScrollRef}
                                     characters={structure.personnages || []}
@@ -551,6 +561,7 @@ export function PlayEditor() {
                             structure={structure}
                             statistics={statistics}
                             onNavigateToSection={navigateToSection}
+                            currentLine={currentLine}
                         />
                     </div>
                 </div>

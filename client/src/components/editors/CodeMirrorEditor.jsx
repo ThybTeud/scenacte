@@ -16,7 +16,7 @@ import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } 
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync, characters = [] }, ref) {
+export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
 
@@ -210,6 +210,12 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
             onChange(update.state.doc.toString());
           }
 
+          // Notifier le changement de curseur
+          if (update.selectionSet && onCursorChange) {
+            const line = update.state.doc.lineAt(update.state.selection.main.head).number - 1;
+            onCursorChange(line);
+          }
+
           // Notifier le scroll
           if (update.view.scrollDOM && onScroll) {
             const scrollDOM = update.view.scrollDOM;
@@ -259,9 +265,10 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
           try {
             const line = view.state.doc.line(Math.max(1, lineNumber));
             view.dispatch({
-              selection: { anchor: line.from },
+              selection: { anchor: line.to }, // Position à la fin de la ligne
               scrollIntoView: true
             });
+            view.focus();
           } catch (error) {
             console.error('Error scrolling to line:', error);
           }
@@ -335,7 +342,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
     },
 
     /**
-     * Scroll vers une ligne spécifique
+     * Scroll vers une ligne spécifique et positionne le curseur à la fin
      * @param {number} lineNumber - Le numéro de ligne (1-indexed)
      */
     scrollToLine: (lineNumber) => {
@@ -344,9 +351,10 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       try {
         const line = viewRef.current.state.doc.line(Math.max(1, lineNumber));
         viewRef.current.dispatch({
-          selection: { anchor: line.from },
+          selection: { anchor: line.to }, // Position à la fin de la ligne
           scrollIntoView: true
         });
+        viewRef.current.focus();
       } catch (error) {
         console.error('Error scrolling to line:', error);
       }

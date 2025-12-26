@@ -338,54 +338,63 @@ function escapeHTML(text) {
  * Extrait les informations structurelles de l'AST
  * (utile pour la navigation)
  * @param {ASTNode} ast - Nœud racine de l'AST
- * @returns {Object} - Structure { actes: [], scenes: [], personnages: [] }
+ * @returns {Object} - Structure { items: [], orphanScenes: [], personnages: [] }
  */
 export function extractStructure(ast) {
-  const structure = {
-    actes: [],
-    scenes: [],
+  const result = {
+    items: [],           // Actes avec scènes imbriquées
+    orphanScenes: [],    // Scènes avant le premier acte
     personnages: new Set()
   };
 
-  const traverse = (node) => {
+  let currentActe = null;
+
+  const processNode = (node) => {
     switch (node.type) {
       case NodeType.ACTE:
-        structure.actes.push({
-          number: node.attributes.number,
+        currentActe = {
+          type: 'acte',
+          value: node.value,
           position: node.position,
-          value: node.value
-        });
+          scenes: []
+        };
+        result.items.push(currentActe);
         break;
 
       case NodeType.SCENE:
-        structure.scenes.push({
-          number: node.attributes.number,
-          position: node.position,
-          value: node.value
-        });
+        const sceneData = {
+          type: 'scene',
+          value: node.value,
+          position: node.position
+        };
+        if (currentActe) {
+          currentActe.scenes.push(sceneData);
+        } else {
+          result.orphanScenes.push(sceneData);
+        }
         break;
 
       case NodeType.PERSONNAGE:
-        structure.personnages.add(node.attributes.name);
+        result.personnages.add(node.attributes.name);
         break;
 
       case NodeType.DIALOGUE:
-      case NodeType.TIRADE:
-      case NodeType.APARTE:
-        structure.personnages.add(node.attributes.speaker);
+        if (node.attributes && node.attributes.speaker) {
+          result.personnages.add(node.attributes.speaker);
+        }
         break;
     }
 
     if (node.children) {
-      node.children.forEach(traverse);
+      node.children.forEach(processNode);
     }
   };
 
-  traverse(ast);
+  processNode(ast);
 
   return {
-    ...structure,
-    personnages: Array.from(structure.personnages)
+    ...result,
+    personnages: Array.from(result.personnages)
   };
 }
 

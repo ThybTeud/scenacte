@@ -1,166 +1,163 @@
 import { Card } from "../ui/Card";
 
-export function RightPanel({
-    structure = { actes: [], scenes: [] },
-    statistics = null,
-    onNavigateToSection,
-}) {
-    const handleSectionClick = (position) => {
-        if (onNavigateToSection && position) {
-            onNavigateToSection(position);
-        }
+/**
+ * Helper pour trouver la section active basée sur la position du curseur
+ */
+function findActiveSection(structure, currentLine) {
+    if (currentLine == null)
+        return { acteIndex: null, sceneIndex: null, orphanIndex: null };
+
+    let bestMatch = {
+        acteIndex: null,
+        sceneIndex: null,
+        orphanIndex: null,
+        position: -1,
     };
 
-    // Organiser les scènes par acte
-    const organizedStructure = structure.actes.map((acte, acteIndex) => {
-        const actScenes = structure.scenes.filter((scene) => {
-            // Si on a un système de hiérarchie dans la structure
-            // Pour l'instant on va juste grouper séquentiellement
-            const nextActePosition =
-                structure.actes[acteIndex + 1]?.position?.start;
-            const scenePosition = scene.position?.start;
-            return (
-                scenePosition > acte.position?.start &&
-                (nextActePosition === undefined ||
-                    scenePosition < nextActePosition)
-            );
-        });
-        return { acte, scenes: actScenes };
-    });
+    // Chercher dans les actes/scènes
+    for (let a = structure.items.length - 1; a >= 0; a--) {
+        const acte = structure.items[a];
+        if (
+            acte.position.start <= currentLine &&
+            acte.position.start > bestMatch.position
+        ) {
+            // Chercher la scène dans cet acte
+            let foundScene = false;
+            for (let s = acte.scenes.length - 1; s >= 0; s--) {
+                if (
+                    acte.scenes[s].position.start <= currentLine &&
+                    acte.scenes[s].position.start > bestMatch.position
+                ) {
+                    bestMatch = {
+                        acteIndex: a,
+                        sceneIndex: s,
+                        orphanIndex: null,
+                        position: acte.scenes[s].position.start,
+                    };
+                    foundScene = true;
+                    break;
+                }
+            }
+            // Dans l'acte mais avant toute scène (ou pas de scène trouvée)
+            if (!foundScene) {
+                bestMatch = {
+                    acteIndex: a,
+                    sceneIndex: null,
+                    orphanIndex: null,
+                    position: acte.position.start,
+                };
+            }
+        }
+    }
 
-    // Gestion des scènes orphelines (sans acte parent)
-    const orphanScenes = structure.scenes.filter((scene) => {
-        return !structure.actes.some((acte, acteIndex) => {
-            const nextActePosition =
-                structure.actes[acteIndex + 1]?.position?.start;
-            const scenePosition = scene.position?.start;
-            return (
-                scenePosition > acte.position?.start &&
-                (nextActePosition === undefined ||
-                    scenePosition < nextActePosition)
-            );
-        });
-    });
+    // Chercher dans les scènes orphelines
+    for (let i = structure.orphanScenes.length - 1; i >= 0; i--) {
+        if (
+            structure.orphanScenes[i].position.start <= currentLine &&
+            structure.orphanScenes[i].position.start > bestMatch.position
+        ) {
+            bestMatch = {
+                acteIndex: null,
+                sceneIndex: null,
+                orphanIndex: i,
+                position: structure.orphanScenes[i].position.start,
+            };
+        }
+    }
+
+    return {
+        acteIndex: bestMatch.acteIndex,
+        sceneIndex: bestMatch.sceneIndex,
+        orphanIndex: bestMatch.orphanIndex,
+    };
+}
+
+export function RightPanel({
+    structure = { items: [], orphanScenes: [] },
+    statistics,
+    onNavigateToSection,
+    currentLine,
+}) {
+    const handleClick = (position) => {
+        onNavigateToSection?.(position);
+    };
+
+    const isEmpty = !structure.items?.length && !structure.orphanScenes?.length;
+    const active = findActiveSection(structure, currentLine);
+
+    // Classes pour surbrillance
+    const activeActeClass = "bg-orange-200 text-black";
+    const activeSceneClass = "bg-orange-400 text-white font-semibold";
+    const defaultActeClass = "hover:bg-orange-400 hover:text-white";
+    const defaultSceneClass =
+        "text-gray-700 hover:bg-orange-400 hover:text-white hover:font-bold";
 
     return (
         <div className="h-full flex flex-col w-60 px-6 py-8 bg-cyan-100/50 gap-y-8">
-            {/* Sommaire */}
             <Card header="Sommaire" size="sm" heightMax="flex-1">
-                {structure.actes.length === 0 &&
-                structure.scenes.length === 0 ? (
+                {isEmpty ? (
                     <div className="flex flex-col items-center justify-center h-full px-3">
                         <p className="text-center text-xs text-gray-500 italic font-ui">
-                            Ecrivez des actes, des scènes ou des tableaux avec
-                            '#'
+                            Écrivez des actes ou scènes avec '#'
                         </p>
                     </div>
                 ) : (
-                    <div className="flex flex-col">
-                        <nav className="space-y-2">
-                            {/* Scènes orphelines en début */}
-                            {orphanScenes.length > 0 &&
-                                structure.actes.length > 0 && (
-                                    <div className="mb-3">
-                                        {orphanScenes.map((scene, index) => (
-                                            <button
-                                                key={`orphan-${index}`}
+                    <nav className="space-y-2">
+                        {/* Scènes orphelines */}
+                        {structure.orphanScenes?.map((scene, i) => (
+                            <div
+                                key={`orphan-${i}`}
+                                onClick={() => handleClick(scene.position)}
+                                className={`text-left ml-4 px-2 py-1 text-sm rounded font-ui cursor-pointer ${
+                                    active.orphanIndex === i
+                                        ? activeSceneClass
+                                        : defaultSceneClass
+                                }`}
+                            >
+                                {scene.value}
+                            </div>
+                        ))}
+
+                        {/* Actes avec leurs scènes */}
+                        {structure.items?.map((acte, a) => (
+                            <ul key={a} className="space-y-1">
+                                <li
+                                    onClick={() => handleClick(acte.position)}
+                                    className={`w-full text-left px-2 py-1 text-sm font-semibold rounded font-ui cursor-pointer ${
+                                        active.acteIndex === a
+                                            ? activeActeClass
+                                            : defaultActeClass
+                                    }`}
+                                >
+                                    {acte.value}
+                                </li>
+                                {acte.scenes?.length > 0 && (
+                                    <ul className="ml-4 space-y-1">
+                                        {acte.scenes.map((scene, s) => (
+                                            <li
+                                                key={s}
                                                 onClick={() =>
-                                                    handleSectionClick(
-                                                        scene.position
-                                                    )
+                                                    handleClick(scene.position)
                                                 }
-                                                className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange rounded transition-colors font-ui"
+                                                className={`w-full text-left px-2 py-1 text-sm rounded font-ui cursor-pointer ${
+                                                    active.acteIndex === a &&
+                                                    active.sceneIndex === s
+                                                        ? activeSceneClass
+                                                        : defaultSceneClass
+                                                }`}
                                             >
-                                                <span className="flex items-center gap-2">
-                                                    <span>{scene.value}</span>
-                                                </span>
-                                            </button>
+                                                {scene.value}
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 )}
-
-                            {/* Actes et leurs scènes */}
-                            {organizedStructure.map((item, acteIndex) => (
-                                <div key={acteIndex} className="space-y-1">
-                                    <button
-                                        onClick={() =>
-                                            handleSectionClick(
-                                                item.acte.position
-                                            )
-                                        }
-                                        className="w-full text-left px-3 py-2 text-sm font-semibold hover:bg-orange-400 hover:text-white rounded font-ui cursor-pointer"
-                                    >
-                                        <span className="flex items-center space-y-2">
-                                            <span>{item.acte.value}</span>
-                                        </span>
-                                    </button>
-
-                                    {/* Scènes de cet acte */}
-                                    {item.scenes.length > 0 && (
-                                        <ul className="ml-4">
-                                            {item.scenes.map(
-                                                (scene, sceneIndex) => (
-                                                    <li
-                                                        key={sceneIndex}
-                                                        onClick={() =>
-                                                            handleSectionClick(
-                                                                scene.position
-                                                            )
-                                                        }
-                                                        className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-400 hover:text-white hover:font-bold rounded font-ui cursor-pointer"
-                                                    >
-                                                        <span className="flex items-center space-y-2">
-                                                            <span>
-                                                                {scene.value}
-                                                            </span>
-                                                        </span>
-                                                    </li>
-                                                )
-                                            )}
-                                        </ul>
-                                    )}
-                                </div>
-                            ))}
-
-                            {/* Si pas d'actes mais des scènes */}
-                            {structure.actes.length === 0 &&
-                                structure.scenes.length > 0 && (
-                                    <div className="space-y-1">
-                                        {structure.scenes.map(
-                                            (scene, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() =>
-                                                        handleSectionClick(
-                                                            scene.position
-                                                        )
-                                                    }
-                                                    className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange rounded transition-colors font-ui"
-                                                >
-                                                    <span className="flex items-center gap-2">
-                                                        <span>
-                                                            {scene.value}
-                                                        </span>
-                                                    </span>
-                                                </button>
-                                            )
-                                        )}
-                                    </div>
-                                )}
-                        </nav>
-                    </div>
+                            </ul>
+                        ))}
+                    </nav>
                 )}
             </Card>
 
-            {/* Statistiques (sticky en bas) */}
-            <div
-                className="p-4 bg-white"
-                style={{ borderTop: "1px solid #e5e5e5" }}
-            >
-                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
-                    Statistiques
-                </h3>
-
+            <Card header="Statistiques" size="sm" heightMax="auto">
                 {!statistics ? (
                     <p className="text-sm text-gray-500 italic font-ui">
                         Chargement...
@@ -175,42 +172,17 @@ export function RightPanel({
                                 {statistics.totalScenes || 0}
                             </span>
                         </div>
-
                         <div className="flex items-center justify-between p-2 bg-cream rounded">
                             <span className="text-sm text-gray-600 font-ui">
                                 Répliques
                             </span>
                             <span className="text-lg font-semibold text-gray-900 font-ui">
-                                {statistics.totalLines || 0}
+                                {statistics.totalRepliques || 0}
                             </span>
                         </div>
-
-                        {/* Stats supplémentaires (optionnelles, affichées en petit) */}
-                        {/* Masquée pour le moment */}
-                        {/* {statistics.totalActs > 0 && (
-              <div className="pt-2 border-t border-gray-200 text-xs text-gray-500 space-y-1">
-                <div className="flex justify-between">
-                  <span>Actes</span>
-                  <span>{statistics.totalActs}</span>
-                </div>
-                {statistics.totalCharacters > 0 && (
-                  <div className="flex justify-between">
-                    <span>Personnages</span>
-                    <span>{statistics.totalCharacters}</span>
-                  </div>
-                )}
-                {statistics.wordCount > 0 && (
-                  <div className="flex justify-between">
-                    <span>Mots</span>
-                    <span>{statistics.wordCount.toLocaleString()}</span>
-                  </div>
-                )}
-                
-              </div>
-            )} */}
                     </div>
                 )}
-            </div>
+            </Card>
         </div>
     );
 }
