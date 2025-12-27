@@ -26,6 +26,7 @@ export const PdfPreview = forwardRef(function PdfPreview({
 }, ref) {
   const iframeRef = ref || useRef(null);
   const previewerRef = useRef(null);
+  const sourceContentRef = useRef(null);
   const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,6 +57,12 @@ export const PdfPreview = forwardRef(function PdfPreview({
     // Initialiser PagedJS une fois le DOM prêt
     iframe.onload = async () => {
       try {
+        // Sauvegarder le contenu source avant que PagedJS le consomme
+        const content = doc.querySelector('.play-content');
+        if (content) {
+          sourceContentRef.current = content.cloneNode(true);
+        }
+
         // Créer une nouvelle instance du Previewer
         previewerRef.current = new Previewer();
 
@@ -72,6 +79,7 @@ export const PdfPreview = forwardRef(function PdfPreview({
 
     return () => {
       iframe.onload = null;
+      sourceContentRef.current = null;
     };
   }, [htmlContent, playTitle, playSubtitle]);
 
@@ -102,28 +110,32 @@ export const PdfPreview = forwardRef(function PdfPreview({
   /**
    * Fonction de rendu PagedJS
    * Nettoie le rendu précédent et génère les nouvelles pages
+   * Utilise sourceContentRef pour éviter les problèmes de contenu consommé par PagedJS
    */
   async function renderPages() {
-    if (!iframeRef.current || !previewerRef.current) return;
+    if (!iframeRef.current || !previewerRef.current || !sourceContentRef.current) return;
 
     const doc = iframeRef.current.contentDocument;
-    const content = doc.querySelector('.play-content');
 
-    if (!content) {
-      console.error('Contenu .play-content introuvable');
-      setIsLoading(false);
-      return;
-    }
-
-    // Nettoyer le rendu précédent
+    // Nettoyer tout le rendu précédent
     const pagedContainer = doc.querySelector('.pagedjs_pages');
     if (pagedContainer) {
       pagedContainer.remove();
     }
 
+    // Supprimer l'ancien contenu source s'il existe encore
+    const oldContent = doc.querySelector('.play-content');
+    if (oldContent) {
+      oldContent.remove();
+    }
+
+    // Réinjecter une copie fraîche du contenu source
+    const freshContent = sourceContentRef.current.cloneNode(true);
+    doc.body.appendChild(freshContent);
+
     // Re-render avec PagedJS
     try {
-      await previewerRef.current.preview(content, [], doc.body);
+      await previewerRef.current.preview(freshContent, [], doc.body);
 
       // Compter les pages générées
       const pages = doc.querySelectorAll('.pagedjs_page');
