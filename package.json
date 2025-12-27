@@ -13,5 +13,8 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^4.3.1"
   }
 }

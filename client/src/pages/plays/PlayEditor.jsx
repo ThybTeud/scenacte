@@ -77,7 +77,7 @@ export function PlayEditor() {
     const isParsing = content !== debouncedContent;
 
     // Parse l'AST une seule fois et dérive toutes les valeurs nécessaires
-    const { structure, statistics, htmlContent } = usePlayParsing(
+    const { ast, structure, statistics, htmlContent } = usePlayParsing(
         debouncedContent,
         parser
     );
@@ -419,8 +419,7 @@ export function PlayEditor() {
                 onClose={() => setShowPdfExport(false)}
                 playTitle={play.title}
                 playSubtitle={play.subtitle}
-                htmlContent={htmlContent}
-                rawContent={content}
+                ast={ast}
             />
         </div>
     );
