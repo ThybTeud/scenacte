@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, forwardRef } from 'react';
-import { generatePdfHtml } from '../../utils/pdfExport';
+import { Previewer } from 'pagedjs';
+import { generatePdfDocument, generatePdfStyles } from '../../utils/pdfExport';
 import { Loader } from '../ui/Loader';
 
 /**
  * PdfPreview - Composant de prévisualisation PDF avec PagedJS
  * Utilise une iframe pour isoler les styles PagedJS
+ * Optimisé pour éviter les rechargements complets lors des changements de template/format
  *
  * @param {Object} props
  * @param {string} props.htmlContent - HTML généré par astToHTML
@@ -23,64 +25,141 @@ export const PdfPreview = forwardRef(function PdfPreview({
   onPagesRendered,
 }, ref) {
   const iframeRef = ref || useRef(null);
+  const previewerRef = useRef(null);
+  const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Effect 1 : Initialisation unique du document (contenu HTML)
   useEffect(() => {
     if (!iframeRef.current) return;
 
     setIsLoading(true);
+    setInitialized(false);
 
     const iframe = iframeRef.current;
     const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Générer le HTML complet avec PagedJS
-    const fullHtml = generatePdfHtml({
+    // Générer le document HTML (sans PagedJS)
+    const documentHtml = generatePdfDocument({
       htmlContent,
       playTitle,
       playSubtitle,
-      template,
-      pageFormat,
     });
 
     doc.open();
-    doc.write(fullHtml);
+    doc.write(documentHtml);
     doc.close();
 
-    // Configuration PagedJS pour être notifié quand le rendu est terminé
-    // On attend que le script PagedJS soit chargé et exécuté
-    const checkPagedJS = setInterval(() => {
-      if (iframe.contentWindow.PagedPolyfill) {
-        clearInterval(checkPagedJS);
+    // Injecter les styles initiaux
+    injectStyles(doc, template, pageFormat);
 
-        // Écouter l'événement de fin de rendu PagedJS
-        iframe.contentWindow.addEventListener('pagedjs-ready', () => {
-          // Compter le nombre de pages générées
-          const pages = iframe.contentDocument.querySelectorAll('.pagedjs_page');
-          onPagesRendered?.(pages.length);
-          setIsLoading(false);
-        });
+    // Initialiser PagedJS une fois le DOM prêt
+    iframe.onload = async () => {
+      try {
+        // Créer une nouvelle instance du Previewer
+        previewerRef.current = new Previewer();
+
+        // Effectuer le premier rendu
+        await renderPages();
+
+        setInitialized(true);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation PagedJS:', error);
+        setIsLoading(false);
+        onPagesRendered?.(0);
       }
-    }, 100);
-
-    // Cleanup après 10 secondes si PagedJS ne répond pas
-    const timeout = setTimeout(() => {
-      clearInterval(checkPagedJS);
-      setIsLoading(false);
-      onPagesRendered?.(0);
-    }, 10000);
+    };
 
     return () => {
-      clearInterval(checkPagedJS);
-      clearTimeout(timeout);
+      iframe.onload = null;
     };
-  }, [htmlContent, template, pageFormat, playTitle, playSubtitle, onPagesRendered]);
+  }, [htmlContent, playTitle, playSubtitle]);
+
+  // Effect 2 : Changement de template/format (CSS uniquement, pas de rechargement)
+  useEffect(() => {
+    if (!initialized) return;
+
+    const updateStyles = async () => {
+      setIsLoading(true);
+
+      try {
+        const doc = iframeRef.current.contentDocument;
+
+        // Mettre à jour les styles CSS
+        injectStyles(doc, template, pageFormat);
+
+        // Re-render avec les nouveaux styles
+        await renderPages();
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour des styles:', error);
+        setIsLoading(false);
+      }
+    };
+
+    updateStyles();
+  }, [template, pageFormat, initialized]);
+
+  /**
+   * Fonction de rendu PagedJS
+   * Nettoie le rendu précédent et génère les nouvelles pages
+   */
+  async function renderPages() {
+    if (!iframeRef.current || !previewerRef.current) return;
+
+    const doc = iframeRef.current.contentDocument;
+    const content = doc.querySelector('.play-content');
+
+    if (!content) {
+      console.error('Contenu .play-content introuvable');
+      setIsLoading(false);
+      return;
+    }
+
+    // Nettoyer le rendu précédent
+    const pagedContainer = doc.querySelector('.pagedjs_pages');
+    if (pagedContainer) {
+      pagedContainer.remove();
+    }
+
+    // Re-render avec PagedJS
+    try {
+      await previewerRef.current.preview(content, [], doc.body);
+
+      // Compter les pages générées
+      const pages = doc.querySelectorAll('.pagedjs_page');
+      onPagesRendered?.(pages.length);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Erreur lors du rendu PagedJS:', error);
+      setIsLoading(false);
+      onPagesRendered?.(0);
+    }
+  }
+
+  /**
+   * Injection dynamique des styles CSS
+   * Permet de changer le template/format sans recharger l'iframe
+   */
+  function injectStyles(doc, template, pageFormat) {
+    let styleEl = doc.getElementById('pdf-styles');
+
+    if (!styleEl) {
+      styleEl = doc.createElement('style');
+      styleEl.id = 'pdf-styles';
+      doc.head.appendChild(styleEl);
+    }
+
+    styleEl.textContent = generatePdfStyles({ template, pageFormat });
+  }
 
   return (
     <div className="relative h-full w-full bg-gray-100 rounded border-2 border-black overflow-hidden">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
           <Loader />
-          <span className="ml-2 font-ui">Génération des pages...</span>
+          <span className="ml-2 font-ui">
+            {initialized ? 'Mise à jour...' : 'Génération des pages...'}
+          </span>
         </div>
       )}
       <iframe

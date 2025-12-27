@@ -3,63 +3,27 @@
  */
 
 /**
- * Génère le HTML complet pour le rendu PDF avec PagedJS
+ * Génère le document HTML initial (structure + contenu)
+ * Appelé une seule fois à l'initialisation
  * @param {Object} params
  * @param {string} params.htmlContent - HTML généré par astToHTML
  * @param {string} params.playTitle - Titre de la pièce
  * @param {string} [params.playSubtitle] - Sous-titre de la pièce
- * @param {string} [params.template='classic'] - Template CSS à utiliser
- * @param {string} [params.pageFormat='A4'] - Format de page
- * @returns {string} - HTML complet pour le PDF
+ * @returns {string} - HTML complet pour le PDF (sans PagedJS CDN)
  */
-export function generatePdfHtml({
+export function generatePdfDocument({
   htmlContent,
   playTitle,
   playSubtitle,
-  template = 'classic',
-  pageFormat = 'A4',
 }) {
-  const pageSize = {
-    'A4': 'A4',
-    'A5': 'A5',
-    'letter': 'letter',
-  }[pageFormat];
-
-  // CSS de base pour PagedJS
-  const baseStyles = `
-    @page {
-      size: ${pageSize};
-      margin: 25mm 20mm;
-
-      @bottom-center {
-        content: counter(page);
-        font-family: 'Inter', sans-serif;
-        font-size: 10pt;
-      }
-    }
-
-    @page:first {
-      @bottom-center {
-        content: none;
-      }
-    }
-  `;
-
-  // Charger le template CSS correspondant
-  const templateStyles = getTemplateStyles(template);
-
   return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>${escapeHtml(playTitle)}</title>
-  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    ${baseStyles}
-    ${templateStyles}
-
     /* Reset et base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -147,6 +111,50 @@ export function generatePdfHtml({
 </body>
 </html>
   `;
+}
+
+/**
+ * Génère uniquement les styles CSS (PagedJS + template)
+ * Appelé à chaque changement de template/format
+ * @param {Object} params
+ * @param {string} [params.template='classic'] - Template CSS à utiliser
+ * @param {string} [params.pageFormat='A4'] - Format de page
+ * @returns {string} - Styles CSS complets
+ */
+export function generatePdfStyles({
+  template = 'classic',
+  pageFormat = 'A4',
+}) {
+  const pageSize = {
+    'A4': 'A4',
+    'A5': 'A5',
+    'letter': 'letter',
+  }[pageFormat];
+
+  // CSS de base pour PagedJS
+  const baseStyles = `
+    @page {
+      size: ${pageSize};
+      margin: 25mm 20mm;
+
+      @bottom-center {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 10pt;
+      }
+    }
+
+    @page:first {
+      @bottom-center {
+        content: none;
+      }
+    }
+  `;
+
+  // Charger le template CSS correspondant
+  const templateStyles = getTemplateStyles(template);
+
+  return `${baseStyles}\n${templateStyles}`;
 }
 
 /**
