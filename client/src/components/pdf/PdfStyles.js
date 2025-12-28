@@ -1,11 +1,10 @@
-import { StyleSheet, Font } from '@react-pdf/renderer';
+import { StyleSheet } from '@react-pdf/renderer';
 
 /**
  * Formats de page supportés
  */
 export const PAGE_FORMATS = {
   A4: 'A4',
-  A5: 'A5',
   LETTER: 'LETTER',
 };
 
@@ -14,14 +13,13 @@ export const PAGE_FORMATS = {
  */
 const MARGINS = {
   A4: { top: 70, right: 55, bottom: 70, left: 55 },
-  A5: { top: 50, right: 40, bottom: 50, left: 40 },
   LETTER: { top: 72, right: 72, bottom: 72, left: 72 },
 };
 
 /**
  * Génère les styles pour un template et format donnés
  * @param {string} template - 'classic' | 'modern' | 'minimal'
- * @param {string} pageFormat - 'A4' | 'A5' | 'LETTER'
+ * @param {string} pageFormat - 'A4' | 'LETTER'
  * @returns {Object} StyleSheet
  */
 export function getStyles(template = 'classic', pageFormat = 'A4') {
@@ -29,10 +27,19 @@ export function getStyles(template = 'classic', pageFormat = 'A4') {
   const baseStyles = getBaseStyles(margins);
   const templateStyles = getTemplateStyles(template);
 
-  return StyleSheet.create({
-    ...baseStyles,
-    ...templateStyles,
+  // Merger en profondeur pour ne pas écraser les styles de base
+  const mergedStyles = { ...baseStyles };
+  Object.keys(templateStyles).forEach(key => {
+    if (mergedStyles[key]) {
+      // Fusionner les propriétés existantes
+      mergedStyles[key] = { ...mergedStyles[key], ...templateStyles[key] };
+    } else {
+      // Ajouter les nouvelles propriétés
+      mergedStyles[key] = templateStyles[key];
+    }
   });
+
+  return StyleSheet.create(mergedStyles);
 }
 
 /**
@@ -57,7 +64,7 @@ function getBaseStyles(margins) {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingTop: '30%',
+      paddingTop: 200,
     },
     titlePageTitle: {
       fontSize: 28,
@@ -72,10 +79,15 @@ function getBaseStyles(margins) {
       textAlign: 'center',
     },
 
+    // Conteneur principal du contenu
+    content: {
+      flex: 1,
+    },
+
     // Footer avec numéro de page
-    pageFooter: {
+    pageNumber: {
       position: 'absolute',
-      bottom: 30,
+      bottom: 20,
       left: 0,
       right: 0,
       textAlign: 'center',
@@ -104,7 +116,7 @@ function getBaseStyles(margins) {
 
     // Personnage
     character: {
-      fontWeight: 'semibold',
+      fontWeight: 'bold',
       textTransform: 'uppercase',
       textAlign: 'center',
       marginTop: 12,
@@ -186,7 +198,7 @@ function getTemplateStyles(template) {
         color: '#444444',
       },
       character: {
-        fontWeight: 'semibold',
+        fontWeight: 'bold',
         textTransform: 'uppercase',
         textAlign: 'center',
         marginTop: 12,

@@ -23,9 +23,6 @@ export function PdfExportModal({
   playSubtitle,
   ast,
 }) {
-// Ajout d'un log pour vérifier l'AST reçu (temporaire)
-  console.log('AST reçu dans PdfExportModal:', JSON.stringify(ast, null, 2));
-
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [pageFormat, setPageFormat] = useState('A4');
 
@@ -37,7 +34,6 @@ export function PdfExportModal({
 
   const formatOptions = [
     { value: 'A4', label: 'A4' },
-    { value: 'A5', label: 'A5 (Livre)' },
     { value: 'LETTER', label: 'Letter (US)' },
   ];
 

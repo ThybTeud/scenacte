@@ -21,11 +21,8 @@ export function Character({ node, styles }) {
  */
 function getTextContent(node) {
   if (!node) return '';
-  if (typeof node === 'string') return node;
-  if (node.content) return node.content;
-  if (node.name) return node.name; // Pour les nœuds personnage avec propriété name
-  if (node.children) {
-    return node.children.map(getTextContent).join('');
-  }
+  // AST Scenacte : le nom est dans node.attributes.name
+  if (node.attributes?.name) return node.attributes.name;
+  if (node.name) return node.name;
   return '';
 }

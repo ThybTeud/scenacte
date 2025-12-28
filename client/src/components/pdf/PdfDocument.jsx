@@ -1,5 +1,5 @@
 import './registerFonts';
-import { Document, Page, View } from '@react-pdf/renderer';
+import { Document, Page, View, Text } from '@react-pdf/renderer';
 import { getStyles } from './PdfStyles';
 import {
   TitlePage,
@@ -8,7 +8,6 @@ import {
   Character,
   Dialogue,
   StageDirection,
-  PageFooter,
 } from './components';
 
 /**
@@ -19,7 +18,7 @@ import {
  * @param {string} props.title - Titre de la pièce
  * @param {string} [props.subtitle] - Sous-titre optionnel
  * @param {string} [props.template='classic'] - Template de style ('classic' | 'modern' | 'minimal')
- * @param {string} [props.pageFormat='A4'] - Format de page ('A4' | 'A5' | 'LETTER')
+ * @param {string} [props.pageFormat='A4'] - Format de page ('A4' | 'LETTER')
  */
 export function PdfDocument({
   ast,
@@ -29,10 +28,6 @@ export function PdfDocument({
   pageFormat = 'A4',
 }) {
   const styles = getStyles(template, pageFormat);
-
-  console.log('=== PdfDocument render ===');
-  console.log('AST reçu dans PdfDocument:', ast);
-  console.log('Template:', template, 'Format:', pageFormat);
 
   return (
     <Document
@@ -48,11 +43,20 @@ export function PdfDocument({
 
       {/* Contenu de la pièce avec pagination automatique */}
       <Page size={pageFormat} style={styles.page} wrap>
-        <PageFooter styles={styles} />
-        <View>
-          {console.log('Avant appel renderAstContent')}
+        {/* Contenu principal */}
+        <View style={styles.content}>
           {renderAstContent(ast, styles)}
         </View>
+
+        {/* Footer - numéro de page fixe */}
+        <Text
+          style={styles.pageNumber}
+          render={({ pageNumber }) => {
+            if (pageNumber === 1) return '';
+            return `${pageNumber - 1}`;
+          }}
+          fixed
+        />
       </Page>
     </Document>
   );
@@ -66,24 +70,15 @@ export function PdfDocument({
  * @returns {React.ReactNode[]} Composants React-PDF
  */
 function renderAstContent(ast, styles) {
-  console.log('=== renderAstContent appelé ===');
-  console.log('AST reçu:', ast);
-  console.log('AST.children:', ast?.children);
-
   if (!ast || !ast.children || ast.children.length === 0) {
-    console.warn('AST vide ou invalide');
     return null;
   }
-
-  console.log('Nombre d\'enfants:', ast.children.length);
 
   // Contexte partagé pour tracker l'index des actes
   const context = { actIndex: 0 };
 
   const elements = ast.children.map((node, index) => {
-    console.log(`Traitement nœud ${index}:`, node.type, node);
     const element = renderNode(node, index, styles, context);
-    console.log(`Élément généré pour ${node.type}:`, element);
     // Incrémenter actIndex seulement pour les actes
     if (node.type === 'acte') {
       context.actIndex++;
@@ -91,7 +86,6 @@ function renderAstContent(ast, styles) {
     return element;
   });
 
-  console.log('Éléments générés:', elements);
   return elements;
 }
 
@@ -105,10 +99,7 @@ function renderAstContent(ast, styles) {
  * @returns {React.ReactNode} Composant React-PDF
  */
 function renderNode(node, index, styles, context = {}) {
-  console.log(`renderNode appelé - type: ${node?.type}, index: ${index}`);
-
   if (!node) {
-    console.warn('Node est null/undefined');
     return null;
   }
 

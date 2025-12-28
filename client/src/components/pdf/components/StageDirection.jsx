@@ -21,10 +21,8 @@ export function StageDirection({ node, styles }) {
  */
 function getTextContent(node) {
   if (!node) return '';
-  if (typeof node === 'string') return node;
+  // AST Scenacte : le texte est dans node.value
+  if (node.value) return node.value;
   if (node.content) return node.content;
-  if (node.children) {
-    return node.children.map(getTextContent).join('');
-  }
   return '';
 }

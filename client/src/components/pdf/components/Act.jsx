@@ -26,10 +26,8 @@ export function Act({ node, styles, isFirst = false }) {
  */
 function getTextContent(node) {
   if (!node) return '';
-  if (typeof node === 'string') return node;
-  if (node.content) return node.content;
-  if (node.children) {
-    return node.children.map(getTextContent).join('');
-  }
+  // AST Scenacte : le titre est dans node.value ou node.attributes.number
+  if (node.value) return node.value;
+  if (node.attributes?.number) return node.attributes.number;
   return '';
 }
