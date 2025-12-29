@@ -34,7 +34,6 @@ export function PdfExportModal({
 
   const formatOptions = [
     { value: 'A4', label: 'A4' },
-    { value: 'A3', label: 'A3' },
     { value: 'LETTER', label: 'Letter (US)' },
   ];
 
