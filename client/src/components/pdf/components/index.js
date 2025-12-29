@@ -4,4 +4,3 @@ export { Scene } from './Scene';
 export { Character } from './Character';
 export { Dialogue } from './Dialogue';
 export { StageDirection } from './StageDirection';
-export { PageFooter } from './PageFooter';

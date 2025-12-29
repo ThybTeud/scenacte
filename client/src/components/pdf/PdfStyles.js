@@ -5,6 +5,7 @@ import { StyleSheet } from '@react-pdf/renderer';
  */
 export const PAGE_FORMATS = {
   A4: 'A4',
+  A3: 'A3',
   LETTER: 'LETTER',
 };
 
@@ -13,13 +14,14 @@ export const PAGE_FORMATS = {
  */
 const MARGINS = {
   A4: { top: 70, right: 55, bottom: 70, left: 55 },
+  A3: { top: 80, right: 80, bottom: 80, left: 80 },
   LETTER: { top: 72, right: 72, bottom: 72, left: 72 },
 };
 
 /**
  * Génère les styles pour un template et format donnés
  * @param {string} template - 'classic' | 'modern' | 'minimal'
- * @param {string} pageFormat - 'A4' | 'LETTER'
+ * @param {string} pageFormat - 'A4' | 'A3' | 'LETTER'
  * @returns {Object} StyleSheet
  */
 export function getStyles(template = 'classic', pageFormat = 'A4') {
@@ -68,7 +70,7 @@ function getBaseStyles(margins) {
     },
     titlePageTitle: {
       fontSize: 28,
-      fontWeight: 'bold',
+      // fontWeight: 'bold',
       marginBottom: 12,
       textAlign: 'center',
     },
@@ -87,12 +89,11 @@ function getBaseStyles(margins) {
     // Footer avec numéro de page
     pageNumber: {
       position: 'absolute',
-      bottom: 20,
+      fontSize: 10,
+      bottom: 30,
       left: 0,
       right: 0,
       textAlign: 'center',
-      fontSize: 10,
-      fontFamily: 'Helvetica',
       color: '#666666',
     },
 
@@ -107,7 +108,7 @@ function getBaseStyles(margins) {
 
     // Scène
     scene: {
-      fontWeight: 'bold',
+      fontWeight: 'Times-Roman-bold',
       textTransform: 'uppercase',
       textAlign: 'center',
       marginTop: 18,
@@ -234,15 +235,4 @@ function getTemplateStyles(template) {
   };
 
   return templates[template] || templates.classic;
-}
-
-/**
- * Fusionne les styles de base avec les overrides du template
- * @param {Object} baseStyle - Style de base
- * @param {Object} overrideStyle - Style du template (peut être undefined)
- * @returns {Object} Style fusionné
- */
-export function mergeStyles(baseStyle, overrideStyle) {
-  if (!overrideStyle) return baseStyle;
-  return { ...baseStyle, ...overrideStyle };
 }

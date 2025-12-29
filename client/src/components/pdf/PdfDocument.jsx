@@ -1,14 +1,14 @@
-import './registerFonts';
-import { Document, Page, View, Text } from '@react-pdf/renderer';
-import { getStyles } from './PdfStyles';
+import "./registerFonts";
+import { Document, Page, View, Text } from "@react-pdf/renderer";
+import { getStyles } from "./PdfStyles";
 import {
-  TitlePage,
-  Act,
-  Scene,
-  Character,
-  Dialogue,
-  StageDirection,
-} from './components';
+    TitlePage,
+    Act,
+    Scene,
+    Character,
+    Dialogue,
+    StageDirection,
+} from "./components";
 
 /**
  * Document PDF principal pour l'export de pièces de théâtre
@@ -21,45 +21,39 @@ import {
  * @param {string} [props.pageFormat='A4'] - Format de page ('A4' | 'LETTER')
  */
 export function PdfDocument({
-  ast,
-  title,
-  subtitle,
-  template = 'classic',
-  pageFormat = 'A4',
+    ast,
+    title,
+    subtitle,
+    template = "classic",
+    pageFormat = "A4",
 }) {
-  const styles = getStyles(template, pageFormat);
+    const styles = getStyles(template, pageFormat);
 
-  return (
-    <Document
-      title={title}
-      author="Scenacte"
-      creator="Scenacte"
-      producer="Scenacte - react-pdf"
-    >
-      {/* Page de titre */}
-      <Page size={pageFormat} style={styles.page}>
-        <TitlePage title={title} subtitle={subtitle} styles={styles} />
-      </Page>
+    return (
+        <Document
+            title={title}
+            author="Scenacte"
+            creator="Scenacte"
+            producer="Scenacte - react-pdf"
+        >
+            {/* Page de titre */}
+            <Page size={pageFormat} style={styles.page} wrap>
+                <TitlePage title={title} subtitle={subtitle} styles={styles} />
+            
+                {/* Contenu principal */}
+                <View style={styles.content}>
+                    {renderAstContent(ast, styles)}
+                </View>
 
-      {/* Contenu de la pièce avec pagination automatique */}
-      <Page size={pageFormat} style={styles.page} wrap>
-        {/* Contenu principal */}
-        <View style={styles.content}>
-          {renderAstContent(ast, styles)}
-        </View>
-
-        {/* Footer - numéro de page fixe */}
-        <Text
-          style={styles.pageNumber}
-          render={({ pageNumber }) => {
-            if (pageNumber === 1) return '';
-            return `${pageNumber - 1}`;
-          }}
-          fixed
-        />
-      </Page>
-    </Document>
-  );
+                {/* Footer - numéro de page fixe */}
+                <Text
+                    style={styles.pageNumber}
+                    render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+                    fixed
+                />
+            </Page>
+        </Document>
+    );
 }
 
 /**
@@ -70,23 +64,23 @@ export function PdfDocument({
  * @returns {React.ReactNode[]} Composants React-PDF
  */
 function renderAstContent(ast, styles) {
-  if (!ast || !ast.children || ast.children.length === 0) {
-    return null;
-  }
-
-  // Contexte partagé pour tracker l'index des actes
-  const context = { actIndex: 0 };
-
-  const elements = ast.children.map((node, index) => {
-    const element = renderNode(node, index, styles, context);
-    // Incrémenter actIndex seulement pour les actes
-    if (node.type === 'acte') {
-      context.actIndex++;
+    if (!ast || !ast.children || ast.children.length === 0) {
+        return null;
     }
-    return element;
-  });
 
-  return elements;
+    // Contexte partagé pour tracker l'index des actes
+    const context = { actIndex: 0 };
+
+    const elements = ast.children.map((node, index) => {
+        const element = renderNode(node, index, styles, context);
+        // Incrémenter actIndex seulement pour les actes
+        if (node.type === "acte") {
+            context.actIndex++;
+        }
+        return element;
+    });
+
+    return elements;
 }
 
 /**
@@ -99,70 +93,64 @@ function renderAstContent(ast, styles) {
  * @returns {React.ReactNode} Composant React-PDF
  */
 function renderNode(node, index, styles, context = {}) {
-  if (!node) {
-    return null;
-  }
+    if (!node) {
+        return null;
+    }
 
-  const key = node.id || `node-${index}`;
+    const key = node.id || `node-${index}`;
 
-  switch (node.type) {
-    case 'acte':
-      return (
-        <View key={key}>
-          <Act
-            node={node}
-            styles={styles}
-            isFirst={context.actIndex === 0}
-          />
-          {node.children && renderChildren(node.children, styles)}
-        </View>
-      );
+    switch (node.type) {
+        case "acte":
+            return (
+                <View key={key}>
+                    <Act
+                        node={node}
+                        styles={styles}
+                        isFirst={context.actIndex === 0}
+                    />
+                    {node.children && renderChildren(node.children, styles)}
+                </View>
+            );
 
-    case 'scene':
-      return (
-        <View key={key}>
-          <Scene node={node} styles={styles} />
-          {node.children && renderChildren(node.children, styles)}
-        </View>
-      );
+        case "scene":
+            return (
+                <View key={key}>
+                    <Scene node={node} styles={styles} />
+                    {node.children && renderChildren(node.children, styles)}
+                </View>
+            );
 
-    case 'personnage':
-      return (
-        <View key={key}>
-          <Character node={node} styles={styles} />
-          {node.children && renderChildren(node.children, styles)}
-        </View>
-      );
+        case "personnage":
+            return (
+                <View key={key}>
+                    <Character node={node} styles={styles} />
+                    {node.children && renderChildren(node.children, styles)}
+                </View>
+            );
 
-    case 'dialogue':
-      return (
-        <Dialogue key={key} node={node} styles={styles} />
-      );
+        case "dialogue":
+            return <Dialogue key={key} node={node} styles={styles} />;
 
-    case 'didascalie':
-      return (
-        <StageDirection key={key} node={node} styles={styles} />
-      );
+        case "didascalie":
+            return <StageDirection key={key} node={node} styles={styles} />;
 
-    case 'text':
-    case 'paragraph':
-      // Texte simple, rendu comme dialogue par défaut
-      return (
-        <Dialogue key={key} node={node} styles={styles} />
-      );
+        case "text":
+        case "paragraph":
+            // Texte simple, rendu comme dialogue par défaut
+            return <Dialogue key={key} node={node} styles={styles} />;
 
-    default:
-      // Pour les types non reconnus, tenter de rendre les enfants
-      if (node.children) {
-        return (
-          <View key={key}>
-            {renderChildren(node.children, styles)}
-          </View>
-        );
-      }
-      console.warn(`Type de nœud non géré: ${node.type}`);
-      return null;
-  }
+        default:
+            // Pour les types non reconnus, tenter de rendre les enfants
+            if (node.children) {
+                return (
+                    <View key={key}>
+                        {renderChildren(node.children, styles)}
+                    </View>
+                );
+            }
+            console.warn(`Type de nœud non géré: ${node.type}`);
+            return null;
+    }
 }
 
 /**
@@ -173,74 +161,11 @@ function renderNode(node, index, styles, context = {}) {
  * @returns {React.ReactNode[]} Composants React-PDF
  */
 function renderChildren(children, styles) {
-  if (!Array.isArray(children)) return null;
+    if (!Array.isArray(children)) return null;
 
-  return children.map((child, index) => {
-    return renderNode(child, index, styles);
-  });
-}
-
-/**
- * Version avec groupement personnage + dialogues pour éviter les orphelins
- * Utilisable pour une optimisation future
- *
- * @param {Array} children - Nœuds enfants d'une scène
- * @param {Object} styles - Styles du template
- * @returns {React.ReactNode[]} Composants groupés
- */
-function renderGroupedContent(children, styles) {
-  if (!Array.isArray(children)) return null;
-
-  const groups = [];
-  let currentGroup = null;
-
-  children.forEach((node, index) => {
-    if (node.type === 'character') {
-      // Nouveau groupe : personnage + ses dialogues
-      if (currentGroup) {
-        groups.push(currentGroup);
-      }
-      currentGroup = {
-        character: node,
-        dialogues: [],
-        key: node.id || `group-${index}`,
-      };
-    } else if (node.type === 'dialogue' && currentGroup) {
-      currentGroup.dialogues.push(node);
-    } else {
-      // Élément hors groupe (didascalie, etc.)
-      if (currentGroup) {
-        groups.push(currentGroup);
-        currentGroup = null;
-      }
-      groups.push({ standalone: node, key: node.id || `standalone-${index}` });
-    }
-  });
-
-  // Ajouter le dernier groupe
-  if (currentGroup) {
-    groups.push(currentGroup);
-  }
-
-  return groups.map((group) => {
-    if (group.standalone) {
-      return renderNode(group.standalone, 0, styles);
-    }
-
-    // Groupe personnage + dialogues avec wrap={false} pour éviter les orphelins
-    return (
-      <View key={group.key} style={styles.characterGroup} wrap={false}>
-        <Character node={group.character} styles={styles} />
-        {group.dialogues.map((dialogue, i) => (
-          <Dialogue
-            key={dialogue.id || `dialogue-${i}`}
-            node={dialogue}
-            styles={styles}
-          />
-        ))}
-      </View>
-    );
-  });
+    return children.map((child, index) => {
+        return renderNode(child, index, styles);
+    });
 }
 
 export default PdfDocument;
