@@ -1,4 +1,5 @@
 import { Text } from '@react-pdf/renderer';
+import { getTextContent } from '../utils/getTextContent';
 
 /**
  * Nom du personnage qui parle
@@ -14,15 +15,4 @@ export function Character({ node, styles }) {
       {name}
     </Text>
   );
-}
-
-/**
- * Extrait le contenu textuel d'un nœud AST
- */
-function getTextContent(node) {
-  if (!node) return '';
-  // AST Scenacte : le nom est dans node.attributes.name
-  if (node.attributes?.name) return node.attributes.name;
-  if (node.name) return node.name;
-  return '';
 }

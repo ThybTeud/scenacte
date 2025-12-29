@@ -1,4 +1,5 @@
 import { Text } from '@react-pdf/renderer';
+import { getTextContent } from '../utils/getTextContent';
 
 /**
  * Didascalie (indication scénique)
@@ -14,15 +15,4 @@ export function StageDirection({ node, styles }) {
       {text}
     </Text>
   );
-}
-
-/**
- * Extrait le contenu textuel d'un nœud AST
- */
-function getTextContent(node) {
-  if (!node) return '';
-  // AST Scenacte : le texte est dans node.value
-  if (node.value) return node.value;
-  if (node.content) return node.content;
-  return '';
 }

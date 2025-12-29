@@ -1,4 +1,5 @@
 import { Text } from '@react-pdf/renderer';
+import { getTextContent } from '../utils/getTextContent';
 
 /**
  * Titre de scène
@@ -14,15 +15,4 @@ export function Scene({ node, styles }) {
       {title}
     </Text>
   );
-}
-
-/**
- * Extrait le contenu textuel d'un nœud AST
- */
-function getTextContent(node) {
-  if (!node) return '';
-  // AST Scenacte : le titre est dans node.value ou node.attributes.number
-  if (node.value) return node.value;
-  if (node.attributes?.number) return node.attributes.number;
-  return '';
 }
