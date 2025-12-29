@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -34,6 +34,7 @@ export function PdfExportModal({
 
   const formatOptions = [
     { value: 'A4', label: 'A4' },
+    { value: 'A3', label: 'A3' },
     { value: 'LETTER', label: 'Letter (US)' },
   ];
 
@@ -47,15 +48,18 @@ export function PdfExportModal({
     return `${sanitizedTitle}.pdf`;
   }, [playTitle]);
 
-  // Document PDF pour le téléchargement
-  const pdfDocument = (
-    <PdfDocument
-      ast={ast}
-      title={playTitle || 'Sans titre'}
-      subtitle={playSubtitle}
-      template={selectedTemplate}
-      pageFormat={pageFormat}
-    />
+  // Document PDF mémoïsé pour éviter la re-génération
+  const pdfDocument = useMemo(
+    () => (
+      <PdfDocument
+        ast={ast}
+        title={playTitle || 'Sans titre'}
+        subtitle={playSubtitle}
+        template={selectedTemplate}
+        pageFormat={pageFormat}
+      />
+    ),
+    [ast, playTitle, playSubtitle, selectedTemplate, pageFormat]
   );
 
   return (
