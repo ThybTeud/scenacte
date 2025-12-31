@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PDF Lab - Scenacte Dev</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+            rel="stylesheet"
+        />
+        <script
+            src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"
+            defer
+        ></script>
+        <link
+            id="template-styles"
+            rel="stylesheet"
+            href="/pdf-templates/classique.css"
+        />
+        <!-- Styles pour imprimer le texte uniquement -->
+        <style>
+            @media print {
+                #controls,
+                hr {
+                    display: none !important;
+                }
+                .pagedjs_page {
+                    box-shadow: none;
+                    margin: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="controls">
+            <h1>PDF Lab</h1>
+
+            <label
+                >Taille:
+                <select id="content-size">
+                    <option value="short">Court (~10 pages)</option>
+                    <option value="medium">Moyen (~40 pages)</option>
+                    <option value="long">Long (~100 pages)</option>
+                </select>
+            </label>
+
+            <label
+                >Template:
+                <select id="template">
+                    <option value="classique">Classique</option>
+                    <option value="default">Default</option>
+                </select>
+            </label>
+
+            <button id="btn-render">Render</button>
+            <button id="btn-clear">Clear</button>
+            <button id="btn-download">Télécharger</button>
+
+            <span id="metrics">
+                <span id="page-count">Pages: -</span> |
+                <span id="render-time">Temps: -</span>
+            </span>
+        </div>
+
+        <hr />
+
+        <div id="content"></div>
+
+        <script>
+            // === CONFIG ===
+            window.PagedConfig = { auto: false };
+
+            // === MOCK DATA (structure Scenacte) ===
+            function generateMockPlay(size) {
+                const config = {
+                    short: { actes: 1, scenesParActe: 2, repliquesParScene: 5 },
+                    medium: {
+                        actes: 2,
+                        scenesParActe: 4,
+                        repliquesParScene: 8,
+                    },
+                    long: { actes: 5, scenesParActe: 4, repliquesParScene: 10 },
+                };
+                const { actes, scenesParActe, repliquesParScene } =
+                    config[size] || config.short;
+
+                const personnages = ["MARIE", "JEAN", "PAUL", "CLAIRE"];
+
+                let html = `
+        <section class="title-page">
+          <h1>LA PIÈCE DE TEST</h1>
+          <p class="subtitle">Une comédie en ${actes} acte${
+                    actes > 1 ? "s" : ""
+                }</p>
+        </section>
+
+        <section class="distribution">
+          <h2>Distribution</h2>
+          <ul>
+            <li><strong>MARIE</strong>, une femme de caractère</li>
+            <li><strong>JEAN</strong>, son mari</li>
+            <li><strong>PAUL</strong>, leur voisin</li>
+            <li><strong>CLAIRE</strong>, une amie de passage</li>
+          </ul>
+        </section>
+
+        <section class="play-content">
+      `;
+
+                for (let a = 1; a <= actes; a++) {
+                    html += `<div class="acte">Acte ${a}</div>`;
+                    html += `<div class="didascalie liminaire">Un salon bourgeois. Lumière du matin. Une grande fenêtre donne sur un jardin.</div>`;
+
+                    for (let s = 1; s <= scenesParActe; s++) {
+                        html += `<div class="scene">Scène ${s}</div>`;
+                        html += `<div class="didascalie liminaire">${personnages
+                            .slice(0, 2 + (s % 2))
+                            .join(", ")} sont en scène.</div>`;
+
+                        for (let r = 0; r < repliquesParScene; r++) {
+                            const perso = personnages[r % personnages.length];
+                            const hasPreReplique = r % 3 === 0;
+                            const hasIntraReplique = r % 4 === 1;
+
+                            html += `<div class="personnage">${perso}</div>`;
+
+                            if (hasPreReplique) {
+                                html += `<span class="didascalie pre-replique">se levant brusquement</span>`;
+                            }
+
+                            let dialogue = `Voilà ce que j'avais à dire sur cette affaire. Il me semble que nous devrions prendre le temps d'y réfléchir avant de nous engager plus avant.`;
+
+                            if (hasIntraReplique) {
+                                dialogue = `Je ne sais pas trop... <span class="didascalie intra-replique">un temps</span> ...enfin, peut-être que oui, après tout.`;
+                            }
+
+                            html += `<p class="dialogue">${dialogue}</p>`;
+
+                            if (r === Math.floor(repliquesParScene / 2)) {
+                                html += `<div class="didascalie inter-repliques">Un silence. On entend au loin une horloge sonner.</div>`;
+                            }
+                        }
+                    }
+                }
+
+                html += `</section>`;
+                return html;
+            }
+
+            // === RENDER ===
+            async function renderPagedJS() {
+                const size = document.getElementById("content-size").value;
+                const templateSelect = document.getElementById("template");
+                const content = document.getElementById("content");
+                const metricsTime = document.getElementById("render-time");
+                const metricsPages = document.getElementById("page-count");
+
+                // Cleanup avant render
+                content.innerHTML = "";
+                metricsTime.textContent = "Temps: rendering...";
+                metricsPages.textContent = "Pages: -";
+
+                const htmlContent = generateMockPlay(size);
+                const cssPath = `/pdf-templates/${templateSelect.value}.css`;
+
+                const start = performance.now();
+
+                try {
+                    const paged = new Paged.Previewer();
+                    const flow = await paged.preview(
+                        htmlContent,
+                        [cssPath],
+                        content
+                    );
+
+                    const elapsed = (performance.now() - start).toFixed(0);
+                    metricsTime.textContent = `Temps: ${elapsed}ms`;
+                    metricsPages.textContent = `Pages: ${flow.total}`;
+
+                    console.log(
+                        `[PDF Lab] ${flow.total} pages en ${elapsed}ms (${size})`
+                    );
+                } catch (err) {
+                    metricsTime.textContent = "Temps: ERREUR";
+                    console.error("[PDF Lab] Erreur:", err);
+                }
+            }
+
+            function clearContent() {
+                document.getElementById("content").innerHTML = "";
+                document.getElementById("render-time").textContent = "Temps: -";
+                document.getElementById("page-count").textContent = "Pages: -";
+            }
+
+            // === TEMPLATE SWITCH ===
+            document
+                .getElementById("template")
+                .addEventListener("change", (e) => {
+                    const link = document.getElementById("template-styles");
+                    link.href = `/pdf-templates/${e.target.value}.css`;
+                });
+
+            // === EVENTS ===
+            document
+                .getElementById("btn-render")
+                .addEventListener("click", renderPagedJS);
+            document
+                .getElementById("btn-clear")
+                .addEventListener("click", clearContent);
+            document
+                .getElementById("btn-download")
+                .addEventListener("click", () => {
+                    window.print();
+                });
+        </script>
+    </body>
+</html>
