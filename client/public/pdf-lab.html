@@ -4,18 +4,39 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PDF Lab - Scenacte Dev</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+            rel="stylesheet"
+        />
         <script
             src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"
             defer
         ></script>
-        <link id="template-styles" rel="stylesheet" href="/pdf-templates/default.css">
+        <link
+            id="template-styles"
+            rel="stylesheet"
+            href="/pdf-templates/classique.css"
+        />
+        <!-- Styles pour imprimer le texte uniquement -->
+        <style>
+            @media print {
+                #controls,
+                hr {
+                    display: none !important;
+                }
+                .pagedjs_page {
+                    box-shadow: none;
+                    margin: 0;
+                }
+            }
+        </style>
     </head>
     <body>
-        <div id="controls" style="position: sticky; top: 0; background-color: white; z-index: 2;">
+        <div id="controls">
             <h1>PDF Lab</h1>
 
             <label
-                >Taille contenu:
+                >Taille:
                 <select id="content-size">
                     <option value="short">Court (~10 pages)</option>
                     <option value="medium">Moyen (~40 pages)</option>
@@ -26,21 +47,22 @@
             <label
                 >Template:
                 <select id="template">
+                    <option value="classique">Classique</option>
                     <option value="default">Default</option>
                 </select>
             </label>
 
-            <button id="btn-render">Render PagedJS</button>
-            <button id="btn-print">Print natif</button>
+            <button id="btn-render">Render</button>
             <button id="btn-clear">Clear</button>
+            <button id="btn-download">Télécharger</button>
 
-            <div id="metrics">
-                <span id="page-count">Pages: -</span>
+            <span id="metrics">
+                <span id="page-count">Pages: -</span> |
                 <span id="render-time">Temps: -</span>
-            </div>
-            <hr />
+            </span>
         </div>
 
+        <hr />
 
         <div id="content"></div>
 
@@ -48,92 +70,106 @@
             // === CONFIG ===
             window.PagedConfig = { auto: false };
 
-            // === MOCK DATA ===
+            // === MOCK DATA (structure Scenacte) ===
             function generateMockPlay(size) {
-                const sizes = { short: 3, medium: 12, long: 30 };
-                const sceneCount = sizes[size] || 3;
+                const config = {
+                    short: { actes: 1, scenesParActe: 2, repliquesParScene: 5 },
+                    medium: {
+                        actes: 2,
+                        scenesParActe: 4,
+                        repliquesParScene: 8,
+                    },
+                    long: { actes: 5, scenesParActe: 4, repliquesParScene: 10 },
+                };
+                const { actes, scenesParActe, repliquesParScene } =
+                    config[size] || config.short;
+
+                const personnages = ["MARIE", "JEAN", "PAUL", "CLAIRE"];
 
                 let html = `
-        <div class="play">
-          <div class="title-page">
-            <h1 class="play-title">LA PIÈCE DE TEST</h1>
-            <p class="author">Par Un Auteur</p>
-          </div>
-          <div class="distribution">
-            <h2>Distribution</h2>
-            <ul>
-              <li><strong>PERSONNAGE A</strong> - Description du personnage</li>
-              <li><strong>PERSONNAGE B</strong> - Description du personnage</li>
-              <li><strong>PERSONNAGE C</strong> - Description du personnage</li>
-            </ul>
-          </div>
+        <section class="title-page">
+          <h1>LA PIÈCE DE TEST</h1>
+          <p class="subtitle">Une comédie en ${actes} acte${
+                    actes > 1 ? "s" : ""
+                }</p>
+        </section>
+
+        <section class="distribution">
+          <h2>Distribution</h2>
+          <ul>
+            <li><strong>MARIE</strong>, une femme de caractère</li>
+            <li><strong>JEAN</strong>, son mari</li>
+            <li><strong>PAUL</strong>, leur voisin</li>
+            <li><strong>CLAIRE</strong>, une amie de passage</li>
+          </ul>
+        </section>
+
+        <section class="play-content">
       `;
 
-                for (let act = 1; act <= Math.ceil(sceneCount / 4); act++) {
-                    html += `<div class="act"><h2>ACTE ${act}</h2>`;
+                for (let a = 1; a <= actes; a++) {
+                    html += `<div class="acte">Acte ${a}</div>`;
+                    html += `<div class="didascalie liminaire">Un salon bourgeois. Lumière du matin. Une grande fenêtre donne sur un jardin.</div>`;
 
-                    for (
-                        let scene = 1;
-                        scene <= 4 && (act - 1) * 4 + scene <= sceneCount;
-                        scene++
-                    ) {
-                        html += `
-            <div class="scene">
-              <h3>Scène ${scene}</h3>
-              <p class="didascalie-liminaire">Un salon bourgeois. Lumière tamisée.</p>
-          `;
+                    for (let s = 1; s <= scenesParActe; s++) {
+                        html += `<div class="scene">Scène ${s}</div>`;
+                        html += `<div class="didascalie liminaire">${personnages
+                            .slice(0, 2 + (s % 2))
+                            .join(", ")} sont en scène.</div>`;
 
-                        // Répliques
-                        for (let r = 0; r < 8; r++) {
-                            const character = [
-                                "PERSONNAGE A",
-                                "PERSONNAGE B",
-                                "PERSONNAGE C",
-                            ][r % 3];
-                            html += `
-              <div class="replique">
-                <p class="character">${character}</p>
-                <p class="didascalie-pre-replique">(se levant)</p>
-                <p class="dialogue">Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
-              </div>
-            `;
+                        for (let r = 0; r < repliquesParScene; r++) {
+                            const perso = personnages[r % personnages.length];
+                            const hasPreReplique = r % 3 === 0;
+                            const hasIntraReplique = r % 4 === 1;
+
+                            html += `<div class="personnage">${perso}</div>`;
+
+                            if (hasPreReplique) {
+                                html += `<span class="didascalie pre-replique">se levant brusquement</span>`;
+                            }
+
+                            let dialogue = `Voilà ce que j'avais à dire sur cette affaire. Il me semble que nous devrions prendre le temps d'y réfléchir avant de nous engager plus avant.`;
+
+                            if (hasIntraReplique) {
+                                dialogue = `Je ne sais pas trop... <span class="didascalie intra-replique">un temps</span> ...enfin, peut-être que oui, après tout.`;
+                            }
+
+                            html += `<p class="dialogue">${dialogue}</p>`;
+
+                            if (r === Math.floor(repliquesParScene / 2)) {
+                                html += `<div class="didascalie inter-repliques">Un silence. On entend au loin une horloge sonner.</div>`;
+                            }
                         }
-
-                        html += `</div>`; // .scene
                     }
-
-                    html += `</div>`; // .act
                 }
 
-                html += `</div>`; // .play
+                html += `</section>`;
                 return html;
             }
 
             // === RENDER ===
             async function renderPagedJS() {
                 const size = document.getElementById("content-size").value;
+                const templateSelect = document.getElementById("template");
                 const content = document.getElementById("content");
                 const metricsTime = document.getElementById("render-time");
                 const metricsPages = document.getElementById("page-count");
 
-                // IMPORTANT: Vider le conteneur AVANT le render
+                // Cleanup avant render
                 content.innerHTML = "";
-
                 metricsTime.textContent = "Temps: rendering...";
                 metricsPages.textContent = "Pages: -";
 
-                // Générer le HTML en string (pas injecté dans le DOM)
                 const htmlContent = generateMockPlay(size);
+                const cssPath = `/pdf-templates/${templateSelect.value}.css`;
 
                 const start = performance.now();
 
                 try {
                     const paged = new Paged.Previewer();
                     const flow = await paged.preview(
-                        htmlContent, // String HTML, pas DOM
-                        [],
+                        htmlContent,
+                        [cssPath],
                         content
                     );
 
@@ -150,31 +186,32 @@
                 }
             }
 
-            function printNative() {
-                const size = document.getElementById("content-size").value;
-                document.getElementById("content").innerHTML =
-                    generateMockPlay(size);
-                document.getElementById("template-styles").textContent =
-                    defaultTemplate;
-                setTimeout(() => window.print(), 100);
-            }
-
             function clearContent() {
                 document.getElementById("content").innerHTML = "";
                 document.getElementById("render-time").textContent = "Temps: -";
                 document.getElementById("page-count").textContent = "Pages: -";
             }
 
+            // === TEMPLATE SWITCH ===
+            document
+                .getElementById("template")
+                .addEventListener("change", (e) => {
+                    const link = document.getElementById("template-styles");
+                    link.href = `/pdf-templates/${e.target.value}.css`;
+                });
+
             // === EVENTS ===
             document
                 .getElementById("btn-render")
                 .addEventListener("click", renderPagedJS);
             document
-                .getElementById("btn-print")
-                .addEventListener("click", printNative);
-            document
                 .getElementById("btn-clear")
                 .addEventListener("click", clearContent);
+            document
+                .getElementById("btn-download")
+                .addEventListener("click", () => {
+                    window.print();
+                });
         </script>
     </body>
 </html>

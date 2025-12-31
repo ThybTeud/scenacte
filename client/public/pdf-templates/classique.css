@@ -1,0 +1,152 @@
+/* === PAGE SETUP === */
+@page {
+    size: A4;
+    margin: 15mm 12mm;
+    @bottom-center {
+        content: counter(page);
+        font-size: 10pt;
+        color: #888;
+    }
+    @top-left {
+        content: "";
+    }
+}
+
+@page :first {
+    @bottom-center {
+        content: none;
+    }
+}
+
+/* === BORDURES PAGES (visualisation lab) === */
+.pagedjs_page {
+    box-shadow: 0 0 0 1px #ccc;
+    margin-bottom: 10px;
+    background: white;
+}
+
+/* === TYPOGRAPHIE DE BASE === */
+body {
+    font-family: "Crimson Text", Georgia, serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+}
+
+/* === PAGE DE TITRE === */
+.title-page {
+    break-after: page;
+    text-align: center;
+    padding-top: 30%;
+}
+
+.title-page h1 {
+    font-size: 28pt;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.title-page .subtitle {
+    font-size: 18pt;
+    font-style: italic;
+    color: #555;
+}
+
+/* === DISTRIBUTION === */
+.distribution {
+    break-after: page;
+}
+
+.distribution h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.distribution ul {
+    list-style: none;
+    padding: 0;
+}
+
+.distribution li {
+    margin-bottom: 0.5rem;
+}
+
+/* === STRUCTURE THEATRALE === */
+.play-content {
+    break-before: page;
+}
+
+.play-content .acte {
+    font-size: 16pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 2rem 0 1rem;
+    break-before: page;
+}
+
+.play-content .scene {
+    break-after: avoid;
+    font-size: 14pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 1.5rem 0 1rem;
+}
+
+.play-content .personnage {
+    break-after: avoid;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 1rem 0 0.5rem;
+}
+
+.play-content .dialogue {
+    orphans: 3;
+    widows: 3;
+    text-align: justify;
+    margin: 0.5rem 0;
+}
+
+/* === DIDASCALIES (4 types) === */
+.play-content .didascalie {
+    font-style: italic;
+}
+
+/* Liminaire - avant acte/scène */
+.play-content .didascalie.liminaire {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+/* Inter-répliques - entre deux répliques */
+.play-content .didascalie.inter-repliques {
+    text-align: right;
+    margin: 0.75rem 0;
+    padding-left: 4rem;
+}
+
+/* Pré-réplique - après nom personnage */
+.play-content .didascalie.pre-replique {
+    display: inline;
+    font-size: 0.9em;
+}
+.play-content .didascalie.pre-replique::before {
+    content: "(";
+}
+.play-content .didascalie.pre-replique::after {
+    content: ")";
+}
+
+/* Intra-réplique - dans le dialogue */
+.play-content .didascalie.intra-replique {
+    display: inline;
+    font-size: 0.9em;
+}
+.play-content .didascalie.intra-replique::before {
+    content: "(";
+}
+.play-content .didascalie.intra-replique::after {
+    content: ")";
+}
