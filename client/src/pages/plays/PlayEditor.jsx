@@ -104,10 +104,8 @@ export function PlayEditor() {
         setIsLoading(true);
         try {
             const response = await storageService.getPlay(id);
-            // En mode invité, response est l'objet play directement, pas { play: ... }
-            const playData = response.play || response;
-            setPlay(playData);
-            const rawContent = playData.rawContent || "";
+            setPlay(response.play);
+            const rawContent = response.play.rawContent || "";
             setContent(rawContent);
             setLastSavedContent(rawContent);
             setHasUnsavedChanges(false);

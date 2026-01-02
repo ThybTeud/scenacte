@@ -49,7 +49,7 @@ const getLocalPlay = (id) => {
     throw new Error('Pièce non trouvée');
   }
 
-  return play;
+  return { play };
 };
 
 const createLocalPlay = (playData) => {
@@ -70,7 +70,7 @@ const createLocalPlay = (playData) => {
   data.plays.unshift(newPlay); // Ajoute en début de liste
   setGuestData(data);
 
-  return newPlay;
+  return { play: newPlay };
 };
 
 const saveLocalPlay = (id, playData) => {
@@ -91,7 +91,7 @@ const saveLocalPlay = (id, playData) => {
   data.plays[playIndex] = updatedPlay;
   setGuestData(data);
 
-  return updatedPlay;
+  return { play: updatedPlay };
 };
 
 const deleteLocalPlay = (id) => {

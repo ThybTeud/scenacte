@@ -113,9 +113,7 @@ export function PlaysList() {
       toast.success('Pièce créée avec succès !');
       setShowCreateModal(false);
       setNewPlay({ title: '', subtitle: '' });
-      // En mode invité, response est l'objet play directement, pas { play: ... }
-      const playId = response.play?.id || response.id;
-      navigate(`/plays/${playId}`);
+      navigate(`/plays/${response.play.id}`);
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la création');
     } finally {
