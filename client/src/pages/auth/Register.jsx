@@ -89,8 +89,8 @@ export function Register() {
   };
 
   const validateUsername = (username) => {
-    // Au moins 3 caractères, lettres, chiffres, tirets et underscores uniquement
-    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    // Au moins 3 caractères, lettres uniquement
+    const usernameRegex = /^[\p{L}]{3,20}$/;
     return usernameRegex.test(username);
   };
 
@@ -101,8 +101,8 @@ export function Register() {
   const getPasswordStrength = (password) => {
     if (password.length === 0) return null;
     if (password.length < 6) return 'weak';
-    if (password.length < 8) return 'medium';
-    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
+    if (password.length < 12) return 'medium';
+    if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
     return 'medium';
   };
 
@@ -118,7 +118,7 @@ export function Register() {
     }
 
     if (!validatePassword(formData.password)) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = 'Le mot de passe doit contenir au moins 12 caractères';
     }
 
     if (formData.password !== formData.confirmPassword) {

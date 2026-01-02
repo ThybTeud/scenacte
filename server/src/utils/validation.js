@@ -40,10 +40,10 @@ export function validateUsername(username) {
     return { valid: false, message: 'Nom d\'utilisateur trop long (max 50 caractères)' };
   }
 
-  // Lettres, chiffres, underscore, tiret uniquement
-  const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+  // Lettres, chiffres
+  const usernameRegex = /^[\p{L}]+$/;
   if (!usernameRegex.test(trimmed)) {
-    return { valid: false, message: 'Nom d\'utilisateur invalide (lettres, chiffres, - et _ uniquement)' };
+    return { valid: false, message: 'Nom d\'utilisateur invalide' };
   }
 
   return { valid: true, message: '' };
