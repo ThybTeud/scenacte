@@ -51,7 +51,7 @@ function App() {
           <Route
             path="/plays"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowGuest>
                 <PlaysList />
               </PrivateRoute>
             }
@@ -59,7 +59,7 @@ function App() {
           <Route
             path="/plays/:id"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowGuest>
                 <PlayEditor />
               </PrivateRoute>
             }

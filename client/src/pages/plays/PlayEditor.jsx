@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { playsService } from "../../services/plays.service";
+import { storageService } from "../../services/storage.service";
 import { cn } from "../../utils/cn";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
@@ -16,6 +16,7 @@ import { PlayPreview } from "../../components/editors/PlayPreview";
 import { LeftPanel } from "../../components/editors/LeftPanel";
 import { RightPanel } from "../../components/editors/RightPanel";
 import { PdfExportModal } from "../../components/pdf/PdfExportModal";
+import { GuestModeBanner } from "../../components/ui/GuestModeBanner";
 import { MenuIcon } from "../../components/icons/MenuIcon";
 import { PlayParser } from "../../utils/playParser";
 import toast from "react-hot-toast";
@@ -23,22 +24,34 @@ import toast from "react-hot-toast";
 export function PlayEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, isGuest } = useAuth();
 
-    // Menu items pour HeaderEditor
+    // Menu items pour HeaderEditor (conditionnels selon mode invité)
     const menuItems = useMemo(
-        () => [
-            { label: "Profil", onClick: () => navigate("/profile") },
-            { label: "Préférences", onClick: () => navigate("/preferences") },
-            {
-                label: "Déconnexion",
-                onClick: () => {
-                    logout();
-                    navigate("/login");
-                },
-            },
-        ],
-        [navigate, logout]
+        () =>
+            isGuest
+                ? [
+                      {
+                          label: "Créer un compte",
+                          onClick: () => navigate("/register"),
+                      },
+                      {
+                          label: "Se connecter",
+                          onClick: () => navigate("/login"),
+                      },
+                  ]
+                : [
+                      { label: "Profil", onClick: () => navigate("/profile") },
+                      { label: "Préférences", onClick: () => navigate("/preferences") },
+                      {
+                          label: "Déconnexion",
+                          onClick: () => {
+                              logout();
+                              navigate("/login");
+                          },
+                      },
+                  ],
+        [navigate, logout, isGuest]
     );
 
     const [play, setPlay] = useState(null);
@@ -89,9 +102,11 @@ export function PlayEditor() {
     const fetchPlay = async () => {
         setIsLoading(true);
         try {
-            const response = await playsService.getPlay(id);
-            setPlay(response.play);
-            const rawContent = response.play.rawContent || "";
+            const response = await storageService.getPlay(id);
+            // En mode invité, response est l'objet play directement, pas { play: ... }
+            const playData = response.play || response;
+            setPlay(playData);
+            const rawContent = playData.rawContent || "";
             setContent(rawContent);
             setHasUnsavedChanges(false);
         } catch (error) {
@@ -119,7 +134,7 @@ export function PlayEditor() {
                 htmlContent: htmlContent,
             };
 
-            await playsService.savePlay(id, saveData);
+            await storageService.savePlay(id, saveData);
             setHasUnsavedChanges(false);
             toast.success("Pièce sauvegardée");
         } catch (error) {
@@ -271,6 +286,12 @@ export function PlayEditor() {
                 hasUnsavedChanges={hasUnsavedChanges}
                 content={content}
             />
+
+            {isGuest && (
+                <div className="container-custom py-2">
+                    <GuestModeBanner />
+                </div>
+            )}
 
             {/* Layout principal : Container centré avec max-width global */}
             <div className="flex-1 flex justify-center overflow-hidden">

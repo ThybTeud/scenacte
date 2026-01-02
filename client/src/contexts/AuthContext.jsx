@@ -34,8 +34,8 @@ export function AuthProvider({ children }) {
     return response;
   }, []);
 
-  const register = useCallback(async (email, username, password) => {
-    const response = await authService.register(email, username, password);
+  const register = useCallback(async (email, password) => {
+    const response = await authService.register(email, password);
     setToken(response.token);
     setUser(response.user);
     return response;
@@ -55,6 +55,7 @@ export function AuthProvider({ children }) {
     user,
     token,
     isAuthenticated: !!token && !!user,
+    isGuest: !token && !user,
     isLoading,
     login,
     register,

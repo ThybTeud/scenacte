@@ -4,8 +4,7 @@ import { Dropdown, DropdownItem } from './Dropdown';
  * Avatar component - Composant d'avatar avec dropdown menu neobrutalist
  * @param {Object} props
  * @param {Object} props.user - Objet utilisateur
- * @param {string} props.user.name - Nom de l'utilisateur
- * @param {string} [props.user.email] - Email de l'utilisateur
+ * @param {string} props.user.email - Email de l'utilisateur
  * @param {string} [props.user.avatar] - URL de l'avatar
  * @param {Array<Object>} props.menuItems - Items du menu dropdown
  * @param {string} props.menuItems[].label - Label de l'item
@@ -15,17 +14,13 @@ import { Dropdown, DropdownItem } from './Dropdown';
  * @param {string} [props.className] - Classes CSS additionnelles
  */
 export default function Avatar({ user, menuItems = [], className = '' }) {
-  // Obtenir les initiales
-  const getInitials = (name) => {
-    if (!name) return '?';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
+  // Obtenir les initiales depuis l'email
+  const getInitials = (email) => {
+    if (!email) return '?';
+    return email[0].toUpperCase();
   };
 
-  const initials = getInitials(user?.name || user?.username);
+  const initials = getInitials(user?.email);
 
   return (
     <div className={className}>
@@ -49,7 +44,7 @@ export default function Avatar({ user, menuItems = [], className = '' }) {
               {user?.avatar ? (
                 <img
                   src={user.avatar}
-                  alt={user.name || user.username}
+                  alt={user.email}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (

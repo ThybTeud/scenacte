@@ -2,7 +2,6 @@ import prisma from '../db/index.js';
 import { hashPassword, comparePassword } from '../utils/hash.js';
 import {
   validateEmail,
-  validateUsername,
   validatePassword
 } from '../utils/validation.js';
 import {
@@ -58,7 +57,7 @@ export async function getProfile(req, res, next) {
  */
 export async function updateProfile(req, res, next) {
   try {
-    const { email, username, currentPassword, newPassword } = req.body;
+    const { email, currentPassword, newPassword } = req.body;
     const userId = req.user.id;
 
     // Données à mettre à jour
@@ -85,30 +84,6 @@ export async function updateProfile(req, res, next) {
         }
 
         updateData.email = normalizedEmail;
-      }
-    }
-
-    // Mise à jour du username
-    if (username !== undefined) {
-      const usernameValidation = validateUsername(username);
-      if (!usernameValidation.valid) {
-        throw new ValidationError(usernameValidation.message);
-      }
-
-      const trimmedUsername = username.trim();
-
-      // Vérifier si le username est différent de l'actuel
-      if (trimmedUsername !== req.user.username) {
-        // Vérifier que le username n'est pas déjà utilisé
-        const existingUser = await prisma.user.findUnique({
-          where: { username: trimmedUsername }
-        });
-
-        if (existingUser) {
-          throw new ConflictError('Ce nom d\'utilisateur est déjà utilisé');
-        }
-
-        updateData.username = trimmedUsername;
       }
     }
 
@@ -215,7 +190,7 @@ export async function deleteAccount(req, res, next) {
       where: { id: userId }
     });
 
-    logger.info({ email: user.email, username: user.username }, 'Compte supprimé');
+    logger.info({ email: user.email }, 'Compte supprimé');
 
     res.json({
       message: 'Compte supprimé avec succès'

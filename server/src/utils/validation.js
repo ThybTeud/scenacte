@@ -41,7 +41,7 @@ export function validateUsername(username) {
   }
 
   // Lettres, chiffres
-  const usernameRegex = /^[\p{L}]+$/;
+  const usernameRegex = /^[a-zA-Z]+$/;
   if (!usernameRegex.test(trimmed)) {
     return { valid: false, message: 'Nom d\'utilisateur invalide' };
   }

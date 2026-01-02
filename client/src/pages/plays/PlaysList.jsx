@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playsService } from '../../services/plays.service';
+import { storageService } from '../../services/storage.service';
 import { useAuth } from '../../hooks/useAuth';
 import HeaderGlobal from '../../components/layout/HeaderGlobal';
 import { Button } from '../../components/ui/Button';
@@ -9,11 +9,12 @@ import { Loader } from '../../components/ui/Loader';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Pagination } from '../../components/ui/Pagination';
+import { GuestModeBanner } from '../../components/ui/GuestModeBanner';
 import toast from 'react-hot-toast';
 
 export function PlaysList() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isGuest } = useAuth();
   const [plays, setPlays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -34,24 +35,35 @@ export function PlaysList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
 
-  // Menu items pour le HeaderGlobal
-  const menuItems = [
-    {
-      label: 'Profil',
-      onClick: () => navigate('/profile'),
-    },
-    {
-      label: 'Préférences',
-      onClick: () => navigate('/preferences'),
-    },
-    {
-      label: 'Déconnexion',
-      onClick: () => {
-        logout();
-        navigate('/login');
-      },
-    },
-  ];
+  // Menu items pour le HeaderGlobal (conditionnels selon mode invité)
+  const menuItems = isGuest
+    ? [
+        {
+          label: 'Créer un compte',
+          onClick: () => navigate('/register'),
+        },
+        {
+          label: 'Se connecter',
+          onClick: () => navigate('/login'),
+        },
+      ]
+    : [
+        {
+          label: 'Profil',
+          onClick: () => navigate('/profile'),
+        },
+        {
+          label: 'Préférences',
+          onClick: () => navigate('/preferences'),
+        },
+        {
+          label: 'Déconnexion',
+          onClick: () => {
+            logout();
+            navigate('/login');
+          },
+        },
+      ];
 
   useEffect(() => {
     fetchPlays();
@@ -77,7 +89,7 @@ export function PlaysList() {
   const fetchPlays = async () => {
     setIsLoading(true);
     try {
-      const response = await playsService.listPlays({
+      const response = await storageService.listPlays({
         page: pagination.page,
         limit: 20,
         ...filters,
@@ -97,11 +109,13 @@ export function PlaysList() {
     setIsSubmitting(true);
 
     try {
-      const response = await playsService.createPlay(newPlay);
+      const response = await storageService.createPlay(newPlay);
       toast.success('Pièce créée avec succès !');
       setShowCreateModal(false);
       setNewPlay({ title: '', subtitle: '' });
-      navigate(`/plays/${response.play.id}`);
+      // En mode invité, response est l'objet play directement, pas { play: ... }
+      const playId = response.play?.id || response.id;
+      navigate(`/plays/${playId}`);
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la création');
     } finally {
@@ -114,7 +128,7 @@ export function PlaysList() {
 
     setIsSubmitting(true);
     try {
-      await playsService.deletePlay(selectedPlay.id);
+      await storageService.deletePlay(selectedPlay.id);
       toast.success('Pièce supprimée avec succès !');
       setShowDeleteModal(false);
       setSelectedPlay(null);
@@ -183,6 +197,8 @@ export function PlaysList() {
       <HeaderGlobal user={user} menuItems={menuItems} />
 
       <main className="container-custom py-8">
+        {isGuest && <GuestModeBanner />}
+
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold font-ui text-black">Mes pièces</h1>
           <Button onClick={() => setShowCreateModal(true)}>
