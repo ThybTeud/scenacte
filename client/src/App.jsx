@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
@@ -17,72 +18,74 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#363636',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10B981',
-                secondary: '#fff',
+        <ErrorBoundary>
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#fff',
+                color: '#363636',
               },
-            },
-            error: {
-              iconTheme: {
-                primary: '#EF4444',
-                secondary: '#fff',
+              success: {
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: '#fff',
+                },
               },
-            },
-          }}
-        />
-
-        <Routes>
-          <Route path="/" element={<Navigate to="/plays" replace />} />
-
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-
-          <Route
-            path="/plays"
-            element={
-              <PrivateRoute allowGuest>
-                <PlaysList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/plays/:id"
-            element={
-              <PrivateRoute allowGuest>
-                <PlayEditor />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <UserProfile />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/preferences"
-            element={
-              <PrivateRoute>
-                <Preferences />
-              </PrivateRoute>
-            }
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
           />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<Navigate to="/plays" replace />} />
+
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            <Route
+              path="/plays"
+              element={
+                <PrivateRoute allowGuest>
+                  <PlaysList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/plays/:id"
+              element={
+                <PrivateRoute allowGuest>
+                  <PlayEditor />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <UserProfile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/preferences"
+              element={
+                <PrivateRoute>
+                  <Preferences />
+                </PrivateRoute>
+              }
+            />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );
