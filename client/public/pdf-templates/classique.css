@@ -1,20 +1,38 @@
 /* === PAGE SETUP === */
 @page {
-    size: A4;
+    size: A5;
     margin: 15mm 12mm;
     @bottom-center {
         content: counter(page);
         font-size: 10pt;
         color: #888;
     }
-    @top-left {
-        content: "";
-    }
 }
 
 @page :first {
+    @top-left {
+        content: none;
+    }
+    @top-right {
+        content: none;
+    }
     @bottom-center {
         content: none;
+    }
+}
+
+@page :left {
+    @top-left {
+        content: string(title);
+        font-size: 9pt;
+        font-style: italic;
+    }
+}
+
+@page :right {
+    @top-right {
+        font-size: 9pt;
+        font-style: italic;
     }
 }
 
@@ -23,6 +41,10 @@
     box-shadow: 0 0 0 1px #ccc;
     margin-bottom: 10px;
     background: white;
+}
+
+.pagedjs_margin {
+    outline: 1px dotted #ccc;
 }
 
 /* === TYPOGRAPHIE DE BASE === */
@@ -41,6 +63,7 @@ body {
 }
 
 .title-page h1 {
+    string-set: title content();
     font-size: 28pt;
     font-weight: 700;
     margin-bottom: 1rem;
