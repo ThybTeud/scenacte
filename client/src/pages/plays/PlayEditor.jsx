@@ -56,6 +56,7 @@ export function PlayEditor() {
 
     const [play, setPlay] = useState(null);
     const [content, setContent] = useState("");
+    const [lastSavedContent, setLastSavedContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -108,6 +109,7 @@ export function PlayEditor() {
             setPlay(playData);
             const rawContent = playData.rawContent || "";
             setContent(rawContent);
+            setLastSavedContent(rawContent);
             setHasUnsavedChanges(false);
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
@@ -120,8 +122,9 @@ export function PlayEditor() {
 
     /**
      * Sauvegarde le contenu de la pièce
+     * @param {boolean} isAutoSave - Si true, la sauvegarde est automatique et silencieuse
      */
-    const savePlay = useCallback(async () => {
+    const savePlay = useCallback(async (isAutoSave = false) => {
         if (!play) return;
 
         setIsSaving(true);
@@ -135,8 +138,13 @@ export function PlayEditor() {
             };
 
             await storageService.savePlay(id, saveData);
+            setLastSavedContent(content);
             setHasUnsavedChanges(false);
-            toast.success("Pièce sauvegardée");
+
+            // Afficher le toast seulement pour les sauvegardes manuelles
+            if (!isAutoSave) {
+                toast.success("Pièce sauvegardée");
+            }
         } catch (error) {
             toast.error(error.message || "Erreur lors de la sauvegarde");
             console.error(error);
@@ -180,6 +188,33 @@ export function PlayEditor() {
             }
         };
     }, []);
+
+    /**
+     * Sauvegarde automatique après 2 secondes d'inactivité
+     */
+    useEffect(() => {
+        // Ne pas déclencher l'auto-save si le contenu n'a pas changé
+        if (content === lastSavedContent || !play) {
+            return;
+        }
+
+        // Annuler le timeout précédent
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        // Programmer la sauvegarde automatique
+        saveTimeoutRef.current = setTimeout(() => {
+            savePlay(true); // true = sauvegarde automatique (silencieuse)
+        }, 2000);
+
+        // Cleanup
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [content, lastSavedContent, savePlay, play]);
 
     /**
      * Toggle un format de ligne dans l'éditeur
