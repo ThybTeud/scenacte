@@ -53,7 +53,7 @@ function App() {
             <Route
               path="/plays"
               element={
-                <PrivateRoute allowGuest>
+                <PrivateRoute>
                   <PlaysList />
                 </PrivateRoute>
               }
@@ -61,7 +61,7 @@ function App() {
             <Route
               path="/plays/:id"
               element={
-                <PrivateRoute allowGuest>
+                <PrivateRoute>
                   <PlayEditor />
                 </PrivateRoute>
               }
@@ -69,7 +69,7 @@ function App() {
             <Route
               path="/profile"
               element={
-                <PrivateRoute>
+                <PrivateRoute requireAuth>
                   <UserProfile />
                 </PrivateRoute>
               }
@@ -77,7 +77,7 @@ function App() {
             <Route
               path="/preferences"
               element={
-                <PrivateRoute>
+                <PrivateRoute requireAuth>
                   <Preferences />
                 </PrivateRoute>
               }
