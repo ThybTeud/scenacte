@@ -4,7 +4,7 @@ import {
     astToHTML,
     extractStructure,
 } from "../utils/playParser";
-import { calculatePlayStatistics } from "../utils/playStatistics";
+import { calculateStatsFromAST } from "../utils/playStatistics";
 
 /**
  * Hook qui parse le contenu de la pièce et retourne l'AST, la structure, les statistiques et le HTML
@@ -30,7 +30,7 @@ export function usePlayParsing(content, parser) {
 
             // Dérive toutes les valeurs nécessaires depuis l'AST
             const structure = extractStructure(ast);
-            const statistics = calculatePlayStatistics(content);
+            const statistics = calculateStatsFromAST(ast);
             const htmlContent = astToHTML(ast);
 
             return {
