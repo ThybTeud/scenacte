@@ -115,7 +115,7 @@ export function PlayEditor() {
             setHasUnsavedChanges(false);
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
-            console.error(error);
+            // Error already handled by toast notification
             navigate("/plays");
         } finally {
             setIsLoading(false);
@@ -149,7 +149,7 @@ export function PlayEditor() {
             }
         } catch (error) {
             toast.error(error.message || "Erreur lors de la sauvegarde");
-            console.error(error);
+            // Error already handled by toast notification
         } finally {
             setIsSaving(false);
         }

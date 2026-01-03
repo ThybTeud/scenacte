@@ -62,7 +62,7 @@ export function UserProfile() {
       }));
     } catch (error) {
       toast.error('Erreur lors du chargement du profil');
-      console.error(error);
+      // Error already handled by toast notification
     } finally {
       setIsLoading(false);
     }
