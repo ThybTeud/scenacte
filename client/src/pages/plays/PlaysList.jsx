@@ -10,6 +10,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Pagination } from '../../components/ui/Pagination';
 import { GuestModeBanner } from '../../components/ui/GuestModeBanner';
+import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
 import toast from 'react-hot-toast';
 
 export function PlaysList() {
@@ -29,6 +30,7 @@ export function PlaysList() {
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showVersionsModal, setShowVersionsModal] = useState(false);
   const [selectedPlay, setSelectedPlay] = useState(null);
   const [newPlay, setNewPlay] = useState({ title: '', subtitle: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +104,7 @@ export function PlaysList() {
       setPagination(response.pagination);
     } catch (error) {
       toast.error('Erreur lors du chargement des pièces');
-      console.error(error);
+      // Error already handled by toast notification
     } finally {
       setIsLoading(false);
     }
@@ -145,8 +147,8 @@ export function PlaysList() {
   const handleVersionsClick = (play, e) => {
     e.stopPropagation();
     setOpenMenuId(null);
-    // TODO: Navigate to versions page or open versions modal
-    toast('Fonctionnalité Versions à venir', { icon: 'ℹ️' });
+    setSelectedPlay(play);
+    setShowVersionsModal(true);
   };
 
   const handleDeleteClick = (play, e) => {
@@ -409,6 +411,20 @@ export function PlaysList() {
           irréversible.
         </p>
       </Modal>
+
+      <VersionsSidebar
+        isOpen={showVersionsModal}
+        onClose={() => {
+          setShowVersionsModal(false);
+          setSelectedPlay(null);
+        }}
+        playId={selectedPlay?.id}
+        onRestore={() => {
+          setShowVersionsModal(false);
+          setSelectedPlay(null);
+          fetchPlays();
+        }}
+      />
     </div>
   );
 }

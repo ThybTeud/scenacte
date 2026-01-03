@@ -175,7 +175,7 @@ export function Register() {
       navigate('/plays');
     } catch (error) {
       toast.error('Erreur lors de la migration des données');
-      console.error(error);
+      // Error already handled by toast notification
       navigate('/plays');
     }
   };
