@@ -70,6 +70,10 @@ export function PlayEditor() {
     const [showRightPanel, setShowRightPanel] = useState(false);
     const [currentLine, setCurrentLine] = useState(0);
 
+    // États pour undo/redo
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
+
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
     const editorRef = useRef(null);
 
@@ -152,12 +156,45 @@ export function PlayEditor() {
     }, [id, content, htmlContent, play]);
 
     /**
+     * Met à jour l'état des boutons undo/redo
+     */
+    const updateUndoRedoState = useCallback(() => {
+        if (editorRef.current) {
+            setCanUndo(editorRef.current.canUndo?.() ?? false);
+            setCanRedo(editorRef.current.canRedo?.() ?? false);
+        }
+    }, []);
+
+    /**
      * Gère le changement de contenu dans l'éditeur
      */
     const handleContentChange = useCallback((newContent) => {
         setContent(newContent);
         setHasUnsavedChanges(true);
-    }, []);
+
+        // Mettre à jour l'état undo/redo après chaque modification
+        updateUndoRedoState();
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour undo
+     */
+    const handleUndo = useCallback(() => {
+        if (editorRef.current?.undo) {
+            editorRef.current.undo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour redo
+     */
+    const handleRedo = useCallback(() => {
+        if (editorRef.current?.redo) {
+            editorRef.current.redo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
 
     /**
      * Gère le changement de position du curseur
@@ -333,8 +370,8 @@ export function PlayEditor() {
                     {/* Left Panel - hidden mobile, visible desktop */}
                     <div className="hidden lg:block flex-shrink-0 h-full">
                         <LeftPanel
-                            onUndo={() => {}}
-                            onRedo={() => {}}
+                            onUndo={handleUndo}
+                            onRedo={handleRedo}
                             onSave={handleManualSave}
                             onDownload={handleDownload}
                             onExportPdf={() => setShowPdfExport(true)}
@@ -342,8 +379,8 @@ export function PlayEditor() {
                             onToggleFormat={toggleFormat}
                             onInsertCharacter={insertCharacter}
                             characters={structure.personnages || []}
-                            canUndo={false}
-                            canRedo={false}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
                             showPreview={showPreview}
                             isSaving={isSaving}
                         />
@@ -431,8 +468,8 @@ export function PlayEditor() {
                 className="lg:hidden"
             >
                 <LeftPanel
-                    onUndo={() => {}}
-                    onRedo={() => {}}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
                     onSave={handleManualSave}
                     onDownload={handleDownload}
                     onExportPdf={() => setShowPdfExport(true)}
@@ -440,8 +477,8 @@ export function PlayEditor() {
                     onToggleFormat={toggleFormat}
                     onInsertCharacter={insertCharacter}
                     characters={structure.personnages || []}
-                    canUndo={false}
-                    canRedo={false}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
                     showPreview={showPreview}
                     isSaving={isSaving}
                 />

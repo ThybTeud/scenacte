@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { EditorState, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } from '@codemirror/autocomplete';
 
@@ -367,6 +367,42 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       if (viewRef.current) {
         viewRef.current.focus();
       }
+    },
+
+    /**
+     * Annule la dernière modification
+     * @returns {boolean} - true si l'annulation a été effectuée
+     */
+    undo: () => {
+      if (!viewRef.current) return false;
+      return undo(viewRef.current);
+    },
+
+    /**
+     * Rétablit la dernière modification annulée
+     * @returns {boolean} - true si le rétablissement a été effectué
+     */
+    redo: () => {
+      if (!viewRef.current) return false;
+      return redo(viewRef.current);
+    },
+
+    /**
+     * Vérifie si l'annulation est possible
+     * @returns {boolean} - true si l'annulation est possible
+     */
+    canUndo: () => {
+      if (!viewRef.current) return false;
+      return undoDepth(viewRef.current.state) > 0;
+    },
+
+    /**
+     * Vérifie si le rétablissement est possible
+     * @returns {boolean} - true si le rétablissement est possible
+     */
+    canRedo: () => {
+      if (!viewRef.current) return false;
+      return redoDepth(viewRef.current.state) > 0;
     },
 
     /**
