@@ -92,6 +92,10 @@ export function Login() {
     }
   };
 
+  const handleGuestAccess = () => {
+    navigate('/plays');
+  };
+
   return (
     <AuthLayout title="Connexion" subtitle="Bienvenue sur Scenacte">
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -160,6 +164,24 @@ export function Login() {
             )}
           </div>
         )}
+
+        {/* Séparateur "ou" */}
+        <div className="flex items-center gap-4 my-4">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <span className="text-gray-500 text-sm font-ui">ou</span>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        {/* Bouton mode invité */}
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={handleGuestAccess}
+          disabled={isLoading}
+        >
+          Continuer sans compte
+        </Button>
 
         <p className="text-center text-sm text-black font-ui">
           Pas encore de compte ?{' '}
