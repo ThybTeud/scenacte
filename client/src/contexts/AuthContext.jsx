@@ -8,6 +8,16 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(authService.getToken());
   const [isLoading, setIsLoading] = useState(true);
 
+  // Écouter les déconnexions forcées depuis api.js (401)
+  useEffect(() => {
+    const handleForceLogout = () => {
+      setUser(null);
+      setToken(null);
+    };
+    window.addEventListener('auth:logout', handleForceLogout);
+    return () => window.removeEventListener('auth:logout', handleForceLogout);
+  }, []);
+
   useEffect(() => {
     async function loadUser() {
       if (token) {

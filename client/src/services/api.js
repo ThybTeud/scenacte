@@ -18,10 +18,10 @@ async function request(endpoint, options = {}) {
   });
 
   if (response.status === 401) {
-    // Token expiré ou invalide - on nettoie juste le token
-    // Le redirect sera géré par PrivateRoute ou le composant qui gère l'erreur
+    // Token expiré ou invalide - on nettoie le token et on notifie le context
     localStorage.removeItem('token');
-    // Ne pas faire de redirect ici pour éviter de recharger la page
+    window.dispatchEvent(new Event('auth:logout'));
+    // Le redirect sera géré par PrivateRoute ou le composant qui gère l'erreur
   }
 
   if (!response.ok) {
