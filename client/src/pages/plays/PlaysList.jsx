@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { storageService } from '../../services/storage.service';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,34 +36,38 @@ export function PlaysList() {
   const menuRef = useRef(null);
 
   // Menu items pour le HeaderGlobal (conditionnels selon mode invité)
-  const menuItems = isGuest
-    ? [
-        {
-          label: 'Créer un compte',
-          onClick: () => navigate('/register'),
-        },
-        {
-          label: 'Se connecter',
-          onClick: () => navigate('/login'),
-        },
-      ]
-    : [
-        {
-          label: 'Profil',
-          onClick: () => navigate('/profile'),
-        },
-        {
-          label: 'Préférences',
-          onClick: () => navigate('/preferences'),
-        },
-        {
-          label: 'Déconnexion',
-          onClick: () => {
-            logout();
-            navigate('/login');
-          },
-        },
-      ];
+  const menuItems = useMemo(
+    () =>
+      isGuest
+        ? [
+            {
+              label: 'Créer un compte',
+              onClick: () => navigate('/register'),
+            },
+            {
+              label: 'Se connecter',
+              onClick: () => navigate('/login'),
+            },
+          ]
+        : [
+            {
+              label: 'Profil',
+              onClick: () => navigate('/profile'),
+            },
+            {
+              label: 'Préférences',
+              onClick: () => navigate('/preferences'),
+            },
+            {
+              label: 'Déconnexion',
+              onClick: () => {
+                logout();
+                navigate('/login');
+              },
+            },
+          ],
+    [navigate, logout, isGuest]
+  );
 
   useEffect(() => {
     fetchPlays();
@@ -113,9 +117,7 @@ export function PlaysList() {
       toast.success('Pièce créée avec succès !');
       setShowCreateModal(false);
       setNewPlay({ title: '', subtitle: '' });
-      // En mode invité, response est l'objet play directement, pas { play: ... }
-      const playId = response.play?.id || response.id;
-      navigate(`/plays/${playId}`);
+      navigate(`/plays/${response.play.id}`);
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la création');
     } finally {

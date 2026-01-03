@@ -56,6 +56,7 @@ export function PlayEditor() {
 
     const [play, setPlay] = useState(null);
     const [content, setContent] = useState("");
+    const [lastSavedContent, setLastSavedContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -68,6 +69,10 @@ export function PlayEditor() {
     const [showLeftPanel, setShowLeftPanel] = useState(false);
     const [showRightPanel, setShowRightPanel] = useState(false);
     const [currentLine, setCurrentLine] = useState(0);
+
+    // États pour undo/redo
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
 
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
     const editorRef = useRef(null);
@@ -103,11 +108,10 @@ export function PlayEditor() {
         setIsLoading(true);
         try {
             const response = await storageService.getPlay(id);
-            // En mode invité, response est l'objet play directement, pas { play: ... }
-            const playData = response.play || response;
-            setPlay(playData);
-            const rawContent = playData.rawContent || "";
+            setPlay(response.play);
+            const rawContent = response.play.rawContent || "";
             setContent(rawContent);
+            setLastSavedContent(rawContent);
             setHasUnsavedChanges(false);
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
@@ -120,8 +124,9 @@ export function PlayEditor() {
 
     /**
      * Sauvegarde le contenu de la pièce
+     * @param {boolean} isAutoSave - Si true, la sauvegarde est automatique et silencieuse
      */
-    const savePlay = useCallback(async () => {
+    const savePlay = useCallback(async (isAutoSave = false) => {
         if (!play) return;
 
         setIsSaving(true);
@@ -135,8 +140,13 @@ export function PlayEditor() {
             };
 
             await storageService.savePlay(id, saveData);
+            setLastSavedContent(content);
             setHasUnsavedChanges(false);
-            toast.success("Pièce sauvegardée");
+
+            // Afficher le toast seulement pour les sauvegardes manuelles
+            if (!isAutoSave) {
+                toast.success("Pièce sauvegardée");
+            }
         } catch (error) {
             toast.error(error.message || "Erreur lors de la sauvegarde");
             console.error(error);
@@ -146,12 +156,45 @@ export function PlayEditor() {
     }, [id, content, htmlContent, play]);
 
     /**
+     * Met à jour l'état des boutons undo/redo
+     */
+    const updateUndoRedoState = useCallback(() => {
+        if (editorRef.current) {
+            setCanUndo(editorRef.current.canUndo?.() ?? false);
+            setCanRedo(editorRef.current.canRedo?.() ?? false);
+        }
+    }, []);
+
+    /**
      * Gère le changement de contenu dans l'éditeur
      */
     const handleContentChange = useCallback((newContent) => {
         setContent(newContent);
         setHasUnsavedChanges(true);
-    }, []);
+
+        // Mettre à jour l'état undo/redo après chaque modification
+        updateUndoRedoState();
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour undo
+     */
+    const handleUndo = useCallback(() => {
+        if (editorRef.current?.undo) {
+            editorRef.current.undo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour redo
+     */
+    const handleRedo = useCallback(() => {
+        if (editorRef.current?.redo) {
+            editorRef.current.redo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
 
     /**
      * Gère le changement de position du curseur
@@ -180,6 +223,33 @@ export function PlayEditor() {
             }
         };
     }, []);
+
+    /**
+     * Sauvegarde automatique après 2 secondes d'inactivité
+     */
+    useEffect(() => {
+        // Ne pas déclencher l'auto-save si le contenu n'a pas changé
+        if (content === lastSavedContent || !play) {
+            return;
+        }
+
+        // Annuler le timeout précédent
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        // Programmer la sauvegarde automatique
+        saveTimeoutRef.current = setTimeout(() => {
+            savePlay(true); // true = sauvegarde automatique (silencieuse)
+        }, 2000);
+
+        // Cleanup
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [content, lastSavedContent, savePlay, play]);
 
     /**
      * Toggle un format de ligne dans l'éditeur
@@ -300,8 +370,8 @@ export function PlayEditor() {
                     {/* Left Panel - hidden mobile, visible desktop */}
                     <div className="hidden lg:block flex-shrink-0 h-full">
                         <LeftPanel
-                            onUndo={() => {}}
-                            onRedo={() => {}}
+                            onUndo={handleUndo}
+                            onRedo={handleRedo}
                             onSave={handleManualSave}
                             onDownload={handleDownload}
                             onExportPdf={() => setShowPdfExport(true)}
@@ -309,8 +379,8 @@ export function PlayEditor() {
                             onToggleFormat={toggleFormat}
                             onInsertCharacter={insertCharacter}
                             characters={structure.personnages || []}
-                            canUndo={false}
-                            canRedo={false}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
                             showPreview={showPreview}
                             isSaving={isSaving}
                         />
@@ -398,8 +468,8 @@ export function PlayEditor() {
                 className="lg:hidden"
             >
                 <LeftPanel
-                    onUndo={() => {}}
-                    onRedo={() => {}}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
                     onSave={handleManualSave}
                     onDownload={handleDownload}
                     onExportPdf={() => setShowPdfExport(true)}
@@ -407,8 +477,8 @@ export function PlayEditor() {
                     onToggleFormat={toggleFormat}
                     onInsertCharacter={insertCharacter}
                     characters={structure.personnages || []}
-                    canUndo={false}
-                    canRedo={false}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
                     showPreview={showPreview}
                     isSaving={isSaving}
                 />

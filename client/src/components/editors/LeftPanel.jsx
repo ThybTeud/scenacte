@@ -68,7 +68,7 @@ export function LeftPanel({
                         variant="secondary"
                         square={true}
                         onClick={onUndo}
-                        // disabled={!canUndo}
+                        disabled={!canUndo}
                         title="Annuler (Ctrl+Z)"
                         className="flex-1"
                     >
@@ -90,7 +90,7 @@ export function LeftPanel({
                         variant="secondary"
                         square={true}
                         onClick={onRedo}
-                        // disabled={!canRedo}
+                        disabled={!canRedo}
                         title="Rétablir (Ctrl+Y)"
                         className="flex-1"
                     >

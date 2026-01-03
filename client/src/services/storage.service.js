@@ -7,6 +7,32 @@ const generateGuestId = () => {
   return 'guest_' + crypto.randomUUID();
 };
 
+// Valide la structure des données localStorage
+const validateLocalData = (data) => {
+  // Vérifier que data est un objet
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return false;
+  }
+
+  // Vérifier que data.plays est un tableau
+  if (!Array.isArray(data.plays)) {
+    return false;
+  }
+
+  // Vérifier que chaque play a les propriétés minimales requises
+  return data.plays.every((play) => {
+    return (
+      play &&
+      typeof play === 'object' &&
+      typeof play.id === 'string' &&
+      typeof play.title === 'string' &&
+      (typeof play.rawContent === 'string' || play.rawContent === undefined) &&
+      typeof play.createdAt === 'string' &&
+      typeof play.updatedAt === 'string'
+    );
+  });
+};
+
 // Vérifie si l'utilisateur est en mode invité (pas de token)
 const isGuest = () => {
   return !localStorage.getItem('token');
@@ -14,8 +40,29 @@ const isGuest = () => {
 
 // Récupère les données invité du localStorage
 const getGuestData = () => {
-  const data = localStorage.getItem(GUEST_DATA_KEY);
-  return data ? JSON.parse(data) : { plays: [] };
+  try {
+    const raw = localStorage.getItem(GUEST_DATA_KEY);
+    if (!raw) {
+      return { plays: [] };
+    }
+
+    const data = JSON.parse(raw);
+
+    // Valider la structure des données
+    if (!validateLocalData(data)) {
+      console.warn(
+        '[StorageService] Données localStorage invalides, réinitialisation'
+      );
+      localStorage.removeItem(GUEST_DATA_KEY);
+      return { plays: [] };
+    }
+
+    return data;
+  } catch (e) {
+    console.error('[StorageService] Erreur parsing localStorage:', e);
+    localStorage.removeItem(GUEST_DATA_KEY);
+    return { plays: [] };
+  }
 };
 
 // Sauvegarde les données invité dans le localStorage
@@ -49,7 +96,7 @@ const getLocalPlay = (id) => {
     throw new Error('Pièce non trouvée');
   }
 
-  return play;
+  return { play };
 };
 
 const createLocalPlay = (playData) => {
@@ -70,7 +117,7 @@ const createLocalPlay = (playData) => {
   data.plays.unshift(newPlay); // Ajoute en début de liste
   setGuestData(data);
 
-  return newPlay;
+  return { play: newPlay };
 };
 
 const saveLocalPlay = (id, playData) => {
@@ -91,7 +138,7 @@ const saveLocalPlay = (id, playData) => {
   data.plays[playIndex] = updatedPlay;
   setGuestData(data);
 
-  return updatedPlay;
+  return { play: updatedPlay };
 };
 
 const deleteLocalPlay = (id) => {
