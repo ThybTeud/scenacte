@@ -13,6 +13,7 @@ import { PlaysList } from './pages/plays/PlaysList';
 import { PlayEditor } from './pages/plays/PlayEditor';
 import { UserProfile } from './pages/profile/UserProfile';
 import { Preferences } from './pages/preferences/Preferences';
+import { LegalNotice, PrivacyPolicy, TermsOfService } from './pages/legal';
 import { NotFound } from './pages/NotFound';
 
 function RootRedirect() {
@@ -59,6 +60,10 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+
+            <Route path="/legal" element={<LegalNotice />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
 
             <Route
               path="/plays"

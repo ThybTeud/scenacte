@@ -1,5 +1,6 @@
 import { Card } from '../ui/Card';
 import Logo from '../ui/Logo';
+import Footer from './Footer';
 
 /**
  * AuthLayout component - Layout pour les pages d'authentification avec design neobrutalist
@@ -10,23 +11,27 @@ import Logo from '../ui/Logo';
  */
 export function AuthLayout({ children, title, subtitle }) {
   return (
-    <div className="min-h-screen bg-cream flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
-        <div className="flex justify-center">
-          <Logo variant="full" />
+    <div className="min-h-screen bg-cream flex flex-col">
+      <div className="flex-grow flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
+          <div className="flex justify-center">
+            <Logo variant="full" />
+          </div>
+          {subtitle && (
+            <p className="mt-4 text-center text-sm text-black font-ui">
+              {subtitle}
+            </p>
+          )}
         </div>
-        {subtitle && (
-          <p className="mt-4 text-center text-sm text-black font-ui">
-            {subtitle}
-          </p>
-        )}
+
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <Card header={title}>
+            {children}
+          </Card>
+        </div>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Card header={title}>
-          {children}
-        </Card>
-      </div>
+      <Footer />
     </div>
   );
 }
