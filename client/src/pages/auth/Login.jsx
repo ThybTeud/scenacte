@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 export function Login() {
-  const { login } = useAuth();
+  const { login, enableGuestMode } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -93,6 +93,7 @@ export function Login() {
   };
 
   const handleGuestAccess = () => {
+    enableGuestMode();
     navigate('/plays');
   };
 

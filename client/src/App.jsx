@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
+import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { Login } from './pages/auth/Login';
@@ -13,6 +14,15 @@ import { PlayEditor } from './pages/plays/PlayEditor';
 import { UserProfile } from './pages/profile/UserProfile';
 import { Preferences } from './pages/preferences/Preferences';
 import { NotFound } from './pages/NotFound';
+
+function RootRedirect() {
+  const { user, guestMode } = useAuth();
+
+  if (user || guestMode) {
+    return <Navigate to="/plays" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
@@ -43,7 +53,7 @@ function App() {
           />
 
           <Routes>
-            <Route path="/" element={<Navigate to="/plays" replace />} />
+            <Route path="/" element={<RootRedirect />} />
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

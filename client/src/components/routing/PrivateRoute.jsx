@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Loader } from '../ui/Loader';
 
 export function PrivateRoute({ children, requireAuth = false }) {
-  const { user, isGuest, isLoading } = useAuth();
+  const { user, guestMode, isLoading } = useAuth();
 
   if (isLoading) {
     return <Loader fullScreen />;
@@ -14,11 +14,16 @@ export function PrivateRoute({ children, requireAuth = false }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Sinon, mode invité OU utilisateur connecté = accès autorisé
-  if (isGuest || user) {
+  // Utilisateur connecté → OK
+  if (user) {
     return children;
   }
 
-  // Cas par défaut : redirection login
+  // Mode invité explicite → OK
+  if (guestMode) {
+    return children;
+  }
+
+  // Sinon → redirection login
   return <Navigate to="/login" replace />;
 }

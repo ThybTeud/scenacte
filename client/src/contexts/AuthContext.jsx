@@ -7,6 +7,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(authService.getToken());
   const [isLoading, setIsLoading] = useState(true);
+  const [guestMode, setGuestMode] = useState(() => {
+    return localStorage.getItem('scenacte_guest_mode') === 'true';
+  });
+
+  // Persister le mode invité
+  useEffect(() => {
+    if (guestMode) {
+      localStorage.setItem('scenacte_guest_mode', 'true');
+    }
+  }, [guestMode]);
 
   // Écouter les déconnexions forcées depuis api.js (401)
   useEffect(() => {
@@ -37,19 +47,30 @@ export function AuthProvider({ children }) {
     loadUser();
   }, [token]);
 
+  const enableGuestMode = useCallback(() => {
+    setGuestMode(true);
+  }, []);
+
+  const disableGuestMode = useCallback(() => {
+    setGuestMode(false);
+    localStorage.removeItem('scenacte_guest_mode');
+  }, []);
+
   const login = useCallback(async (email, password) => {
     const response = await authService.login(email, password);
     setToken(response.token);
     setUser(response.user);
+    disableGuestMode();
     return response;
-  }, []);
+  }, [disableGuestMode]);
 
   const register = useCallback(async (email, password) => {
     const response = await authService.register(email, password);
     setToken(response.token);
     setUser(response.user);
+    disableGuestMode();
     return response;
-  }, []);
+  }, [disableGuestMode]);
 
   const logout = useCallback(() => {
     authService.logout();
@@ -65,13 +86,16 @@ export function AuthProvider({ children }) {
     user,
     token,
     isAuthenticated: !!token && !!user,
-    isGuest: !token && !user,
+    isGuest: guestMode && !token && !user,
+    guestMode,
     isLoading,
     login,
     register,
     logout,
     updateUser,
-  }), [user, token, isLoading, login, register, logout, updateUser]);
+    enableGuestMode,
+    disableGuestMode,
+  }), [user, token, guestMode, isLoading, login, register, logout, updateUser, enableGuestMode, disableGuestMode]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
