@@ -48,18 +48,8 @@ export function generatePdfHtml({
   // Charger le template CSS correspondant
   const templateStyles = getTemplateStyles(template);
 
-  return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <title>${escapeHtml(playTitle)}</title>
-  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    ${baseStyles}
-    ${templateStyles}
-
+  // Styles de contenu
+  const contentStyles = `
     /* Reset et base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -131,6 +121,20 @@ export function generatePdfHtml({
       text-align: justify;
       margin: 0.5rem 0;
     }
+  `;
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(playTitle)}</title>
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    ${baseStyles}
+    ${templateStyles}
+    ${contentStyles}
   </style>
 </head>
 <body>

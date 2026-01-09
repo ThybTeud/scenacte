@@ -34,9 +34,9 @@ export default function HeaderEditor({
                     <Link to="/plays">
                         <Logo variant="short" />
                     </Link>
-                    <div className="w-1 h-6 bg-slate-900 mx-4 rounded"></div>
+                    <div className="w-0.5 h-6 bg-slate-900 mx-4 rounded"></div>
                     <div className="border-2 bg-white rounded px-2 py-1 max-w-md line-clamp-1 break-all">
-                        <span className="text-slate-900 text-xl font-mono font-bold">
+                        <span className="text-slate-900 text-2xl font-editor font-bold">
                             {playTitle || "Titre"}
                         </span>
                     </div>

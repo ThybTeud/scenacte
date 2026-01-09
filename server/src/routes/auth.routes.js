@@ -14,7 +14,7 @@ const router = express.Router();
 /**
  * POST /api/auth/register
  * Inscription d'un nouvel utilisateur
- * Body: { email, username, password }
+ * Body: { email, password }
  * Rate limit: 5 requêtes / 15 minutes
  */
 router.post('/register', authLimiter, register);

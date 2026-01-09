@@ -1,10 +1,11 @@
-import { Button } from "../ui/Button";
+import { Button, ButtonGroup } from "../ui/Button";
+import { EditorButton } from "../ui/EditorButton";
+import { Card } from "../ui/Card";
 
 export function LeftPanel({
     onUndo,
     onRedo,
     onSave,
-    onDownload,
     onExportPdf,
     onTogglePreview,
     onToggleFormat,
@@ -16,29 +17,63 @@ export function LeftPanel({
     isSaving = false,
 }) {
     const formatButtons = [
-        { id: "acte", label: "#Acte", shortcut: "Ctrl+1" },
-        { id: "scene", label: "##Scène", shortcut: "Ctrl+1" },
-        { id: "personnage", label: "@Personnage", shortcut: "Ctrl+2" },
-        { id: "didascalie", label: "(Didascalie)", shortcut: "Ctrl+3" },
-        { id: "dialogue", label: "Dialogue", shortcut: "Ctrl+4" },
+        {
+            id: "acte",
+            label: "#Acte",
+            shortcut: "Ctrl+1",
+            background: "bg-orange",
+            textColor: "text-white",
+            fontWeight: "font-bold",
+        },
+        {
+            id: "scene",
+            label: "##Scène",
+            shortcut: "Ctrl+1",
+            background: "bg-orange",
+            textColor: "text-white",
+            fontWeight: "font-bold",
+        },
+        {
+            id: "personnage",
+            label: "@Personnage",
+            shortcut: "Ctrl+2",
+            background: "bg-blue",
+            textColor: "text-white",
+            fontWeight: "font-bold",
+        },
+        {
+            id: "didascalie",
+            label: "(Didascalie)",
+            shortcut: "Ctrl+3",
+            background: "bg-gray",
+            textColor: "text-white",
+            font: "italic",
+        },
+        {
+            id: "dialogue",
+            label: "Dialogue",
+            shortcut: "Ctrl+4",
+            background: "bg-white",
+            textColor: "text-black",
+        },
     ];
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col w-60 px-6 py-8 gap-y-8">
             {/* Toolbar Section */}
-            <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
                 {/* Groupe 1: Historique */}
-                <div className="flex w-40">
+                <ButtonGroup className="flex">
                     <Button
                         variant="secondary"
-                        size="sm"
+                        square={true}
                         onClick={onUndo}
                         disabled={!canUndo}
                         title="Annuler (Ctrl+Z)"
                         className="flex-1"
                     >
                         <svg
-                            className="w-4 h-4 mr-1"
+                            className="w-4 h-4"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -53,14 +88,14 @@ export function LeftPanel({
                     </Button>
                     <Button
                         variant="secondary"
-                        // size="sm"
+                        square={true}
                         onClick={onRedo}
                         disabled={!canRedo}
                         title="Rétablir (Ctrl+Y)"
                         className="flex-1"
                     >
                         <svg
-                            className="w-4 h-4 mr-1"
+                            className="w-4 h-4"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -73,63 +108,21 @@ export function LeftPanel({
                             />
                         </svg>
                     </Button>
-                </div>
+                </ButtonGroup>
 
                 {/* Groupe 2: Fichier & Aperçu */}
-                <div className="space-y-2">
+                <ButtonGroup>
                     <Button
                         variant="secondary"
-                        size="sm"
+                        size="md"
                         onClick={onSave}
                         disabled={isSaving}
-                        className="w-full"
+                        square={true}
+                        title="Sauvegarder"
+                        className="flex-1"
                     >
                         <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                            />
-                        </svg>
-                        {isSaving ? "Sauvegarde..." : "Sauvegarder"}
-                    </Button>
-
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={onDownload}
-                        className="w-full"
-                    >
-                        <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                        </svg>
-                        Télécharger
-                    </Button>
-
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={onExportPdf}
-                        className="w-full"
-                    >
-                        <svg
-                            className="w-4 h-4 mr-2"
+                            className="w-4 h-4"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -141,17 +134,42 @@ export function LeftPanel({
                                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                             />
                         </svg>
-                        Export PDF
+                        {isSaving ? "..." : ""}
                     </Button>
 
                     <Button
                         variant="secondary"
-                        size="sm"
-                        onClick={onTogglePreview}
-                        className="w-full"
+                        size="md"
+                        onClick={onExportPdf}
+                        square={true}
+                        title="Télécharger"
+                        className="flex-1"
                     >
                         <svg
-                            className="w-4 h-4 mr-2"
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                            />
+                        </svg>
+                    </Button>
+
+                    <Button
+                        variant="secondary"
+                        square={true}
+                        size="md"
+                        onClick={onTogglePreview}
+                        title="Afficher l'aperçu"
+                        className="flex-1"
+                    >
+                        <svg
+                            className="w-4 h-4"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -172,71 +190,53 @@ export function LeftPanel({
                                 />
                             )}
                         </svg>
-                        {showPreview ? "Masquer" : "Afficher"} aperçu
                     </Button>
-                </div>
+                </ButtonGroup>
             </div>
 
             {/* Raccourcis de mise en page */}
-            <div
-                className="p-4 flex-shrink-0"
-                style={{ borderBottom: "1px solid #e5e5e5" }}
-            >
-                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
-                    Raccourcis de mise en page
-                </h3>
-                <div className="space-y-1.5">
+            <div className="flex-shrink-0">
+                <div className="flex flex-col gap-y-4">
                     {formatButtons.map((format) => (
-                        <button
+                        <EditorButton
                             key={format.id}
+                            label={format.label}
+                            shortcut={format.shortcut}
+                            background={format.background}
+                            textColor={format.textColor}
+                            font={format.font}
+                            fontWeight={format.fontWeight}
                             onClick={() => onToggleFormat(format.id)}
-                            className="w-full flex items-center justify-between px-3 py-2 text-sm text-left text-gray-700 bg-white rounded hover:bg-gray-50 transition-colors font-ui"
-                            style={{ border: "1px solid #e5e5e5" }}
-                        >
-                            <span className="flex items-center gap-2">
-                                <span className="text-base">{format.icon}</span>
-                                <span className="font-medium">
-                                    {format.label}
-                                </span>
-                            </span>
-                            <span className="text-xs text-gray-500 font-mono">
-                                {format.shortcut}
-                            </span>
-                        </button>
+                        />
                     ))}
                 </div>
             </div>
 
             {/* Liste des personnages */}
-            <div className="p-4 flex-1 overflow-y-auto">
-                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 font-ui">
-                    Personnages
-                </h3>
+            <Card header="Personnages" size="sm" heightMax="flex-1">
                 {characters.length === 0 ? (
-                    <p className="text-sm text-gray-500 italic font-ui">
-                        Aucun personnage défini
-                    </p>
+                    <div className="flex flex-col items-center justify-center h-full px-3">
+                        <p className="text-center text-xs text-gray-500 italic font-ui">
+                            Ecrivez le nom d'un personnage avec '@'
+                        </p>
+                    </div>
                 ) : (
-                    <div className="space-y-1">
+                    <ul className="">
                         {characters.map((character, index) => (
-                            <button
+                            <li
                                 key={index}
                                 onClick={() => onInsertCharacter(character)}
-                                className="w-full px-3 py-2 text-sm text-left text-gray-700 bg-white rounded hover:bg-orange-50 hover:text-orange-700 transition-colors font-ui"
-                                style={{ border: "1px solid #e5e5e5" }}
+                                className="px-2 py-1 text-base hover:bg-blue-400 text-blue hover: hover:text-white active:bg-blue cursor-pointer rounded"
                                 title={`Insérer @${character}`}
                             >
-                                <span className="flex items-center gap-2">
-                                    <span className="text-orange">@</span>
-                                    <span className="font-medium">
-                                        {character}
-                                    </span>
+                                <span className="font-mono font-bold line-clamp-1 break-all">
+                                    @{character}
                                 </span>
-                            </button>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 )}
-            </div>
+            </Card>
         </div>
     );
 }

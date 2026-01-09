@@ -493,6 +493,52 @@ export async function deletePlay(req, res, next) {
 }
 
 /**
+ * GET /api/plays/:id/ast
+ * Récupérer l'AST (Abstract Syntax Tree) d'une pièce en JSON
+ * Endpoint temporaire pour consultation et debugging
+ */
+export async function getPlayAST(req, res, next) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Validation UUID
+    const idValidation = validateUUID(id);
+    if (!idValidation.valid) {
+      throw new ValidationError(idValidation.message);
+    }
+
+    // Récupération de la pièce
+    const query = `SELECT id, user_id, title, raw_content FROM plays WHERE id = $1`;
+    const result = await pool.query(query, [id]);
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError('Pièce non trouvée');
+    }
+
+    const row = result.rows[0];
+
+    // Vérification que la pièce appartient à l'utilisateur
+    if (row.user_id !== userId) {
+      throw new ForbiddenError('Accès non autorisé à cette pièce');
+    }
+
+    // Import dynamique du parser pour générer l'AST
+    const { PlayParser } = await import('../utils/playStatistics.js');
+    const parser = new PlayParser();
+    const ast = parser.parse(row.raw_content);
+
+    res.json({
+      playId: row.id,
+      title: row.title,
+      ast: ast.toJSON()
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * PATCH /api/plays/:id/status
  * Changer le statut d'une pièce
  */

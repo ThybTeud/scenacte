@@ -33,7 +33,7 @@ export const PdfPreview = forwardRef(function PdfPreview({
     const iframe = iframeRef.current;
     const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Générer le HTML complet avec PagedJS
+    // Générer le HTML complet avec PagedJS polyfill
     const fullHtml = generatePdfHtml({
       htmlContent,
       playTitle,
@@ -46,34 +46,27 @@ export const PdfPreview = forwardRef(function PdfPreview({
     doc.write(fullHtml);
     doc.close();
 
-    // Configuration PagedJS pour être notifié quand le rendu est terminé
-    // On attend que le script PagedJS soit chargé et exécuté
-    const checkPagedJS = setInterval(() => {
-      if (iframe.contentWindow.PagedPolyfill) {
-        clearInterval(checkPagedJS);
+    // Écouter l'événement PagedJS ready
+    const handlePagedReady = () => {
+      const pages = doc.querySelectorAll('.pagedjs_page');
+      onPagesRendered?.(pages.length);
+      setIsLoading(false);
+    };
 
-        // Écouter l'événement de fin de rendu PagedJS
-        iframe.contentWindow.addEventListener('pagedjs-ready', () => {
-          // Compter le nombre de pages générées
-          const pages = iframe.contentDocument.querySelectorAll('.pagedjs_page');
-          onPagesRendered?.(pages.length);
-          setIsLoading(false);
-        });
-      }
-    }, 100);
+    // Le polyfill dispatch cet événement quand le rendu est terminé
+    iframe.contentWindow.addEventListener('pagedjs-ready', handlePagedReady);
 
-    // Cleanup après 10 secondes si PagedJS ne répond pas
+    // Timeout de sécurité
     const timeout = setTimeout(() => {
-      clearInterval(checkPagedJS);
       setIsLoading(false);
       onPagesRendered?.(0);
     }, 10000);
 
     return () => {
-      clearInterval(checkPagedJS);
+      iframe.contentWindow?.removeEventListener('pagedjs-ready', handlePagedReady);
       clearTimeout(timeout);
     };
-  }, [htmlContent, template, pageFormat, playTitle, playSubtitle, onPagesRendered]);
+  }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered]);
 
   return (
     <div className="relative h-full w-full bg-gray-100 rounded border-2 border-black overflow-hidden">

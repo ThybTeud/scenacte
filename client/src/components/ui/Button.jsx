@@ -1,12 +1,10 @@
 /**
  * Button component - Composant de bouton neobrutalist
  * @param {Object} props
- * @param {'primary'|'secondary'|'ghost'|'danger'} [props.variant='primary'] - Variante du bouton
+ * @param {'primary'|'secondary'|'ghost'|'danger'|'custom'} [props.variant='primary'] - Variante du bouton
  * @param {'sm'|'md'|'lg'} [props.size='md'] - Taille du bouton
- * @param {React.ReactNode} [props.icon] - Icône à afficher
- * @param {string} [props.shortcut] - Raccourci clavier à afficher
- * @param {'none'|'left'|'middle'|'right'} [props.grouped='none'] - Position dans un groupe de boutons
- * @param {React.ReactNode} props.children - Contenu du bouton
+ * @param {boolean} [props.square=false] - Bouton carré (padding égal)
+ * @param {boolean} [props.fullWidth=false] - Bouton pleine largeur
  * @param {boolean} [props.disabled=false] - État désactivé
  * @param {'button'|'submit'|'reset'} [props.type='button'] - Type du bouton
  * @param {Function} [props.onClick] - Fonction de callback au clic
@@ -16,9 +14,8 @@ export function Button({
     children,
     variant = "primary",
     size = "md",
-    icon,
-    shortcut,
-    grouped = "none",
+    square = false,
+    fullWidth = false,
     disabled = false,
     type = "button",
     onClick,
@@ -27,94 +24,46 @@ export function Button({
 }) {
     // Classes de base
     const baseStyles =
-        "inline-flex items-center justify-center font-ui font-medium border-2 border-black transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+        "inline-flex items-center z-10 rounded justify-center font-ui font-medium border-2 border-black transition-[background-color,transform] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-x-[4px] disabled:translate-y-[4px]";
 
     // Variantes de couleurs
     const variants = {
         primary:
-            "bg-orange text-white hover:bg-accent-hover shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active",
+            "bg-orange text-white enabled:hover:bg-orange/90 enabled:shadow-brutal",
         secondary:
-            "bg-white text-black hover:bg-gray-50 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active",
-        ghost: "bg-transparent text-black border-0 shadow-none hover:bg-gray-100",
-        danger: "bg-red-500 text-white hover:bg-red-600 shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active",
+            "bg-white text-black enabled:hover:bg-gray-50 enabled:shadow-brutal",
+        ghost: "bg-white text-black enabled:hover:bg-gray-100 shadow-none",
+        danger: "bg-red-500 text-white enabled:hover:bg-red-600 enabled:shadow-brutal",
+        custom: "text-white", // Pas de background par défaut, à définir via className
     };
 
     // Tailles
     const sizes = {
-        sm: "px-3 py-1.5 text-sm gap-1.5",
-        md: "px-4 py-2 text-base gap-2",
-        lg: "px-6 py-3 text-lg gap-2.5",
+        sm: square ? "p-1.5 text-sm" : "px-3 py-1.5 text-sm gap-1.5",
+        md: square ? "p-2 text-base" : "px-4 py-2 text-base gap-2",
+        lg: square ? "p-3 text-lg" : "px-6 py-3 text-lg gap-2.5",
     };
 
-    // Gestion du border-radius pour les groupes
-    const groupedStyles = {
-        none: "rounded",
-        left: "rounded-l border-r-0",
-        middle: "rounded-none border-r-0",
-        right: "rounded-r",
-    };
-
-    // Effet hover/active
+    // Effet hover/active (sauf ghost)
     const interactionStyles =
         variant !== "ghost"
-            ? "hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px]"
+            ? "enabled:hover:z-10 enabled:hover:-translate-x-[2px] enabled:hover:-translate-y-[2px] enabled:hover:shadow-brutal-hover enabled:active:translate-x-[2px] enabled:active:translate-y-[2px] enabled:active:shadow-brutal-active"
             : "";
 
-    // Gestion responsive
-    const hasIcon = !!icon;
-    const hasText = !!children;
-    const hasShortcut = !!shortcut;
-
-    // Classes responsive pour afficher/masquer éléments
-    const textClasses =
-        hasIcon && hasShortcut
-            ? "hidden md:inline"
-            : hasIcon
-            ? "hidden md:inline"
-            : "";
-
-    const shortcutClasses =
-        hasIcon && hasText ? "hidden md:inline lg:inline" : "";
-
-    // Si icon seul sur mobile, rendre le bouton carré
-    const squareOnMobile =
-        hasIcon && (hasText || hasShortcut)
-            ? "md:px-4 aspect-square md:aspect-auto px-2"
-            : "";
+    // Largeur
+    const widthStyles = fullWidth ? "w-full" : "";
 
     return (
         <button
             type={type}
             disabled={disabled}
             onClick={onClick}
-            className={`
-        ${baseStyles}
-        ${variants[variant]}
-        ${sizes[size]}
-        ${groupedStyles[grouped]}
-        ${interactionStyles}
-        ${squareOnMobile}
-        ${className}
-      `.trim()}
+            className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${interactionStyles} ${widthStyles} ${className}`
+                .trim()
+                .replace(/\s+/g, " ")}
             {...props}
         >
-            {icon && <span className="flex-shrink-0">{icon}</span>}
-            {hasText && <span className={textClasses}>{children}</span>}
-            {hasShortcut && (
-                <span
-                    className={`
-            ${shortcutClasses}
-            text-xs
-            px-1.5
-            py-0.5
-            rounded
-            bg-black/10
-            font-mono
-          `.trim()}
-                >
-                    {shortcut}
-                </span>
-            )}
+            {children}
         </button>
     );
 }
@@ -126,5 +75,11 @@ export function Button({
  * @param {string} [props.className] - Classes CSS additionnelles
  */
 export function ButtonGroup({ children, className = "" }) {
-    return <div className={`inline-flex ${className}`}>{children}</div>;
+    return (
+        <div
+            className={`inline-flex [&>button]:rounded-none [&>button:first-child]:rounded-l [&>button:last-child]:rounded-r [&>button:not(:last-child)]:border-r-1 [&>button:not(:first-child)]:border-l-1 ${className}`}
+        >
+            {children}
+        </div>
+    );
 }

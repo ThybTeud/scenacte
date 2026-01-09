@@ -7,16 +7,16 @@
 export default function Logo({ variant = 'full'}) {
   if (variant === 'short') {
     return (
-      <div className="flex items-center font-ui font-bold text-2xl gap-4 space-between">
-        <img src="/logo_short.png" alt="Scenacte Logo" className="h-10 w-auto" />
+      <div className="flex">
+        <img src="/logo_short.png" alt="Scenacte Logo" className="h-9 w-auto" />
       </div>
     );
   }
 
   // Variant 'full' par défaut
   return (
-    <div className="flex items-center font-ui font-bold text-2xl">
-      <img src="/logo_long.png" alt="Scenacte Logo" className="h-10 w-auto" />
+    <div className="flex">
+      <img src="/logo_long.png" alt="Scenacte Logo" className="h-9 w-auto" />
     </div>
   );
 }

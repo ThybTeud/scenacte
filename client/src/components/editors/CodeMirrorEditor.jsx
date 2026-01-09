@@ -1,9 +1,10 @@
 import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { EditorState, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } from '@codemirror/autocomplete';
+import { toggleLineFormat } from '../../utils/editorCommands';
 
 // Utilisation d'un mode StreamLanguage pour le surlignage personnalisé (voir createPlayExtension)
 
@@ -16,7 +17,7 @@ import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } 
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, scrollSync, characters = [] }, ref) {
+export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
 
@@ -210,6 +211,12 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
             onChange(update.state.doc.toString());
           }
 
+          // Notifier le changement de curseur
+          if (update.selectionSet && onCursorChange) {
+            const line = update.state.doc.lineAt(update.state.selection.main.head).number - 1;
+            onCursorChange(line);
+          }
+
           // Notifier le scroll
           if (update.view.scrollDOM && onScroll) {
             const scrollDOM = update.view.scrollDOM;
@@ -259,9 +266,10 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
           try {
             const line = view.state.doc.line(Math.max(1, lineNumber));
             view.dispatch({
-              selection: { anchor: line.from },
+              selection: { anchor: line.to }, // Position à la fin de la ligne
               scrollIntoView: true
             });
+            view.focus();
           } catch (error) {
             console.error('Error scrolling to line:', error);
           }
@@ -335,7 +343,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
     },
 
     /**
-     * Scroll vers une ligne spécifique
+     * Scroll vers une ligne spécifique et positionne le curseur à la fin
      * @param {number} lineNumber - Le numéro de ligne (1-indexed)
      */
     scrollToLine: (lineNumber) => {
@@ -344,9 +352,10 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       try {
         const line = viewRef.current.state.doc.line(Math.max(1, lineNumber));
         viewRef.current.dispatch({
-          selection: { anchor: line.from },
+          selection: { anchor: line.to }, // Position à la fin de la ligne
           scrollIntoView: true
         });
+        viewRef.current.focus();
       } catch (error) {
         console.error('Error scrolling to line:', error);
       }
@@ -362,133 +371,47 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
     },
 
     /**
+     * Annule la dernière modification
+     * @returns {boolean} - true si l'annulation a été effectuée
+     */
+    undo: () => {
+      if (!viewRef.current) return false;
+      return undo(viewRef.current);
+    },
+
+    /**
+     * Rétablit la dernière modification annulée
+     * @returns {boolean} - true si le rétablissement a été effectué
+     */
+    redo: () => {
+      if (!viewRef.current) return false;
+      return redo(viewRef.current);
+    },
+
+    /**
+     * Vérifie si l'annulation est possible
+     * @returns {boolean} - true si l'annulation est possible
+     */
+    canUndo: () => {
+      if (!viewRef.current) return false;
+      return undoDepth(viewRef.current.state) > 0;
+    },
+
+    /**
+     * Vérifie si le rétablissement est possible
+     * @returns {boolean} - true si le rétablissement est possible
+     */
+    canRedo: () => {
+      if (!viewRef.current) return false;
+      return redoDepth(viewRef.current.state) > 0;
+    },
+
+    /**
      * Toggle un format de ligne (acte/scène, personnage, didascalie, dialogue)
      * @param {string} formatType - Le type de format : 'heading', 'personnage', 'didascalie', 'dialogue'
      */
     toggleLineFormat: (formatType) => {
-      if (!viewRef.current) return;
-
-      const view = viewRef.current;
-      const selection = view.state.selection.main;
-      const line = view.state.doc.lineAt(selection.from);
-      const lineText = line.text;
-
-      let newText = lineText;
-
-      switch (formatType) {
-        case 'heading': {
-          // Cycle : rien → # → ## → rien
-          if (lineText.startsWith('##')) {
-            // Enlever ##
-            newText = lineText.slice(2).trimStart();
-          } else if (lineText.startsWith('#')) {
-            // # → ##
-            newText = '#' + lineText;
-          } else {
-            // Enlever autres balises d'abord, puis ajouter #
-            let cleanText = lineText;
-            // Enlever @ au début
-            if (cleanText.startsWith('@')) {
-              cleanText = cleanText.slice(1);
-            }
-            // Enlever () autour
-            if (cleanText.startsWith('(') && cleanText.endsWith(')')) {
-              cleanText = cleanText.slice(1, -1);
-            }
-            cleanText = cleanText.trim();
-            newText = '#' + cleanText;
-          }
-          break;
-        }
-
-        case 'personnage': {
-          // Toggle : rien ↔ @
-          if (lineText.startsWith('@')) {
-            // Enlever @
-            newText = lineText.slice(1);
-          } else {
-            // Enlever autres balises d'abord, puis ajouter @
-            let cleanText = lineText;
-            // Enlever # ou ##
-            if (cleanText.startsWith('##')) {
-              cleanText = cleanText.slice(2);
-            } else if (cleanText.startsWith('#')) {
-              cleanText = cleanText.slice(1);
-            }
-            // Enlever () autour
-            if (cleanText.startsWith('(') && cleanText.endsWith(')')) {
-              cleanText = cleanText.slice(1, -1);
-            }
-            cleanText = cleanText.trim();
-            newText = '@' + cleanText;
-          }
-          break;
-        }
-
-        case 'didascalie': {
-          // Toggle : rien ↔ (...)
-          if (lineText.startsWith('(') && lineText.endsWith(')')) {
-            // Enlever ()
-            newText = lineText.slice(1, -1);
-          } else {
-            // Enlever autres balises d'abord, puis entourer avec ()
-            let cleanText = lineText;
-            // Enlever # ou ##
-            if (cleanText.startsWith('##')) {
-              cleanText = cleanText.slice(2);
-            } else if (cleanText.startsWith('#')) {
-              cleanText = cleanText.slice(1);
-            }
-            // Enlever @ au début
-            if (cleanText.startsWith('@')) {
-              cleanText = cleanText.slice(1);
-            }
-            cleanText = cleanText.trim();
-            newText = '(' + cleanText + ')';
-          }
-          break;
-        }
-
-        case 'dialogue': {
-          // Enlever toutes les balises pour avoir une ligne de dialogue pur
-          let cleanText = lineText;
-          // Enlever # ou ##
-          if (cleanText.startsWith('##')) {
-            cleanText = cleanText.slice(2);
-          } else if (cleanText.startsWith('#')) {
-            cleanText = cleanText.slice(1);
-          }
-          // Enlever @ au début
-          if (cleanText.startsWith('@')) {
-            cleanText = cleanText.slice(1);
-          }
-          // Enlever () autour
-          if (cleanText.startsWith('(') && cleanText.endsWith(')')) {
-            cleanText = cleanText.slice(1, -1);
-          }
-          newText = cleanText.trim();
-          break;
-        }
-
-        default:
-          return;
-      }
-
-      // Appliquer la modification
-      view.dispatch({
-        changes: {
-          from: line.from,
-          to: line.to,
-          insert: newText
-        },
-        selection: {
-          anchor: line.from + newText.length
-        },
-        scrollIntoView: true
-      });
-
-      // Focus l'éditeur après modification
-      view.focus();
+      toggleLineFormat(viewRef.current, formatType);
     }
   }), []);
 
