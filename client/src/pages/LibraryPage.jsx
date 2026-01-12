@@ -33,13 +33,14 @@ export default function LibraryPage() {
     <SidebarProvider>
       <LibrarySidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sm:hidden">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <h1 className="text-lg font-semibold">Bibliothèque</h1>
         </header>
 
         <main className="flex-1 p-6">
+          <h1 className="text-2xl font-semibold mb-6 hidden sm:block">Bibliothèque</h1>
           {/* Actions row */}
           <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             {/* Recherche + Filtres */}
