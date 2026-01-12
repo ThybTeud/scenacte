@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Plus } from "lucide-react"
-import { LibrarySidebar } from "@/components/library/LibrarySidebar"
+import { LibrarySidebar } from "@/components/sidebar"
 import { PlayCard } from "@/components/library/PlayCard"
 import { CreatePlayCard } from "@/components/library/CreatePlayCard"
 
