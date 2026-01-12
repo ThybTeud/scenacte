@@ -17,6 +17,7 @@ import { LegalNotice, PrivacyPolicy, TermsOfService } from './pages/legal';
 import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
 import LibraryPage from './pages/LibraryPage';
+import EditorPage from './pages/EditorPage';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -71,6 +72,7 @@ function App() {
               <>
                 <Route path="/dev" element={<DevPlayground />} />
                 <Route path="/library" element={<LibraryPage />} />
+                <Route path="/editor/:id" element={<EditorPage />} />
               </>
             )}
 
