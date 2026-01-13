@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
     Sidebar,
@@ -23,19 +24,14 @@ import {
     ArrowLeft,
     PieChart,
     Download,
-    Settings,
+    Settings2,
     ChevronDown,
     List,
     Users,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
-import { useState } from "react";
-import {
-    ExportModal,
-    EditorSettingsModal,
-    PageSettingsModal,
-} from "@/components/modals";
+import { ExportModal, SettingsModal } from "@/components/modals";
 
 export function EditorSidebar({
     stats = { scenes: 12, repliques: 156, characters: 5 },
@@ -48,8 +44,19 @@ export function EditorSidebar({
     const { state } = useSidebar();
     const isCollapsed = state === "collapsed";
     const [exportOpen, setExportOpen] = useState(false);
-    const [editorSettingsOpen, setEditorSettingsOpen] = useState(false);
-    const [pageSettingsOpen, setPageSettingsOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState("editor");
+
+    // Handlers pour ouvrir sur un tab spécifique
+    const openEditorSettings = () => {
+        setSettingsTab("editor");
+        setSettingsOpen(true);
+    };
+
+    const openPageSettings = () => {
+        setSettingsTab("page");
+        setSettingsOpen(true);
+    };
 
     return (
         <>
@@ -260,7 +267,7 @@ export function EditorSidebar({
                             <SidebarGroup>
                                 <SidebarGroupLabel asChild>
                                     <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
-                                        <Settings className="h-4 w-4 mr-2" />
+                                        <Settings2 className="h-4 w-4 mr-2" />
                                         <span>Paramètres</span>
                                         <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                                     </CollapsibleTrigger>
@@ -272,11 +279,7 @@ export function EditorSidebar({
                                                 <SidebarMenuButton
                                                     tooltip="Paramètres éditeur"
                                                     className="cursor-pointer"
-                                                    onClick={() =>
-                                                        setEditorSettingsOpen(
-                                                            true
-                                                        )
-                                                    }
+                                                    onClick={openEditorSettings}
                                                 >
                                                     Editeur
                                                 </SidebarMenuButton>
@@ -285,11 +288,7 @@ export function EditorSidebar({
                                                 <SidebarMenuButton
                                                     tooltip="Paramètres mise en page"
                                                     className="cursor-pointer"
-                                                    onClick={() =>
-                                                        setPageSettingsOpen(
-                                                            true
-                                                        )
-                                                    }
+                                                    onClick={openPageSettings}
                                                 >
                                                     Mise en page
                                                 </SidebarMenuButton>
@@ -307,11 +306,11 @@ export function EditorSidebar({
                                         tooltip="Paramètres éditeur & mise en page"
                                         className="cursor-pointer"
                                         onClick={() =>
-                                            setEditorSettingsOpen(true)
+                                            setSettingsOpen(true)
                                         }
                                     >
-                                        <Settings className="h-4 w-4" />
-                                        <span>Paramètres éditeur</span>
+                                        <Settings2 className="h-4 w-4" />
+                                        <span>Paramètres</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             </SidebarMenu>
@@ -339,13 +338,10 @@ export function EditorSidebar({
             </Sidebar>
 
             <ExportModal open={exportOpen} onOpenChange={setExportOpen} />
-            <EditorSettingsModal
-                open={editorSettingsOpen}
-                onOpenChange={setEditorSettingsOpen}
-            />
-            <PageSettingsModal
-                open={pageSettingsOpen}
-                onOpenChange={setPageSettingsOpen}
+            <SettingsModal
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+                defaultTab={settingsTab}
             />
         </>
     );
