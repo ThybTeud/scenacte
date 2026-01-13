@@ -15,6 +15,9 @@ import { UserProfile } from './pages/profile/UserProfile';
 import { Preferences } from './pages/preferences/Preferences';
 import { LegalNotice, PrivacyPolicy, TermsOfService } from './pages/legal';
 import { NotFound } from './pages/NotFound';
+import DevPlayground from './pages/DevPlayground';
+import LibraryPage from './pages/LibraryPage';
+import EditorPage from './pages/EditorPage';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -64,6 +67,14 @@ function App() {
             <Route path="/legal" element={<LegalNotice />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
+
+            {import.meta.env.DEV && (
+              <>
+                <Route path="/dev" element={<DevPlayground />} />
+                <Route path="/library" element={<LibraryPage />} />
+                <Route path="/editor/:id" element={<EditorPage />} />
+              </>
+            )}
 
             <Route
               path="/plays"
