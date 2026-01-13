@@ -22,26 +22,30 @@ import {
     Settings,
     Download,
     ChevronDown,
+    Scale,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
 
 const navigationGroups = [
     {
-        label: "Statistiques",
-        icon: PieChart,
-        items: ["Item cliquable 1", "Item cliquable 2", "Item cliquable 3"],
-    },
-    {
         label: "Versions",
         icon: History,
         items: ["Item cliquable 1", "Item cliquable 2"],
+        openByDefault: false,
     },
     {
         label: "Paramètres",
         icon: Settings,
         items: ["Editeur", "Mise en page"],
+        openByDefault: true,
     },
+    {
+        label: "Légal",
+        icon: Scale,
+        items: ["Conditions d'utilisation", "Mentions légales", "Politique de confidentialité"],
+        openByDefault: false,
+    }
 ];
 
 export function LibrarySidebar() {
@@ -53,7 +57,7 @@ export function LibrarySidebar() {
                 {navigationGroups.map((group) => (
                     <Collapsible
                         key={group.label}
-                        defaultOpen={group.label === "Statistiques"}
+                        defaultOpen={group.openByDefault}
                         className="group/collapsible"
                     >
                         <SidebarGroup>
@@ -81,20 +85,6 @@ export function LibrarySidebar() {
                     </Collapsible>
                 ))}
 
-                {/* Export - pas de sous-items */}
-                <SidebarGroup>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                tooltip="Export"
-                                className="cursor-pointer"
-                            >
-                                <Download className="h-4 w-4" />
-                                <span>Export</span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
             </SidebarContent>
 
             <SidebarUserFooter />

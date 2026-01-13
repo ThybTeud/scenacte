@@ -28,6 +28,7 @@ import {
     ChevronDown,
     List,
     Users,
+    History
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
