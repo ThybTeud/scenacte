@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { EditorSidebar } from "@/components/sidebar"
 import { EditorHeader } from "@/components/editor/EditorHeader"
-import { SummaryPanel } from "@/components/editor/SummaryPanel"
 import { SyntaxBar } from "@/components/editor/SyntaxBar"
 
 // Mock data
@@ -58,7 +57,14 @@ export default function EditorPage() {
 
   return (
     <SidebarProvider>
-      <EditorSidebar stats={{ scenes: 12, repliques: 156, characters: 5 }} />
+      <EditorSidebar
+        stats={{ scenes: 12, repliques: 156, characters: 5 }}
+        acts={mockActs}
+        characters={mockCharacters}
+        activeSection={activeSection}
+        onSectionClick={setActiveSection}
+        onCharacterClick={handleCharacterClick}
+      />
       <SidebarInset>
         <EditorHeader
           title={title}
@@ -74,28 +80,15 @@ export default function EditorPage() {
         />
 
         <main className="flex-1 flex justify-center overflow-hidden">
-          <div className="flex w-full max-w-7xl overflow-hidden">
-            {/* Summary Panel - masqué sur mobile */}
-            <div className="hidden sm:block p-4 border-r shrink-0">
-              <SummaryPanel
-                acts={mockActs}
-                characters={mockCharacters}
-                activeSection={activeSection}
-                onSectionClick={setActiveSection}
-                onCharacterClick={handleCharacterClick}
-              />
-            </div>
-
+          <div className="flex w-full max-w-6xl overflow-hidden">
             {/* Colonne éditeur */}
             <div className="flex-1 flex flex-col min-w-0 max-w-3xl">
-              {/* Zone CodeMirror */}
               <div className="flex-1 p-4 overflow-hidden">
                 <div className="h-full bg-muted/20 rounded-lg border flex items-center justify-center text-muted-foreground">
                   Zone éditeur (CodeMirror)
                 </div>
               </div>
 
-              {/* Barre syntaxe */}
               <SyntaxBar
                 onInsert={handleInsertSyntax}
                 onUndo={handleUndo}

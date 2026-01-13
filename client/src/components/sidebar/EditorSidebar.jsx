@@ -8,6 +8,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
@@ -16,11 +19,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ArrowLeft, PieChart, Download, Settings, ChevronDown } from "lucide-react"
+import { ArrowLeft, PieChart, Download, Settings, ChevronDown, List, Users } from "lucide-react"
 import { SidebarLogo } from "./SidebarLogo"
 import { SidebarUserFooter } from "./SidebarUserFooter"
 
-export function EditorSidebar({ stats = { scenes: 12, repliques: 156, characters: 5 } }) {
+export function EditorSidebar({
+  stats = { scenes: 12, repliques: 156, characters: 5 },
+  acts = [],
+  characters = [],
+  activeSection,
+  onSectionClick,
+  onCharacterClick
+}) {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
 
@@ -42,6 +52,78 @@ export function EditorSidebar({ stats = { scenes: 12, repliques: 156, characters
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
+        {/* Sommaire */}
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+                <List className="h-4 w-4 mr-2" />
+                <span>Sommaire</span>
+                <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {acts.map((act) => (
+                    <SidebarMenuItem key={act.id}>
+                      <SidebarMenuButton
+                        onClick={() => onSectionClick?.(act.id)}
+                        className={`cursor-pointer ${activeSection === act.id ? 'bg-muted font-medium' : ''}`}
+                      >
+                        <span>{act.title}</span>
+                      </SidebarMenuButton>
+                      {act.scenes && act.scenes.length > 0 && (
+                        <SidebarMenuSub>
+                          {act.scenes.map((scene) => (
+                            <SidebarMenuSubItem key={scene.id}>
+                              <SidebarMenuSubButton
+                                onClick={() => onSectionClick?.(scene.id)}
+                                className={`cursor-pointer ${activeSection === scene.id ? 'bg-muted font-medium' : ''}`}
+                              >
+                                {scene.title}
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      )}
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        {/* Personnages */}
+        <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+                <Users className="h-4 w-4 mr-2" />
+                <span>Personnages</span>
+                <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {characters.map((char) => (
+                    <SidebarMenuItem key={char.id}>
+                      <SidebarMenuButton
+                        onClick={() => onCharacterClick?.(char.name)}
+                        className="cursor-pointer text-primary"
+                      >
+                        <span>@{char.name}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
         {/* Statistiques */}
         {!isCollapsed ? (
