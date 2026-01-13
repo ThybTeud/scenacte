@@ -1,0 +1,380 @@
+import { useState } from "react";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
+
+export default function AuthPage() {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Login
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+
+    // Register
+    const [registerEmail, setRegisterEmail] = useState("");
+    const [registerPassword, setRegisterPassword] = useState("");
+    const [registerConfirm, setRegisterConfirm] = useState("");
+
+    // Forgot password
+    const [forgotEmail, setForgotEmail] = useState("");
+    const [forgotSent, setForgotSent] = useState(false);
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError("");
+        setIsLoading(true);
+        // TODO: Connecter à auth.service.js
+        console.log("Login:", { loginEmail, loginPassword });
+        setTimeout(() => setIsLoading(false), 1000);
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        if (registerPassword !== registerConfirm) {
+            setError("Les mots de passe ne correspondent pas");
+            return;
+        }
+
+        setIsLoading(true);
+        // TODO: Connecter à auth.service.js
+        console.log("Register:", { registerEmail, registerPassword });
+        setTimeout(() => setIsLoading(false), 1000);
+    };
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        setError("");
+        setIsLoading(true);
+        // TODO: Connecter à auth.service.js
+        console.log("Forgot password:", { forgotEmail });
+        setTimeout(() => {
+            setIsLoading(false);
+            setForgotSent(true);
+        }, 1000);
+    };
+
+    const handleGuestMode = () => {
+        // TODO: Connecter au guestMode du AuthContext
+        console.log("Guest mode activated");
+    };
+
+    // Forgot Password View
+    if (showForgotPassword) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Mot de passe oublié</CardTitle>
+                        <CardDescription>
+                            Entrez votre email pour recevoir un lien de
+                            réinitialisation
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {forgotSent ? (
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Si un compte existe avec cet email, vous
+                                    recevrez un lien de réinitialisation.
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => {
+                                        setShowForgotPassword(false);
+                                        setForgotSent(false);
+                                        setForgotEmail("");
+                                    }}
+                                >
+                                    Retour à la connexion
+                                </Button>
+                            </div>
+                        ) : (
+                            <form
+                                onSubmit={handleForgotPassword}
+                                className="space-y-4"
+                            >
+                                <div className="space-y-2">
+                                    <Label htmlFor="forgot-email">Email</Label>
+                                    <Input
+                                        id="forgot-email"
+                                        type="email"
+                                        placeholder="vous@exemple.com"
+                                        value={forgotEmail}
+                                        onChange={(e) =>
+                                            setForgotEmail(e.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                {error && (
+                                    <p className="text-sm text-destructive">
+                                        {error}
+                                    </p>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? "Envoi..." : "Envoyer le lien"}
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="w-full"
+                                    onClick={() => setShowForgotPassword(false)}
+                                >
+                                    Retour
+                                </Button>
+                            </form>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // Main Auth View
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <Card className="w-full max-w-md">
+                <CardHeader className="text-center">
+                    <CardTitle>Scenacte</CardTitle>
+                    <CardDescription>Éditeur de théâtre</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="login" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="login">Connexion</TabsTrigger>
+                            <TabsTrigger value="register">
+                                Inscription
+                            </TabsTrigger>
+                        </TabsList>
+
+                        {/* Login Tab */}
+                        <TabsContent value="login">
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="login-email">Email</Label>
+                                    <Input
+                                        id="login-email"
+                                        type="email"
+                                        placeholder="vous@exemple.com"
+                                        value={loginEmail}
+                                        onChange={(e) =>
+                                            setLoginEmail(e.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="login-password">
+                                        Mot de passe
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="login-password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={loginPassword}
+                                            onChange={(e) =>
+                                                setLoginPassword(e.target.value)
+                                            }
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={16} />
+                                            ) : (
+                                                <Eye size={16} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {error && (
+                                    <p className="text-sm text-destructive">
+                                        {error}
+                                    </p>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading
+                                        ? "Connexion..."
+                                        : "Se connecter"}
+                                </Button>
+
+                                <button
+                                    type="button"
+                                    className="w-full text-sm text-muted-foreground hover:underline"
+                                    onClick={() => setShowForgotPassword(true)}
+                                >
+                                    Mot de passe oublié ?
+                                </button>
+                            </form>
+                        </TabsContent>
+
+                        {/* Register Tab */}
+                        <TabsContent value="register">
+                            <form
+                                onSubmit={handleRegister}
+                                className="space-y-4"
+                            >
+                                <div className="space-y-2">
+                                    <Label htmlFor="register-email">
+                                        Email
+                                    </Label>
+                                    <Input
+                                        id="register-email"
+                                        type="email"
+                                        placeholder="vous@exemple.com"
+                                        value={registerEmail}
+                                        onChange={(e) =>
+                                            setRegisterEmail(e.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="register-password">
+                                        Mot de passe
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="register-password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={registerPassword}
+                                            onChange={(e) =>
+                                                setRegisterPassword(
+                                                    e.target.value
+                                                )
+                                            }
+                                            required
+                                            minLength={12}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={16} />
+                                            ) : (
+                                                <Eye size={16} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="register-confirm">
+                                        Confirmer le mot de passe
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="register-confirm"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={registerConfirm}
+                                            onChange={(e) =>
+                                                setRegisterConfirm(
+                                                    e.target.value
+                                                )
+                                            }
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={16} />
+                                            ) : (
+                                                <Eye size={16} />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {error && (
+                                    <p className="text-sm text-destructive">
+                                        {error}
+                                    </p>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading
+                                        ? "Inscription..."
+                                        : "S'inscrire"}
+                                </Button>
+                            </form>
+                        </TabsContent>
+                    </Tabs>
+
+                    {/* Guest Mode */}
+                    <div className="mt-6 pt-6 border-t">
+                        <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={handleGuestMode}
+                        >
+                            Continuer sans compte
+                        </Button>
+                        <p className="mt-2 text-xs text-center text-muted-foreground">
+                            Vos pièces seront sauvegardées localement
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}

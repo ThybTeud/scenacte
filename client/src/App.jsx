@@ -18,6 +18,7 @@ import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
 import LibraryPage from './pages/LibraryPage';
 import EditorPage from './pages/EditorPage';
+import AuthPage from './pages/dev/AuthPage';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -73,6 +74,7 @@ function App() {
                 <Route path="/dev" element={<DevPlayground />} />
                 <Route path="/library" element={<LibraryPage />} />
                 <Route path="/editor/:id" element={<EditorPage />} />
+                <Route path="/dev/auth" element={<AuthPage />} />
               </>
             )}
 
