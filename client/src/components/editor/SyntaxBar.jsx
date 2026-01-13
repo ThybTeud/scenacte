@@ -12,33 +12,36 @@ const syntaxButtons = [
 
 export function SyntaxBar({ onInsert, onUndo, onRedo, canUndo = true, canRedo = false }) {
   return (
-    <div className="flex items-center gap-2 p-2 border-t bg-muted/30">
+    <div className="flex items-center gap-1 sm:gap-2 p-2 border-t bg-muted/30">
       {/* Boutons syntaxe */}
-      <div className="flex items-center justify-between gap-2 flex-1 sm:flex-initial sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-1">
         {syntaxButtons.map((btn) => (
           <Button
             key={btn.label}
             variant="outline"
+            size="sm"
             onClick={() => onInsert(btn.syntax)}
             title={btn.tooltip}
-            className="flex-1 sm:flex-initial sm:min-w-[100px] h-10 sm:h-9 text-sm"
+            className="flex-1 h-9 px-2 md:px-3 text-xs md:text-sm"
           >
-            <span className="sm:hidden">{btn.short}</span>
-            <span className="hidden sm:inline">{btn.label}</span>
+            {/* Mobile/Tablet : raccourci */}
+            <span className="md:hidden">{btn.short}</span>
+            {/* Desktop : label complet */}
+            <span className="hidden md:inline">{btn.label}</span>
           </Button>
         ))}
       </div>
 
-      {/* Undo/Redo - visible uniquement sur mobile */}
-      <div className="flex items-center gap-1 sm:hidden">
-        <Separator orientation="vertical" className="h-6" />
+      {/* Undo/Redo - visible uniquement sur mobile/tablet */}
+      <div className="flex items-center gap-1 md:hidden shrink-0">
+        <Separator orientation="vertical" className="h-6 mx-1" />
         <Button
           variant="ghost"
           size="icon"
           onClick={onUndo}
           disabled={!canUndo}
           title="Annuler"
-          className="h-10 w-10"
+          className="h-9 w-9"
         >
           <Undo2 className="h-4 w-4" />
         </Button>
@@ -48,7 +51,7 @@ export function SyntaxBar({ onInsert, onUndo, onRedo, canUndo = true, canRedo = 
           onClick={onRedo}
           disabled={!canRedo}
           title="Rétablir"
-          className="h-10 w-10"
+          className="h-9 w-9"
         >
           <Redo2 className="h-4 w-4" />
         </Button>

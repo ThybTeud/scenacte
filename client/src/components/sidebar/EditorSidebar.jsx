@@ -54,76 +54,102 @@ export function EditorSidebar({
         </SidebarGroup>
 
         {/* Sommaire */}
-        <Collapsible defaultOpen className="group/collapsible">
+        {!isCollapsed ? (
+          <Collapsible defaultOpen className="group/collapsible">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+                  <List className="h-4 w-4 mr-2" />
+                  <span>Sommaire</span>
+                  <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {acts.map((act) => (
+                      <SidebarMenuItem key={act.id}>
+                        <SidebarMenuButton
+                          onClick={() => onSectionClick?.(act.id)}
+                          className={`cursor-pointer ${activeSection === act.id ? 'bg-muted font-medium' : ''}`}
+                        >
+                          <span>{act.title}</span>
+                        </SidebarMenuButton>
+                        {act.scenes && act.scenes.length > 0 && (
+                          <SidebarMenuSub>
+                            {act.scenes.map((scene) => (
+                              <SidebarMenuSubItem key={scene.id}>
+                                <SidebarMenuSubButton
+                                  onClick={() => onSectionClick?.(scene.id)}
+                                  className={`cursor-pointer ${activeSection === scene.id ? 'bg-muted font-medium' : ''}`}
+                                >
+                                  {scene.title}
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        )}
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ) : (
           <SidebarGroup>
-            <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
-                <List className="h-4 w-4 mr-2" />
-                <span>Sommaire</span>
-                <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {acts.map((act) => (
-                    <SidebarMenuItem key={act.id}>
-                      <SidebarMenuButton
-                        onClick={() => onSectionClick?.(act.id)}
-                        className={`cursor-pointer ${activeSection === act.id ? 'bg-muted font-medium' : ''}`}
-                      >
-                        <span>{act.title}</span>
-                      </SidebarMenuButton>
-                      {act.scenes && act.scenes.length > 0 && (
-                        <SidebarMenuSub>
-                          {act.scenes.map((scene) => (
-                            <SidebarMenuSubItem key={scene.id}>
-                              <SidebarMenuSubButton
-                                onClick={() => onSectionClick?.(scene.id)}
-                                className={`cursor-pointer ${activeSection === scene.id ? 'bg-muted font-medium' : ''}`}
-                              >
-                                {scene.title}
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      )}
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Sommaire" className="cursor-pointer">
+                  <List className="h-4 w-4" />
+                  <span>Sommaire</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroup>
-        </Collapsible>
+        )}
 
         {/* Personnages */}
-        <Collapsible defaultOpen className="group/collapsible">
+        {!isCollapsed ? (
+          <Collapsible defaultOpen className="group/collapsible">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+                  <Users className="h-4 w-4 mr-2" />
+                  <span>Personnages</span>
+                  <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {characters.map((char) => (
+                      <SidebarMenuItem key={char.id}>
+                        <SidebarMenuButton
+                          onClick={() => onCharacterClick?.(char.name)}
+                          className="cursor-pointer text-primary"
+                        >
+                          <span>@{char.name}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ) : (
           <SidebarGroup>
-            <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
-                <Users className="h-4 w-4 mr-2" />
-                <span>Personnages</span>
-                <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {characters.map((char) => (
-                    <SidebarMenuItem key={char.id}>
-                      <SidebarMenuButton
-                        onClick={() => onCharacterClick?.(char.name)}
-                        className="cursor-pointer text-primary"
-                      >
-                        <span>@{char.name}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Personnages" className="cursor-pointer">
+                  <Users className="h-4 w-4" />
+                  <span>Personnages</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroup>
-        </Collapsible>
+        )}
 
         {/* Statistiques */}
         {!isCollapsed ? (
