@@ -20,6 +20,7 @@ import LibraryPage from './pages/LibraryPage';
 import EditorPage from './pages/EditorPage';
 import AuthPage from './pages/dev/AuthPage';
 import LegalPage from './pages/dev/LegalPage';
+import ProfilePage from './pages/dev/ProfilePage';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -77,6 +78,7 @@ function App() {
                 <Route path="/editor/:id" element={<EditorPage />} />
                 <Route path="/dev/auth" element={<AuthPage />} />
                 <Route path="/dev/legal/:docType" element={<LegalPage />} />
+                <Route path="/dev/profile" element={<ProfilePage />} />
               </>
             )}
 

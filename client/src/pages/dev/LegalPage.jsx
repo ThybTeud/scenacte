@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { marked } from "marked";
+import AppLayout from "@/components/layout/AppLayout";
 
 const LEGAL_DOCS = {
     legal: {
@@ -43,39 +43,25 @@ export default function LegalPage() {
 
     if (!doc) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Document non trouvé</p>
-            </div>
+            <AppLayout title="Document non trouvé">
+                <p>Ce document n'existe pas.</p>
+            </AppLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <header className="border-b">
-                <div className="max-w-3xl mx-auto px-4 py-4">
-                    <Link
-                        to="/"
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                        <ArrowLeft size={16} />
-                        Retour
-                    </Link>
-                </div>
-            </header>
-
-            <main className="max-w-3xl mx-auto px-4 py-8">
+        <AppLayout title={doc.title}>
+            <div className="max-w-3xl mx-auto">
                 {loading ? (
                     <p className="text-muted-foreground">Chargement...</p>
                 ) : (
                     <article
-                        className="prose prose-neutral max-w-none"
+                        className="prose prose-neutral prose-lg max-w-none dark:prose-invert"
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
                 )}
-            </main>
 
-            <footer className="border-t mt-16">
-                <div className="max-w-3xl mx-auto px-4 py-6">
+                <footer className="mt-16 pt-6 border-t">
                     <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                         <Link
                             to="/dev/legal/legal"
@@ -96,8 +82,8 @@ export default function LegalPage() {
                             CGU
                         </Link>
                     </nav>
-                </div>
-            </footer>
-        </div>
+                </footer>
+            </div>
+        </AppLayout>
     );
 }
