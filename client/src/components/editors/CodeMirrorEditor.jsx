@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle, memo } from 'react';
 import { EditorState, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
@@ -17,7 +17,7 @@ import { toggleLineFormat } from '../../utils/editorCommands';
  * @param {function} props.onScroll - Callback appelé lors du scroll (scrollInfo) => void
  * @param {React.RefObject} props.scrollSync - Ref pour synchroniser le scroll depuis l'extérieur
  */
-export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
+const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
 
@@ -208,7 +208,9 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         ...playExtension,
         EditorView.updateListener.of((update) => {
           if (update.docChanged && onChange) {
-            onChange(update.state.doc.toString());
+            const newValue = update.state.doc.toString();
+            lastValueRef.current = newValue;
+            onChange(newValue);
           }
 
           // Notifier le changement de curseur
@@ -286,22 +288,32 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
   }, []);
 
   /**
-   * Met à jour le contenu de l'éditeur lorsque la valeur change de l'extérieur
+   * Garde une référence de la dernière valeur pour détecter les changements externes
+   */
+  const lastValueRef = useRef(value);
+
+  /**
+   * Met à jour le contenu de l'éditeur UNIQUEMENT lors du montage initial
+   * Les mises à jour ultérieures doivent passer par la méthode setValue() exposée via ref
    */
   useEffect(() => {
-    if (viewRef.current) {
-      const currentValue = viewRef.current.state.doc.toString();
-      if (value !== currentValue) {
-        const transaction = viewRef.current.state.update({
-          changes: {
-            from: 0,
-            to: currentValue.length,
-            insert: value
-          }
-        });
-        viewRef.current.dispatch(transaction);
-      }
+    if (!viewRef.current) return;
+
+    const currentValue = viewRef.current.state.doc.toString();
+
+    // Si la valeur externe a changé ET qu'elle est différente du contenu actuel
+    // ET qu'elle n'est pas le résultat d'un onChange (lastValueRef)
+    if (value !== lastValueRef.current && value !== currentValue) {
+      viewRef.current.dispatch({
+        changes: {
+          from: 0,
+          to: currentValue.length,
+          insert: value
+        }
+      });
     }
+
+    lastValueRef.current = value;
   }, [value]);
 
   
@@ -420,4 +432,12 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
       <div ref={editorRef} className="h-full w-full" />
     </div>
   );
+});
+
+// Mémoïser le composant pour éviter les re-renders inutiles
+// On compare seulement 'value' et 'characters' car ce sont les props qui changent fréquemment
+export const CodeMirrorEditor = memo(CodeMirrorEditorComponent, (prevProps, nextProps) => {
+  // Ne re-render que si value ou characters ont vraiment changé
+  return prevProps.value === nextProps.value &&
+         prevProps.characters === nextProps.characters;
 });
