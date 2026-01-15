@@ -37,29 +37,6 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ErrorBoundary>
-          {/*<Toaster
-            position="bottom-center"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#363636',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />*/}
-
           <Toaster />
 
           <Routes>

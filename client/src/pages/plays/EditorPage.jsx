@@ -58,9 +58,7 @@ export default function EditorPage() {
     // État du document
     const [title, setTitle] = useState("");
     const [activeSection, setActiveSection] = useState("scene-1-2");
-    const [content, setContent] = useState(
-        "# Acte I\n\n## Scène 1\n\n@Personnage\nBonjour le monde !"
-    );
+    const [content, setContent] = useState("");
 
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
     const editorRef = useRef(null);

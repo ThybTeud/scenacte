@@ -12,7 +12,7 @@ const syntaxButtons = [
 
 export function SyntaxBar({ onInsert, onUndo, onRedo, canUndo = true, canRedo = false }) {
   return (
-    <div className="flex items-center gap-1 sm:gap-2 p-2 border-t bg-muted/30">
+    <div className="flex items-center gap-1 sm:gap-2 p-2">
       {/* Boutons syntaxe */}
       <div className="flex items-center gap-1 sm:gap-2 flex-1">
         {syntaxButtons.map((btn) => (

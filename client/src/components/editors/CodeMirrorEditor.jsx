@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle, memo } from 'react';
-import { EditorState, RangeSetBuilder } from '@codemirror/state';
+import { EditorState, RangeSetBuilder, Transaction } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
@@ -309,7 +309,8 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
           from: 0,
           to: currentValue.length,
           insert: value
-        }
+        },
+        annotations: Transaction.addToHistory.of(false)
       });
     }
 
