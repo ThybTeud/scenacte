@@ -28,7 +28,7 @@ import {
     ChevronDown,
     List,
     Users,
-    History
+    History,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
@@ -262,6 +262,60 @@ export function EditorSidebar({
                         </SidebarGroup>
                     )}
 
+                    {/* Historique */}
+                    {!isCollapsed ? (
+                        <Collapsible
+                            defaultOpen={false}
+                            className="group/collapsible"
+                        >
+                            <SidebarGroup>
+                                <SidebarGroupLabel asChild>
+                                    <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+                                        <History className="h-4 w-4" />
+                                        <span>Historique</span>
+                                        <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                    </CollapsibleTrigger>
+                                </SidebarGroupLabel>
+                                <CollapsibleContent>
+                                    <SidebarGroupContent>
+                                        <SidebarMenuSub>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton
+                                                    tooltip="Historique des modifications"
+                                                    className="cursor-pointer"
+                                                >
+                                                    Version du 12 janv. 21:14
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton
+                                                    tooltip="Historique des modifications"
+                                                    className="cursor-pointer"
+                                                >
+                                                    Version du 13 janv. 9:17
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        </SidebarMenuSub>
+                                    </SidebarGroupContent>
+                                </CollapsibleContent>
+                            </SidebarGroup>
+                        </Collapsible>
+                    ) : (
+                        <SidebarGroup>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        tooltip="Historique des modifications"
+                                        className="cursor-pointer"
+                                    >
+                                        <History className="h-4 w-4" />
+                                        <span>Historique</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroup>
+                    )}
+
                     {/* Paramètres */}
                     {!isCollapsed ? (
                         <Collapsible defaultOpen className="group/collapsible">
@@ -306,9 +360,7 @@ export function EditorSidebar({
                                     <SidebarMenuButton
                                         tooltip="Paramètres éditeur & mise en page"
                                         className="cursor-pointer"
-                                        onClick={() =>
-                                            setSettingsOpen(true)
-                                        }
+                                        onClick={() => setSettingsOpen(true)}
                                     >
                                         <Settings2 className="h-4 w-4" />
                                         <span>Paramètres</span>

@@ -15,6 +15,7 @@ import { Search, Plus } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
+import { CreatePlayModal, DeletePlayModal, RenamePlayModal } from "@/components/modals";
 
 const mockPlays = [
     {
@@ -38,21 +39,102 @@ const mockPlays = [
 ];
 
 export default function LibraryPage() {
-  const navigate = useNavigate();
-  const { user, logout, isGuest } = useAuth();
+    const navigate = useNavigate();
+    const { user, logout, isGuest } = useAuth();
 
-  const [plays, setPlays] = useState([mockPlays]);
-  const [isLoading, setIsLoading] = useState(false);
+    const [plays, setPlays] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        totalPages: 1,
+        totalPlays: 0,
+    });
+    const [filters, setFilters] = useState({
+        status: "",
+        sortBy: "updated_at",
+        sortOrder: "desc",
+    });
 
-  useEffect(() => {
-    if (isGuest) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setPlays(mockPlays);
-        setIsLoading(false);
-      }, 1000);
-    }
-  }, [isGuest]);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showRenameModal, setShowRenameModal] = useState(false);
+    const [selectedPlay, setSelectedPlay] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const menuRef = useRef(null);
+
+    const fetchPlays = async () => {
+        setIsLoading(true);
+        try {
+            const response = await storageService.listPlays({
+                page: pagination.page,
+                limit: 20,
+                ...filters,
+            });
+            setPlays(response.plays);
+            setPagination(response.pagination);
+        } catch (error) {
+            toast.error("Erreur lors du chargement des pièces");
+            // Error already handled by toast notification
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCreatePlay = async ({ title, subtitle }) => {
+        setIsSubmitting(true);
+        try {
+            const response = await storageService.createPlay({ title, subtitle });
+            toast.success("Pièce créée avec succès !");
+            setShowCreateModal(false);
+            navigate(`/plays/${response.play.id}`);
+        } catch (error) {
+            toast.error(error.message || "Erreur lors de la création");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeletePlay = async () => {
+        if (!selectedPlay) return;
+        setIsSubmitting(true);
+        try {
+            await storageService.deletePlay(selectedPlay.id);
+            toast.success("Pièce supprimée avec succès !");
+            setShowDeleteModal(false);
+            setSelectedPlay(null);
+            fetchPlays();
+        } catch (error) {
+            toast.error(error.message || "Erreur lors de la suppression");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const openDeleteModal = (play) => {
+        setSelectedPlay(play);
+        setShowDeleteModal(true);
+    };
+
+    const openRenameModal = (play) => {
+        setSelectedPlay(play);
+        setShowRenameModal(true);
+    };
+
+    const handleRenamePlay = async ({ title, subtitle }) => {
+        if (!selectedPlay) return;
+        setIsSubmitting(true);
+        try {
+            await storageService.updatePlay(selectedPlay.id, { title, subtitle });
+            toast.success("Pièce renommée avec succès !");
+            setShowRenameModal(false);
+            setSelectedPlay(null);
+            fetchPlays();
+        } catch (error) {
+            toast.error(error.message || "Erreur lors du renommage");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <SidebarProvider>
@@ -90,7 +172,7 @@ export default function LibraryPage() {
                         </div>
 
                         {/* CTA */}
-                        <Button className="w-full sm:w-auto shrink-0">
+                        <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowCreateModal(true)}>
                             <Plus className="h-4 w-4 mr-2" />
                             Nouvelle pièce
                         </Button>
@@ -102,17 +184,46 @@ export default function LibraryPage() {
                             <PlayCard
                                 key={play.id}
                                 play={play}
-                                onClick={() =>
-                                    console.log("Navigate to", play.id)
-                                }
+                                onClick={() => console.log("Navigate to", play.id)}
+                                onRename={openRenameModal}
+                                onDelete={openDeleteModal}
                             />
                         ))}
                         <CreatePlayCard
-                            onClick={() => console.log("Create new play")}
+                            onClick={() => setShowCreateModal(true)}
                         />
                     </div>
                 </main>
             </SidebarInset>
+
+            <CreatePlayModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSubmit={handleCreatePlay}
+                isLoading={isSubmitting}
+            />
+
+            <DeletePlayModal
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setSelectedPlay(null);
+                }}
+                onConfirm={handleDeletePlay}
+                isLoading={isSubmitting}
+                playTitle={selectedPlay?.title || ""}
+            />
+
+            <RenamePlayModal
+                isOpen={showRenameModal}
+                onClose={() => {
+                    setShowRenameModal(false);
+                    setSelectedPlay(null);
+                }}
+                onSubmit={handleRenamePlay}
+                isLoading={isSubmitting}
+                play={selectedPlay}
+            />
         </SidebarProvider>
     );
 }

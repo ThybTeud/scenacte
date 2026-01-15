@@ -56,7 +56,7 @@ export default function EditorPage() {
     const [lastSavedContent, setLastSavedContent] = useState("");
 
     // État du document
-    const [title, setTitle] = useState("Ma pièce de théâtre");
+    const [title, setTitle] = useState("");
     const [activeSection, setActiveSection] = useState("scene-1-2");
     const [content, setContent] = useState(
         "# Acte I\n\n## Scène 1\n\n@Personnage\nBonjour le monde !"
