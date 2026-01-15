@@ -318,10 +318,23 @@ export default function EditorPage() {
         setCurrentLine(line);
     }, []);
 
-    const handleSectionClick = (sectionId) => {
-        setActiveSection(sectionId);
-        // TODO: Scroller vers la section dans CodeMirror
-    };
+    /**
+     * Naviguer vers une section dans l'éditeur
+     */
+    const handleSectionClick = useCallback(
+        (position) => {
+            if (!editorRef.current || !position) return;
+
+            // Utiliser la fonction de scroll de l'éditeur
+            if (
+                editorScrollRef.current &&
+                editorScrollRef.current.scrollToLine
+            ) {
+                editorScrollRef.current.scrollToLine(position.start + 1);
+            }
+        },
+        [editorScrollRef]
+    );
 
     // A REACTIVER APRES CONNEXION A LA BDD
     // if (!play) {
@@ -331,9 +344,9 @@ export default function EditorPage() {
     return (
         <SidebarProvider className="h-dvh">
             <EditorSidebar
-                stats={MOCK_STATS}
-                acts={MOCK_ACTS}
-                characters={MOCK_CHARACTERS}
+                stats={statistics}
+                structure={structure}
+                characters={structure.personnages}
                 activeSection={activeSection}
                 onSectionClick={handleSectionClick}
                 onCharacterClick={handleCharacterClick}
