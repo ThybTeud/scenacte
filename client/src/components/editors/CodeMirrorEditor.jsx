@@ -20,6 +20,7 @@ import { toggleLineFormat } from '../../utils/editorCommands';
 const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
+  const isInternalChangeRef = useRef(false);
 
   // StateEffect + StateField pour appliquer les décorations ligne (highlights)
   // définis au niveau du module mais utilisés ici.
@@ -208,6 +209,7 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
         ...playExtension,
         EditorView.updateListener.of((update) => {
           if (update.docChanged && onChange) {
+            isInternalChangeRef.current = true;
             const newValue = update.state.doc.toString();
             lastValueRef.current = newValue;
             onChange(newValue);
@@ -297,6 +299,13 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
    * Les mises à jour ultérieures doivent passer par la méthode setValue() exposée via ref
    */
   useEffect(() => {
+    // Si le changement vient de l'intérieur (l'utilisateur qui tape), on ignore
+    if (isInternalChangeRef.current) {
+      isInternalChangeRef.current = false;
+      lastValueRef.current = value;
+      return;
+    }
+
     if (!viewRef.current) return;
 
     const currentValue = viewRef.current.state.doc.toString();

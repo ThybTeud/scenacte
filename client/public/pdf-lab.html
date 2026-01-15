@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PDF Lab - Scenacte Dev</title>
+        <script
+            src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"
+            defer
+        ></script>
+        <link id="template-styles" rel="stylesheet" href="/pdf-templates/default.css">
+    </head>
+    <body>
+        <div id="controls" style="position: sticky; top: 0; background-color: white; z-index: 2;">
+            <h1>PDF Lab</h1>
+
+            <label
+                >Taille contenu:
+                <select id="content-size">
+                    <option value="short">Court (~10 pages)</option>
+                    <option value="medium">Moyen (~40 pages)</option>
+                    <option value="long">Long (~100 pages)</option>
+                </select>
+            </label>
+
+            <label
+                >Template:
+                <select id="template">
+                    <option value="default">Default</option>
+                </select>
+            </label>
+
+            <button id="btn-render">Render PagedJS</button>
+            <button id="btn-print">Print natif</button>
+            <button id="btn-clear">Clear</button>
+
+            <div id="metrics">
+                <span id="page-count">Pages: -</span>
+                <span id="render-time">Temps: -</span>
+            </div>
+            <hr />
+        </div>
+
+
+        <div id="content"></div>
+
+        <script>
+            // === CONFIG ===
+            window.PagedConfig = { auto: false };
+
+            // === MOCK DATA ===
+            function generateMockPlay(size) {
+                const sizes = { short: 3, medium: 12, long: 30 };
+                const sceneCount = sizes[size] || 3;
+
+                let html = `
+        <div class="play">
+          <div class="title-page">
+            <h1 class="play-title">LA PIÈCE DE TEST</h1>
+            <p class="author">Par Un Auteur</p>
+          </div>
+          <div class="distribution">
+            <h2>Distribution</h2>
+            <ul>
+              <li><strong>PERSONNAGE A</strong> - Description du personnage</li>
+              <li><strong>PERSONNAGE B</strong> - Description du personnage</li>
+              <li><strong>PERSONNAGE C</strong> - Description du personnage</li>
+            </ul>
+          </div>
+      `;
+
+                for (let act = 1; act <= Math.ceil(sceneCount / 4); act++) {
+                    html += `<div class="act"><h2>ACTE ${act}</h2>`;
+
+                    for (
+                        let scene = 1;
+                        scene <= 4 && (act - 1) * 4 + scene <= sceneCount;
+                        scene++
+                    ) {
+                        html += `
+            <div class="scene">
+              <h3>Scène ${scene}</h3>
+              <p class="didascalie-liminaire">Un salon bourgeois. Lumière tamisée.</p>
+          `;
+
+                        // Répliques
+                        for (let r = 0; r < 8; r++) {
+                            const character = [
+                                "PERSONNAGE A",
+                                "PERSONNAGE B",
+                                "PERSONNAGE C",
+                            ][r % 3];
+                            html += `
+              <div class="replique">
+                <p class="character">${character}</p>
+                <p class="didascalie-pre-replique">(se levant)</p>
+                <p class="dialogue">Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+              </div>
+            `;
+                        }
+
+                        html += `</div>`; // .scene
+                    }
+
+                    html += `</div>`; // .act
+                }
+
+                html += `</div>`; // .play
+                return html;
+            }
+
+            // === RENDER ===
+            async function renderPagedJS() {
+                const size = document.getElementById("content-size").value;
+                const content = document.getElementById("content");
+                const metricsTime = document.getElementById("render-time");
+                const metricsPages = document.getElementById("page-count");
+
+                // IMPORTANT: Vider le conteneur AVANT le render
+                content.innerHTML = "";
+
+                metricsTime.textContent = "Temps: rendering...";
+                metricsPages.textContent = "Pages: -";
+
+                // Générer le HTML en string (pas injecté dans le DOM)
+                const htmlContent = generateMockPlay(size);
+
+                const start = performance.now();
+
+                try {
+                    const paged = new Paged.Previewer();
+                    const flow = await paged.preview(
+                        htmlContent, // String HTML, pas DOM
+                        [],
+                        content
+                    );
+
+                    const elapsed = (performance.now() - start).toFixed(0);
+                    metricsTime.textContent = `Temps: ${elapsed}ms`;
+                    metricsPages.textContent = `Pages: ${flow.total}`;
+
+                    console.log(
+                        `[PDF Lab] ${flow.total} pages en ${elapsed}ms (${size})`
+                    );
+                } catch (err) {
+                    metricsTime.textContent = "Temps: ERREUR";
+                    console.error("[PDF Lab] Erreur:", err);
+                }
+            }
+
+            function printNative() {
+                const size = document.getElementById("content-size").value;
+                document.getElementById("content").innerHTML =
+                    generateMockPlay(size);
+                document.getElementById("template-styles").textContent =
+                    defaultTemplate;
+                setTimeout(() => window.print(), 100);
+            }
+
+            function clearContent() {
+                document.getElementById("content").innerHTML = "";
+                document.getElementById("render-time").textContent = "Temps: -";
+                document.getElementById("page-count").textContent = "Pages: -";
+            }
+
+            // === EVENTS ===
+            document
+                .getElementById("btn-render")
+                .addEventListener("click", renderPagedJS);
+            document
+                .getElementById("btn-print")
+                .addEventListener("click", printNative);
+            document
+                .getElementById("btn-clear")
+                .addEventListener("click", clearContent);
+        </script>
+    </body>
+</html>
