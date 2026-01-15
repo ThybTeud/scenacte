@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+// import { Toaster } from 'react-hot-toast';
+import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
 import { useAuth } from './hooks/useAuth';
@@ -17,7 +18,7 @@ import { LegalNotice, PrivacyPolicy, TermsOfService } from './pages/legal';
 import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
 import LibraryPage from './pages/LibraryPage';
-import EditorPage from './pages/EditorPage';
+import EditorPage from './pages/plays/EditorPage';
 import AuthPage from './pages/dev/AuthPage';
 import LegalPage from './pages/dev/LegalPage';
 import ProfilePage from './pages/dev/ProfilePage';
@@ -36,7 +37,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ErrorBoundary>
-          <Toaster
+          {/*<Toaster
             position="bottom-center"
             toastOptions={{
               duration: 4000,
@@ -57,7 +58,9 @@ function App() {
                 },
               },
             }}
-          />
+          />*/}
+
+          <Toaster />
 
           <Routes>
             <Route path="/" element={<RootRedirect />} />
@@ -94,7 +97,8 @@ function App() {
               path="/plays/:id"
               element={
                 <PrivateRoute>
-                  <PlayEditor />
+                  {/* <PlayEditor /> */}
+                  <EditorPage />
                 </PrivateRoute>
               }
             />

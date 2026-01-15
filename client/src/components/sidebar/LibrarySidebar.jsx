@@ -29,12 +29,6 @@ import { SidebarUserFooter } from "./SidebarUserFooter";
 
 const navigationGroups = [
     {
-        label: "Versions",
-        icon: History,
-        items: ["Item cliquable 1", "Item cliquable 2"],
-        openByDefault: false,
-    },
-    {
         label: "Paramètres",
         icon: Settings,
         items: ["Editeur", "Mise en page"],
@@ -43,9 +37,13 @@ const navigationGroups = [
     {
         label: "Légal",
         icon: Scale,
-        items: ["Conditions d'utilisation", "Mentions légales", "Politique de confidentialité"],
+        items: [
+            "Conditions d'utilisation",
+            "Mentions légales",
+            "Politique de confidentialité",
+        ],
         openByDefault: false,
-    }
+    },
 ];
 
 export function LibrarySidebar() {
@@ -84,7 +82,6 @@ export function LibrarySidebar() {
                         </SidebarGroup>
                     </Collapsible>
                 ))}
-
             </SidebarContent>
 
             <SidebarUserFooter />

@@ -8,7 +8,8 @@
  *
  * @param {EditorView} view - L'instance de la vue CodeMirror
  * @param {string} formatType - Le type de format à appliquer
- *   - 'heading': Cycle entre rien → # → ## → rien
+ *   - 'heading1': Cycle entre rien → # → ## → rien
+ *   - 'heading2': Cycle entre rien → ## → rien → #
  *   - 'personnage': Toggle @ au début
  *   - 'didascalie': Toggle parenthèses autour du texte
  *   - 'dialogue': Enlève toutes les balises
@@ -23,7 +24,7 @@ export function toggleLineFormat(view, formatType) {
   let newText = lineText;
 
   switch (formatType) {
-    case 'heading': {
+    case 'heading1': {
       // Cycle : rien → # → ## → rien
       if (lineText.startsWith('##')) {
         // Enlever ##
@@ -44,6 +45,31 @@ export function toggleLineFormat(view, formatType) {
         }
         cleanText = cleanText.trim();
         newText = '#' + cleanText;
+      }
+      break;
+    }
+
+    case 'heading2': {
+      // Cycle : rien → ## → # → rien
+      if (lineText.startsWith('##')) {
+        // ## → #
+        newText = lineText.slice(1);
+      } else if (lineText.startsWith('#')) {
+        // # → rien
+        newText = lineText.slice(1).trimStart();
+      } else {
+        // Enlever autres balises d'abord, puis ajouter ##
+        let cleanText = lineText;
+        // Enlever @ au début
+        if (cleanText.startsWith('@')) {
+          cleanText = cleanText.slice(1);
+        }
+        // Enlever () autour
+        if (cleanText.startsWith('(') && cleanText.endsWith(')')) {
+          cleanText = cleanText.slice(1, -1);
+        }
+        cleanText = cleanText.trim();
+        newText = '##' + cleanText;
       }
       break;
     }
