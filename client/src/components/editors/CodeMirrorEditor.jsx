@@ -19,6 +19,7 @@ import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } 
 export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '', onChange, onScroll, onCursorChange, scrollSync, characters = [] }, ref) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
+  const isInternalChangeRef = useRef(false);
 
   // StateEffect + StateField pour appliquer les décorations ligne (highlights)
   // définis au niveau du module mais utilisés ici.
@@ -207,6 +208,7 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
         ...playExtension,
         EditorView.updateListener.of((update) => {
           if (update.docChanged && onChange) {
+            isInternalChangeRef.current = true;
             onChange(update.state.doc.toString());
           }
 
@@ -288,6 +290,12 @@ export const CodeMirrorEditor = forwardRef(function CodeMirrorEditor({ value = '
    * Met à jour le contenu de l'éditeur lorsque la valeur change de l'extérieur
    */
   useEffect(() => {
+    // Si le changement vient de l'intérieur (l'utilisateur qui tape), on ignore
+    if (isInternalChangeRef.current) {
+      isInternalChangeRef.current = false;
+      return;
+    }
+
     if (viewRef.current) {
       const currentValue = viewRef.current.state.doc.toString();
       if (value !== currentValue) {
