@@ -363,7 +363,7 @@ export default function EditorPage() {
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}
-                                    onChange={setContent}
+                                    onChange={handleContentChange}
                                     onCursorChange={handleCursorChange}
                                     characters={characters}
                                 />
