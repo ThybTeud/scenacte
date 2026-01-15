@@ -331,7 +331,7 @@ export default function EditorPage() {
     // }
 
     return (
-        <SidebarProvider>
+        <SidebarProvider className="h-dvh">
             <EditorSidebar
                 stats={MOCK_STATS}
                 acts={MOCK_ACTS}
@@ -341,7 +341,7 @@ export default function EditorPage() {
                 onCharacterClick={handleCharacterClick}
             />
 
-            <SidebarInset>
+            <SidebarInset className="flex flex-col h-dvh overflow-hidden">
                 <EditorHeader
                     title={title}
                     onTitleChange={setTitle}
@@ -355,11 +355,11 @@ export default function EditorPage() {
                     onTogglePreview={() => setShowPreview((prev) => !prev)}
                 />
 
-                <main className="flex-1 flex justify-center overflow-hidden p-4">
-                    <div className="flex w-full max-w-5xl gap-4">
+                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0">
+                    <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
-                        <div className="flex-1 flex flex-col min-w-0">
-                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden">
+                        <div className="flex-1 flex flex-col min-w-0 h-full">
+                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0">
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}
@@ -369,7 +369,7 @@ export default function EditorPage() {
                                 />
                             </div>
 
-                            <div className="w-full max-w-3xl mx-auto mt-2">
+                            <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
                                 <SyntaxBar
                                     onInsert={toggleFormat}
                                     onUndo={handleUndo}
@@ -382,7 +382,7 @@ export default function EditorPage() {
 
                         {/* Preview - masquée sous md */}
                         {showPreview && (
-                            <div className="hidden md:flex flex-1 min-w-0">
+                            <div className="hidden md:flex flex-1 min-w-0 h-full">
                                 <div
                                     className="h-full w-full bg-white rounded-lg border overflow-auto p-4 prose prose-sm max-w-none"
                                     dangerouslySetInnerHTML={{
