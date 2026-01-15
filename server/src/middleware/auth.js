@@ -30,8 +30,7 @@ export async function authMiddleware(req, res, next) {
     // effectuer une requête spécifique dans le contrôleur concerné
     req.user = {
       id: decoded.userId,
-      email: decoded.email,
-      username: decoded.username
+      email: decoded.email
     };
 
     next();
@@ -60,8 +59,7 @@ export async function optionalAuthMiddleware(req, res, next) {
       // Injection de l'utilisateur depuis le JWT vérifié
       req.user = {
         id: decoded.userId,
-        email: decoded.email,
-        username: decoded.username
+        email: decoded.email
       };
     }
 

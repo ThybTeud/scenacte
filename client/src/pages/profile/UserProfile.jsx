@@ -22,7 +22,6 @@ export function UserProfile() {
 
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -60,11 +59,10 @@ export function UserProfile() {
       setFormData((prev) => ({
         ...prev,
         email: response.user.email,
-        username: response.user.username,
       }));
     } catch (error) {
       toast.error('Erreur lors du chargement du profil');
-      console.error(error);
+      // Error already handled by toast notification
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +108,6 @@ export function UserProfile() {
 
     const updateData = {
       email: formData.email,
-      username: formData.username,
     };
 
     if (formData.newPassword) {
@@ -208,17 +205,6 @@ export function UserProfile() {
                 onChange={handleChange}
                 required
                 error={errors.email}
-                disabled={isSaving}
-              />
-
-              <Input
-                label="Nom d'utilisateur"
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                error={errors.username}
                 disabled={isSaving}
               />
 

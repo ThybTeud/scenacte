@@ -1,10 +1,9 @@
 import prisma from '../db/index.js';
 import { hashPassword, comparePassword } from '../utils/hash.js';
 import { generateToken, generateResetToken, verifyResetToken } from '../utils/jwt.js';
-import { 
-  validateEmail, 
-  validateUsername, 
-  validatePassword 
+import {
+  validateEmail,
+  validatePassword
 } from '../utils/validation.js';
 import { 
   BadRequestError, 
@@ -22,7 +21,7 @@ import { sendWelcomeEmail, sendPasswordResetEmail } from '../services/email.serv
  */
 export async function register(req, res, next) {
   try {
-    const { email, username, password } = req.body;
+    const { email, password } = req.body;
 
     // Validation des champs
     const emailValidation = validateEmail(email);
@@ -30,22 +29,16 @@ export async function register(req, res, next) {
       throw new ValidationError(emailValidation.message);
     }
 
-    const usernameValidation = validateUsername(username);
-    if (!usernameValidation.valid) {
-      throw new ValidationError(usernameValidation.message);
-    }
-
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       throw new ValidationError(passwordValidation.message);
     }
 
-    // Vérifier si l'email ou le username existe déjà
+    // Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: email.trim().toLowerCase() },
-          { username: username.trim() }
+          { email: email.trim().toLowerCase() }
         ]
       }
     });
@@ -54,19 +47,16 @@ export async function register(req, res, next) {
       if (existingUser.email === email.trim().toLowerCase()) {
         throw new ConflictError('Cet email est déjà utilisé');
       }
-      if (existingUser.username === username.trim()) {
-        throw new ConflictError('Ce nom d\'utilisateur est déjà utilisé');
-      }
     }
 
     // Hash du mot de passe
     const passwordHash = await hashPassword(password);
 
-    // Création de l'utilisateur
+    // Création de l'utilisateur (sans username)
     const user = await prisma.user.create({
       data: {
         email: email.trim().toLowerCase(),
-        username: username.trim(),
+        username: null,
         passwordHash
       },
       select: {
@@ -80,12 +70,11 @@ export async function register(req, res, next) {
     // Génération du token JWT
     const token = generateToken({
       userId: user.id,
-      email: user.email,
-      username: user.username
+      email: user.email
     });
 
     // Envoi de l'email de bienvenue (non bloquant)
-    sendWelcomeEmail(user.email, user.username);
+    sendWelcomeEmail(user.email, user.email);
 
     res.status(201).json({
       user,
@@ -128,8 +117,7 @@ export async function login(req, res, next) {
     // Génération du token JWT
     const token = generateToken({
       userId: user.id,
-      email: user.email,
-      username: user.username
+      email: user.email
     });
 
     res.json({
@@ -177,7 +165,7 @@ export async function forgotPassword(req, res, next) {
     const resetToken = generateResetToken(user.id);
 
     // Envoi de l'email (bloquant car critique)
-    await sendPasswordResetEmail(user.email, user.username, resetToken);
+    await sendPasswordResetEmail(user.email, user.email, resetToken);
 
     res.json({
       message: 'Si cet email existe, un lien de réinitialisation a été envoyé'

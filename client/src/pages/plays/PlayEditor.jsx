@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { playsService } from "../../services/plays.service";
+import { storageService } from "../../services/storage.service";
 import { cn } from "../../utils/cn";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
@@ -16,6 +16,7 @@ import { PlayPreview } from "../../components/editors/PlayPreview";
 import { LeftPanel } from "../../components/editors/LeftPanel";
 import { RightPanel } from "../../components/editors/RightPanel";
 import { PdfExportModal } from "../../components/pdf/PdfExportModal";
+import { GuestModeBanner } from "../../components/ui/GuestModeBanner";
 import { MenuIcon } from "../../components/icons/MenuIcon";
 import { PlayParser } from "../../utils/playParser";
 import toast from "react-hot-toast";
@@ -23,26 +24,39 @@ import toast from "react-hot-toast";
 export function PlayEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, isGuest } = useAuth();
 
-    // Menu items pour HeaderEditor
+    // Menu items pour HeaderEditor (conditionnels selon mode invité)
     const menuItems = useMemo(
-        () => [
-            { label: "Profil", onClick: () => navigate("/profile") },
-            { label: "Préférences", onClick: () => navigate("/preferences") },
-            {
-                label: "Déconnexion",
-                onClick: () => {
-                    logout();
-                    navigate("/login");
-                },
-            },
-        ],
-        [navigate, logout]
+        () =>
+            isGuest
+                ? [
+                      {
+                          label: "Créer un compte",
+                          onClick: () => navigate("/register"),
+                      },
+                      {
+                          label: "Se connecter",
+                          onClick: () => navigate("/login"),
+                      },
+                  ]
+                : [
+                      { label: "Profil", onClick: () => navigate("/profile") },
+                      { label: "Préférences", onClick: () => navigate("/preferences") },
+                      {
+                          label: "Déconnexion",
+                          onClick: () => {
+                              logout();
+                              navigate("/login");
+                          },
+                      },
+                  ],
+        [navigate, logout, isGuest]
     );
 
     const [play, setPlay] = useState(null);
     const [content, setContent] = useState("");
+    const [lastSavedContent, setLastSavedContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -55,6 +69,10 @@ export function PlayEditor() {
     const [showLeftPanel, setShowLeftPanel] = useState(false);
     const [showRightPanel, setShowRightPanel] = useState(false);
     const [currentLine, setCurrentLine] = useState(0);
+
+    // États pour undo/redo
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
 
     // Référence à l'éditeur CodeMirror pour l'insertion de texte
     const editorRef = useRef(null);
@@ -89,14 +107,15 @@ export function PlayEditor() {
     const fetchPlay = async () => {
         setIsLoading(true);
         try {
-            const response = await playsService.getPlay(id);
+            const response = await storageService.getPlay(id);
             setPlay(response.play);
             const rawContent = response.play.rawContent || "";
             setContent(rawContent);
+            setLastSavedContent(rawContent);
             setHasUnsavedChanges(false);
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
-            console.error(error);
+            // Error already handled by toast notification
             navigate("/plays");
         } finally {
             setIsLoading(false);
@@ -105,8 +124,9 @@ export function PlayEditor() {
 
     /**
      * Sauvegarde le contenu de la pièce
+     * @param {boolean} isAutoSave - Si true, la sauvegarde est automatique et silencieuse
      */
-    const savePlay = useCallback(async () => {
+    const savePlay = useCallback(async (isAutoSave = false) => {
         if (!play) return;
 
         setIsSaving(true);
@@ -119,16 +139,31 @@ export function PlayEditor() {
                 htmlContent: htmlContent,
             };
 
-            await playsService.savePlay(id, saveData);
+            await storageService.savePlay(id, saveData);
+            setLastSavedContent(content);
             setHasUnsavedChanges(false);
-            toast.success("Pièce sauvegardée");
+
+            // Afficher le toast seulement pour les sauvegardes manuelles
+            if (!isAutoSave) {
+                toast.success("Pièce sauvegardée");
+            }
         } catch (error) {
             toast.error(error.message || "Erreur lors de la sauvegarde");
-            console.error(error);
+            // Error already handled by toast notification
         } finally {
             setIsSaving(false);
         }
     }, [id, content, htmlContent, play]);
+
+    /**
+     * Met à jour l'état des boutons undo/redo
+     */
+    const updateUndoRedoState = useCallback(() => {
+        if (editorRef.current) {
+            setCanUndo(editorRef.current.canUndo?.() ?? false);
+            setCanRedo(editorRef.current.canRedo?.() ?? false);
+        }
+    }, []);
 
     /**
      * Gère le changement de contenu dans l'éditeur
@@ -136,7 +171,30 @@ export function PlayEditor() {
     const handleContentChange = useCallback((newContent) => {
         setContent(newContent);
         setHasUnsavedChanges(true);
-    }, []);
+
+        // Mettre à jour l'état undo/redo après chaque modification
+        updateUndoRedoState();
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour undo
+     */
+    const handleUndo = useCallback(() => {
+        if (editorRef.current?.undo) {
+            editorRef.current.undo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
+
+    /**
+     * Handler pour redo
+     */
+    const handleRedo = useCallback(() => {
+        if (editorRef.current?.redo) {
+            editorRef.current.redo();
+            updateUndoRedoState();
+        }
+    }, [updateUndoRedoState]);
 
     /**
      * Gère le changement de position du curseur
@@ -165,6 +223,33 @@ export function PlayEditor() {
             }
         };
     }, []);
+
+    /**
+     * Sauvegarde automatique après 2 secondes d'inactivité
+     */
+    useEffect(() => {
+        // Ne pas déclencher l'auto-save si le contenu n'a pas changé
+        if (content === lastSavedContent || !play) {
+            return;
+        }
+
+        // Annuler le timeout précédent
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        // Programmer la sauvegarde automatique
+        saveTimeoutRef.current = setTimeout(() => {
+            savePlay(true); // true = sauvegarde automatique (silencieuse)
+        }, 2000);
+
+        // Cleanup
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [content, lastSavedContent, savePlay, play]);
 
     /**
      * Toggle un format de ligne dans l'éditeur
@@ -272,6 +357,12 @@ export function PlayEditor() {
                 content={content}
             />
 
+            {isGuest && (
+                <div className="container-custom py-2">
+                    <GuestModeBanner />
+                </div>
+            )}
+
             {/* Layout principal : Container centré avec max-width global */}
             <div className="flex-1 flex justify-center overflow-hidden">
                 {/* Groupe des 3 colonnes - pas de gap, collées ensemble */}
@@ -279,8 +370,8 @@ export function PlayEditor() {
                     {/* Left Panel - hidden mobile, visible desktop */}
                     <div className="hidden lg:block flex-shrink-0 h-full">
                         <LeftPanel
-                            onUndo={() => {}}
-                            onRedo={() => {}}
+                            onUndo={handleUndo}
+                            onRedo={handleRedo}
                             onSave={handleManualSave}
                             onDownload={handleDownload}
                             onExportPdf={() => setShowPdfExport(true)}
@@ -288,8 +379,8 @@ export function PlayEditor() {
                             onToggleFormat={toggleFormat}
                             onInsertCharacter={insertCharacter}
                             characters={structure.personnages || []}
-                            canUndo={false}
-                            canRedo={false}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
                             showPreview={showPreview}
                             isSaving={isSaving}
                         />
@@ -377,8 +468,8 @@ export function PlayEditor() {
                 className="lg:hidden"
             >
                 <LeftPanel
-                    onUndo={() => {}}
-                    onRedo={() => {}}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
                     onSave={handleManualSave}
                     onDownload={handleDownload}
                     onExportPdf={() => setShowPdfExport(true)}
@@ -386,8 +477,8 @@ export function PlayEditor() {
                     onToggleFormat={toggleFormat}
                     onInsertCharacter={insertCharacter}
                     characters={structure.personnages || []}
-                    canUndo={false}
-                    canRedo={false}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
                     showPreview={showPreview}
                     isSaving={isSaving}
                 />

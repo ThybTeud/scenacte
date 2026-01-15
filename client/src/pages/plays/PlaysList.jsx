@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playsService } from '../../services/plays.service';
+import { storageService } from '../../services/storage.service';
 import { useAuth } from '../../hooks/useAuth';
 import HeaderGlobal from '../../components/layout/HeaderGlobal';
 import { Button } from '../../components/ui/Button';
@@ -9,11 +9,13 @@ import { Loader } from '../../components/ui/Loader';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { Pagination } from '../../components/ui/Pagination';
+import { GuestModeBanner } from '../../components/ui/GuestModeBanner';
+import { VersionsSidebar } from '../../components/plays/VersionsSidebar';
 import toast from 'react-hot-toast';
 
 export function PlaysList() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isGuest } = useAuth();
   const [plays, setPlays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -28,30 +30,46 @@ export function PlaysList() {
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showVersionsModal, setShowVersionsModal] = useState(false);
   const [selectedPlay, setSelectedPlay] = useState(null);
   const [newPlay, setNewPlay] = useState({ title: '', subtitle: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
 
-  // Menu items pour le HeaderGlobal
-  const menuItems = [
-    {
-      label: 'Profil',
-      onClick: () => navigate('/profile'),
-    },
-    {
-      label: 'Préférences',
-      onClick: () => navigate('/preferences'),
-    },
-    {
-      label: 'Déconnexion',
-      onClick: () => {
-        logout();
-        navigate('/login');
-      },
-    },
-  ];
+  // Menu items pour le HeaderGlobal (conditionnels selon mode invité)
+  const menuItems = useMemo(
+    () =>
+      isGuest
+        ? [
+            {
+              label: 'Créer un compte',
+              onClick: () => navigate('/register'),
+            },
+            {
+              label: 'Se connecter',
+              onClick: () => navigate('/login'),
+            },
+          ]
+        : [
+            {
+              label: 'Profil',
+              onClick: () => navigate('/profile'),
+            },
+            {
+              label: 'Préférences',
+              onClick: () => navigate('/preferences'),
+            },
+            {
+              label: 'Déconnexion',
+              onClick: () => {
+                logout();
+                navigate('/login');
+              },
+            },
+          ],
+    [navigate, logout, isGuest]
+  );
 
   useEffect(() => {
     fetchPlays();
@@ -77,7 +95,7 @@ export function PlaysList() {
   const fetchPlays = async () => {
     setIsLoading(true);
     try {
-      const response = await playsService.listPlays({
+      const response = await storageService.listPlays({
         page: pagination.page,
         limit: 20,
         ...filters,
@@ -86,7 +104,7 @@ export function PlaysList() {
       setPagination(response.pagination);
     } catch (error) {
       toast.error('Erreur lors du chargement des pièces');
-      console.error(error);
+      // Error already handled by toast notification
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +115,7 @@ export function PlaysList() {
     setIsSubmitting(true);
 
     try {
-      const response = await playsService.createPlay(newPlay);
+      const response = await storageService.createPlay(newPlay);
       toast.success('Pièce créée avec succès !');
       setShowCreateModal(false);
       setNewPlay({ title: '', subtitle: '' });
@@ -114,7 +132,7 @@ export function PlaysList() {
 
     setIsSubmitting(true);
     try {
-      await playsService.deletePlay(selectedPlay.id);
+      await storageService.deletePlay(selectedPlay.id);
       toast.success('Pièce supprimée avec succès !');
       setShowDeleteModal(false);
       setSelectedPlay(null);
@@ -129,8 +147,8 @@ export function PlaysList() {
   const handleVersionsClick = (play, e) => {
     e.stopPropagation();
     setOpenMenuId(null);
-    // TODO: Navigate to versions page or open versions modal
-    toast('Fonctionnalité Versions à venir', { icon: 'ℹ️' });
+    setSelectedPlay(play);
+    setShowVersionsModal(true);
   };
 
   const handleDeleteClick = (play, e) => {
@@ -183,6 +201,8 @@ export function PlaysList() {
       <HeaderGlobal user={user} menuItems={menuItems} />
 
       <main className="container-custom py-8">
+        {isGuest && <GuestModeBanner />}
+
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold font-ui text-black">Mes pièces</h1>
           <Button onClick={() => setShowCreateModal(true)}>
@@ -391,6 +411,20 @@ export function PlaysList() {
           irréversible.
         </p>
       </Modal>
+
+      <VersionsSidebar
+        isOpen={showVersionsModal}
+        onClose={() => {
+          setShowVersionsModal(false);
+          setSelectedPlay(null);
+        }}
+        playId={selectedPlay?.id}
+        onRestore={() => {
+          setShowVersionsModal(false);
+          setSelectedPlay(null);
+          fetchPlays();
+        }}
+      />
     </div>
   );
 }

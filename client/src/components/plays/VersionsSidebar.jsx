@@ -31,7 +31,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
       setPagination(response.pagination);
     } catch (error) {
       toast.error('Erreur lors du chargement des versions');
-      console.error(error);
+      // Error already handled by toast notification
     } finally {
       setIsLoading(false);
     }

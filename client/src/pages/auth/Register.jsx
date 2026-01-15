@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { storageService } from '../../services/storage.service';
 import { AuthLayout } from '../../components/layout/AuthLayout';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { GuestDataMigrationModal } from '../../components/ui/GuestDataMigrationModal';
 import toast from 'react-hot-toast';
 
 export function Register() {
@@ -14,7 +16,6 @@ export function Register() {
   const [showSlowConnectionMessage, setShowSlowConnectionMessage] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
     password: '',
     confirmPassword: '',
   });
@@ -22,6 +23,10 @@ export function Register() {
   const [touched, setTouched] = useState({});
   const loadingIntervalRef = useRef(null);
   const cycleCountRef = useRef(0);
+
+  // États pour la migration des données invité
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const [guestPlaysCount, setGuestPlaysCount] = useState(0);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,21 +93,15 @@ export function Register() {
     return emailRegex.test(email);
   };
 
-  const validateUsername = (username) => {
-    // Au moins 3 caractères, lettres, chiffres, tirets et underscores uniquement
-    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
-    return usernameRegex.test(username);
-  };
-
   const validatePassword = (password) => {
-    return password.length >= 6;
+    return password.length >= 12;
   };
 
   const getPasswordStrength = (password) => {
     if (password.length === 0) return null;
     if (password.length < 6) return 'weak';
-    if (password.length < 8) return 'medium';
-    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
+    if (password.length < 12) return 'medium';
+    if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password)) return 'strong';
     return 'medium';
   };
 
@@ -113,12 +112,8 @@ export function Register() {
       newErrors.email = 'Email invalide';
     }
 
-    if (!validateUsername(formData.username)) {
-      newErrors.username = 'Nom d\'utilisateur invalide (3-20 caractères, lettres, chiffres, - et _ uniquement)';
-    }
-
     if (!validatePassword(formData.password)) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = 'Le mot de passe doit contenir au moins 12 caractères';
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -141,15 +136,55 @@ export function Register() {
     setIsLoading(true);
 
     try {
-      await register(formData.email, formData.username, formData.password);
+      await register(formData.email, formData.password);
       toast.success('Compte créé avec succès !');
-      navigate('/plays');
+
+      // Vérifier si des données invité existent
+      if (storageService.hasGuestData()) {
+        const guestData = storageService.getGuestData();
+        setGuestPlaysCount(guestData.plays.length);
+        setShowMigrationModal(true);
+      } else {
+        // Pas de données invité, redirection directe
+        navigate('/plays');
+      }
     } catch (error) {
       toast.error(error.message || 'Échec de la création du compte');
       setErrors({ general: error.message });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMigrateData = async () => {
+    setShowMigrationModal(false);
+    toast.loading('Migration des pièces en cours...');
+
+    try {
+      const result = await storageService.migrateGuestData();
+
+      if (result.failed > 0) {
+        toast.success(
+          `${result.migrated} pièce(s) importée(s), ${result.failed} échec(s)`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success(`${result.migrated} pièce(s) importée(s) avec succès !`);
+      }
+
+      navigate('/plays');
+    } catch (error) {
+      toast.error('Erreur lors de la migration des données');
+      // Error already handled by toast notification
+      navigate('/plays');
+    }
+  };
+
+  const handleSkipMigration = () => {
+    setShowMigrationModal(false);
+    storageService.clearGuestData();
+    toast('Données locales supprimées', { icon: 'ℹ️' });
+    navigate('/plays');
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -173,11 +208,7 @@ export function Register() {
             </li>
             <li className="flex items-start">
               <span className="mr-2">•</span>
-              <span><strong>Nom d'utilisateur :</strong> 3-20 caractères, lettres, chiffres, tirets (-) et underscores (_) uniquement</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span><strong>Mot de passe :</strong> Minimum 6 caractères (recommandé : 8+ avec majuscules et chiffres)</span>
+              <span><strong>Mot de passe :</strong> Minimum 12 caractères (recommandé : avec majuscules, chiffres et symboles)</span>
             </li>
           </ul>
         </div>
@@ -193,19 +224,6 @@ export function Register() {
           error={errors.email}
           disabled={isLoading}
           placeholder="exemple@domaine.com"
-        />
-
-        <Input
-          label="Nom d'utilisateur"
-          type="text"
-          name="username"
-          value={formData.username}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          required
-          error={errors.username}
-          disabled={isLoading}
-          placeholder="mon_username"
         />
 
         <div>
@@ -295,6 +313,13 @@ export function Register() {
           </Link>
         </p>
       </form>
+
+      <GuestDataMigrationModal
+        isOpen={showMigrationModal}
+        onClose={handleSkipMigration}
+        onMigrate={handleMigrateData}
+        playsCount={guestPlaysCount}
+      />
     </AuthLayout>
   );
 }

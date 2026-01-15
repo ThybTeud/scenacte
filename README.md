@@ -1,298 +1,40 @@
 # Scenacte
 
-Application web d'écriture de pièces de théâtre avec gestion de versions, développée avec React et Node.js.
+Éditeur web de pièces de théâtre avec versioning automatique et export PDF.
 
-## 📋 Description
+🔗 **[scenacte.fr](https://scenacte.fr)**
 
-Scenacte est un outil d'écriture dramaturgique moderne permettant aux auteurs de :
-- Écrire et structurer leurs pièces de théâtre
-- Gérer automatiquement les versions de leurs textes
-- Exporter leurs œuvres en PDF avec différents templates
-- Collaborer et suivre l'évolution de leurs créations
+## Syntaxe
 
-## 🏗️ Architecture du projet
+Scenacte utilise une syntaxe markup simple :
 
-```
-scenacte/
-├── client/          # Frontend React + Vite + TailwindCSS
-│   ├── src/
-│   │   ├── components/    # Composants réutilisables
-│   │   ├── pages/         # Pages de l'application
-│   │   ├── contexts/      # Context API (auth, etc.)
-│   │   ├── services/      # Couche de services API
-│   │   └── hooks/         # Custom React hooks
-│   └── README.md
-│
-├── server/          # Backend Node.js + Express + PostgreSQL
-│   ├── src/
-│   │   ├── controllers/   # Logique métier
-│   │   ├── routes/        # Routes API
-│   │   ├── services/      # Services (email, PDF, etc.)
-│   │   ├── middleware/    # Middlewares (auth, errors)
-│   │   └── config/        # Configuration
-│   ├── migrations/        # Migrations SQL
-│   └── README.md
-│
-└── README.md        # Ce fichier
-```
+| Symbole | Usage | Exemple |
+|---------|-------|---------|
+| `#` | Acte | `# Acte I` |
+| `##` | Scène | `## Scène 1` |
+| `@` | Personnage | `@JEAN` |
+| `()` | Didascalie | `(il sort)` |
 
-## 🚀 Démarrage rapide
+## Fonctionnalités
 
-### Prérequis
+- Éditeur avec preview HTML temps réel
+- Versioning automatique (style Google Docs)
+- Export PDF avec templates éditeur
+- Mode invité (sans compte)
+- Statistiques : actes, scènes, personnages, durée estimée
 
-- Node.js 18+
-- PostgreSQL 14+
-- npm ou yarn
+## Stack
 
-### Installation complète
+**Frontend** : React 19, Vite, TailwindCSS v4
+**Backend** : Node.js, Express, PostgreSQL
+**PDF** : PagedJS
 
-#### 1. Cloner le repository
+## Documentation
 
-```bash
-git clone <repo-url>
-cd scenacte
-```
+- [Documentation client](./client/README.md)
+- [Documentation serveur](./server/README.md)
+- [Déploiement](./DEPLOYMENT.md)
 
-#### 2. Configuration de la base de données
+## Licence
 
-```bash
-# Créer la base de données PostgreSQL
-createdb scenacte_db
-createuser scenacte_user -P  # Entrez le mot de passe
-
-# Appliquer les migrations
-cd server
-psql -U scenacte_user -d scenacte_db -f migrations/init.sql
-```
-
-> **Note** : pg-boss crée automatiquement ses tables (préfixées `pgboss_*`) au premier démarrage pour gérer la queue d'emails de manière fiable avec retry automatique.
-
-#### 3. Configuration du serveur
-
-```bash
-cd server
-
-# Installer les dépendances
-npm install
-
-# Créer le fichier .env à partir de l'exemple
-cp .env.example .env
-
-# Éditer .env avec vos configurations
-# - DATABASE_URL
-# - JWT_SECRET
-# - SMTP_* (pour les emails)
-nano .env
-```
-
-#### 4. Configuration du client
-
-```bash
-cd ../client
-
-# Installer les dépendances
-npm install
-
-# Créer le fichier .env
-cp .env.example .env
-
-# La configuration par défaut devrait fonctionner
-# VITE_API_URL=http://localhost:3000/api
-```
-
-#### 5. Lancer l'application
-
-**Terminal 1 - Serveur :**
-```bash
-cd server
-./start-dev.sh
-# Démarre PostgreSQL, MailDev et le serveur sur http://localhost:3000
-# MailDev web interface: http://localhost:1080
-```
-
-**Terminal 2 - Client :**
-```bash
-cd client
-npm run dev
-# Application sur http://localhost:5173
-```
-
-> **Note** : Le script `start-dev.sh` démarre automatiquement PostgreSQL, MailDev (serveur SMTP local) et le serveur Node.js
-
-#### 6. Accéder à l'application
-
-Ouvrez votre navigateur sur `http://localhost:5173`
-
-## 📚 Documentation
-
-- [Documentation du serveur](./server/README.md) - API complète, configuration, architecture
-- [Documentation du client](./client/README.md) - Frontend React, composants, services
-- [Guide de déploiement](./DEPLOYMENT.md) - Déploiement sur Render.com
-- [Guide de maintenance](./MAINTENANCE.md) - Maintenance, dépendances critiques, troubleshooting
-
-## 🔧 Stack technique
-
-### Frontend
-- **React 19** - Framework UI
-- **Vite** - Build tool
-- **TailwindCSS** - Framework CSS
-- **React Router** - Routing
-- **react-hot-toast** - Notifications
-
-### Backend
-- **Node.js** - Runtime JavaScript
-- **Express** - Framework web
-- **PostgreSQL** - Base de données
-- **JWT** - Authentication
-- **Nodemailer** - Envoi d'emails
-- **PagedJS** - Export PDF
-
-## 🌟 Fonctionnalités
-
-### Authentification
-- [x] Inscription / Connexion
-- [x] Réinitialisation de mot de passe
-- [x] Gestion de profil utilisateur
-
-### Gestion des pièces
-- [x] Création, édition, suppression de pièces
-- [x] Liste avec filtres et pagination
-- [x] Statuts (brouillon, terminé, archivé)
-
-### Éditeur
-- [x] Interface 3 colonnes (navigation, éditeur, preview)
-- [ ] Parsing du texte (# actes, ## scènes, @ personnages)
-- [ ] Preview HTML en temps réel
-- [ ] Auto-save toutes les 2 minutes
-
-### Versioning
-- [x] Versions automatiques
-- [x] Versions manuelles avec labels
-- [x] Restauration de versions
-- [x] Nettoyage automatique des anciennes versions
-- [ ] Comparaison de versions (diff)
-
-### Export
-- [ ] Export PDF avec templates
-- [ ] Templates personnalisables
-- [ ] Export multiple formats
-
-## 🔐 Sécurité
-
-- Mots de passe hashés avec bcrypt
-- Authentication par JWT
-- Protection CORS
-- Validation des entrées
-- Protection XSS (React + sanitization)
-- Gestion des secrets via variables d'environnement
-
-## 📝 Variables d'environnement
-
-### Serveur (`server/.env`)
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/scenacte_db
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-password
-SMTP_FROM=noreply@scenacte.com
-PORT=3000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
-```
-
-### Client (`client/.env`)
-
-```env
-VITE_API_URL=http://localhost:3000/api
-```
-
-## 🧪 Tests
-
-```bash
-# Tests serveur
-cd server
-npm test
-
-# Tests client
-cd client
-npm test
-```
-
-## 📦 Build de production
-
-### Serveur
-```bash
-cd server
-npm start
-```
-
-### Client
-```bash
-cd client
-npm run build
-npm run preview
-```
-
-## 🌐 Déploiement
-
-L'application peut être déployée sur **Render.com** (recommandé).
-
-### Déploiement sur Render.com
-
-Render.com offre un hébergement simple et gratuit pour débuter :
-
-- **Base de données PostgreSQL** : Plan gratuit (90 jours)
-- **Backend Node.js** : Plan gratuit avec auto-sleep après 15 min d'inactivité
-- **Frontend React** : Hébergement statique gratuit illimité
-
-#### Guide de déploiement
-
-- **[Guide de déploiement complet](./DEPLOYMENT.md)** - Documentation détaillée avec troubleshooting
-
-#### Déploiement automatique avec Blueprint
-
-Le fichier `render.yaml` à la racine permet un déploiement automatisé :
-
-1. Connectez-vous à [Render.com](https://render.com)
-2. Cliquez sur **New** → **Blueprint**
-3. Sélectionnez votre repository
-4. Cliquez sur **Apply**
-
-Render créera automatiquement :
-- Une base de données PostgreSQL
-- Le backend API (Node.js)
-- Le frontend (site statique React)
-
-Consultez le [guide de déploiement](./DEPLOYMENT.md) pour plus de détails.
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
-
-## 📄 Licence
-
-MIT
-
-## 🗺️ Roadmap
-
-- [ ] Éditeur de texte riche avec coloration syntaxique
-- [ ] Preview HTML en temps réel
-- [ ] Export PDF avec templates personnalisables
-- [ ] Auto-save
-- [ ] Statistiques avancées (nombre d'actes, scènes, personnages)
-- [ ] Mode collaboratif
-- [ ] Import depuis d'autres formats
-- [ ] API publique pour intégrations tierces
-
-## 📞 Support
-
-Pour toute question ou problème, ouvrez une issue sur GitHub.
-
----
-
-**Version actuelle** : 1.0.0
-**Dernière mise à jour** : Novembre 2025
+MIT — voir [LICENSE](./LICENSE)
