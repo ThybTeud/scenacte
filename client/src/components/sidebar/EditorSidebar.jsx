@@ -35,8 +35,8 @@ import { SidebarUserFooter } from "./SidebarUserFooter";
 import { ExportModal, SettingsModal } from "@/components/modals";
 
 export function EditorSidebar({
-  stats = { scenes: 1, repliques: 0, characters: 0 },
-  structure = { items: [], orphanScenes: [] }, // AJOUTER LA GESTION DES ORPHELINS
+  stats,
+  structure = { items: [], orphanScenes: [], personnages: [] },
   characters = [],
   activeSection,
   onSectionClick,
@@ -44,6 +44,9 @@ export function EditorSidebar({
 }) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+
+  // Gérer le cas où stats est null ou undefined
+  const safeStats = stats || { totalScenes: 0, totalRepliques: 0, totalCharacters: 0 };
   const [exportOpen, setExportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState("editor");
@@ -210,13 +213,13 @@ export function EditorSidebar({
                   <SidebarGroupContent>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
-                        {stats.totalScenes} scènes
+                        {safeStats.totalScenes} scènes
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        {stats.totalRepliques} répliques
+                        {safeStats.totalRepliques} répliques
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        {stats.totalCharacters} personnages
+                        {safeStats.totalCharacters} personnages
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </SidebarGroupContent>

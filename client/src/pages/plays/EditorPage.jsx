@@ -14,39 +14,6 @@ import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
 
-// TODO: Remplacer par données réelles depuis API
-const MOCK_ACTS = [
-    {
-        id: "act-1",
-        title: "Acte 1",
-        scenes: [
-            { id: "scene-1-1", title: "Scène 1" },
-            { id: "scene-1-2", title: "Scène 2" },
-            { id: "scene-1-3", title: "Scène 3" },
-        ],
-    },
-    {
-        id: "act-2",
-        title: "Acte 2",
-        scenes: [
-            { id: "scene-2-1", title: "Scène 1" },
-            { id: "scene-2-2", title: "Scène 2" },
-        ],
-    },
-];
-
-const MOCK_CHARACTERS = [
-    { id: "1", name: "Argante" },
-    { id: "2", name: "Géronte" },
-    { id: "3", name: "Zélide" },
-];
-
-const MOCK_STATS = {
-    scenes: 12,
-    repliques: 156,
-    characters: 5,
-};
-
 export default function EditorPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -56,7 +23,6 @@ export default function EditorPage() {
     const [lastSavedContent, setLastSavedContent] = useState("");
 
     // État du document
-    const [title, setTitle] = useState("");
     const [activeSection, setActiveSection] = useState("scene-1-2");
     const [content, setContent] = useState("");
 
@@ -123,7 +89,7 @@ export default function EditorPage() {
         } catch (error) {
             toast.error("Erreur lors du chargement de la pièce");
             // Error already handled by toast notification
-            navigate("/plays");
+            navigate("/library");
         } finally {
             setIsLoading(false);
         }
@@ -214,6 +180,14 @@ export default function EditorPage() {
             updateUndoRedoState();
         }
     }, [updateUndoRedoState]);
+
+    /**
+     * Gère le changement de titre
+     */
+    const handleTitleChange = useCallback((newTitle) => {
+        setPlay(prev => prev ? { ...prev, title: newTitle } : null);
+        setHasUnsavedChanges(true);
+    }, []);
 
     /**
      * Sauvegarde manuelle
@@ -346,7 +320,7 @@ export default function EditorPage() {
             <EditorSidebar
                 stats={statistics}
                 structure={structure}
-                characters={structure.personnages}
+                characters={structure?.personnages || []}
                 activeSection={activeSection}
                 onSectionClick={handleSectionClick}
                 onCharacterClick={handleCharacterClick}
@@ -354,8 +328,8 @@ export default function EditorPage() {
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden">
                 <EditorHeader
-                    title={title}
-                    onTitleChange={setTitle}
+                    title={play?.title || ""}
+                    onTitleChange={handleTitleChange}
                     isSaving={isSaving}
                     onSave={handleManualSave}
                     onUndo={handleUndo}
