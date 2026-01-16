@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -421,6 +421,30 @@ export default function AuthPage() {
                         <p className="mt-2 text-xs text-center text-muted-foreground">
                             Vos pièces seront sauvegardées localement
                         </p>
+                    </div>
+
+                    {/* Legal links */}
+                    <div className="mt-6 pt-4 border-t">
+                        <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+                            <Link
+                                to="/legal/terms"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                CGU
+                            </Link>
+                            <Link
+                                to="/legal/legal"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                Mentions légales
+                            </Link>
+                            <Link
+                                to="/legal/privacy"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                Confidentialité
+                            </Link>
+                        </nav>
                     </div>
                 </CardContent>
             </Card>
