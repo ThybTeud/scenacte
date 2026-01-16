@@ -40,7 +40,7 @@ export function SidebarUserFooter({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Mode invité">
+            <SidebarMenuButton size="lg" tooltip="Mode invité" onClick={onNavigateSignup}>
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   <UserRound className="h-4 w-4" />
@@ -48,12 +48,9 @@ export function SidebarUserFooter({
               </Avatar>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold">Mode invité</span>
-                <button
-                  onClick={onNavigateSignup}
-                  className="text-xs text-primary hover:underline text-left"
-                >
+                <span className="text-xs text-primary text-left">
                   Créer un compte
-                </button>
+                </span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
