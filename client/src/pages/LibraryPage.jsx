@@ -11,32 +11,21 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { GuestModeBanner } from "@/components/ui/GuestModeBanner";
+import { Pagination } from "@/components/ui/Pagination";
 import { Search, Plus } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
 import { CreatePlayModal, DeletePlayModal, RenamePlayModal } from "@/components/modals";
-
-const mockPlays = [
-    {
-        id: "1",
-        title: "Le Malade imaginaire",
-        subtitle: "Comédie-ballet",
-        updatedAt: new Date("2025-01-12"),
-        charactersCount: 5,
-        scenesCount: 8,
-        repliquesCount: 124,
-    },
-    {
-        id: "2",
-        title: "Phèdre",
-        subtitle: null,
-        updatedAt: new Date("2025-01-08"),
-        charactersCount: 3,
-        scenesCount: 5,
-        repliquesCount: 89,
-    },
-];
 
 export default function LibraryPage() {
     const navigate = useNavigate();
@@ -54,6 +43,8 @@ export default function LibraryPage() {
         sortBy: "updated_at",
         sortOrder: "desc",
     });
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -61,6 +52,32 @@ export default function LibraryPage() {
     const [selectedPlay, setSelectedPlay] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const menuRef = useRef(null);
+
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Load plays on mount and when pagination/filters change
+    useEffect(() => {
+        fetchPlays();
+    }, [pagination.page, filters]);
+
+    // Filter plays locally based on search term
+    const filteredPlays = useMemo(() => {
+        if (!debouncedSearchTerm) return plays;
+
+        const searchLower = debouncedSearchTerm.toLowerCase();
+        return plays.filter(
+            (play) =>
+                play.title.toLowerCase().includes(searchLower) ||
+                (play.subtitle && play.subtitle.toLowerCase().includes(searchLower))
+        );
+    }, [plays, debouncedSearchTerm]);
 
     const fetchPlays = async () => {
         setIsLoading(true);
@@ -124,7 +141,7 @@ export default function LibraryPage() {
         if (!selectedPlay) return;
         setIsSubmitting(true);
         try {
-            await storageService.updatePlay(selectedPlay.id, { title, subtitle });
+            await storageService.savePlay(selectedPlay.id, { title, subtitle });
             toast.success("Pièce renommée avec succès !");
             setShowRenameModal(false);
             setSelectedPlay(null);
@@ -150,6 +167,10 @@ export default function LibraryPage() {
                     <h1 className="text-2xl font-semibold mb-6 hidden sm:block">
                         Bibliothèque
                     </h1>
+
+                    {/* Guest Mode Banner */}
+                    {isGuest && <GuestModeBanner />}
+
                     {/* Actions row */}
                     <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
                         {/* Recherche + Filtres */}
@@ -159,15 +180,58 @@ export default function LibraryPage() {
                                 <Input
                                     placeholder="Rechercher une pièce..."
                                     className="pl-9 w-full"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                    Filtre
-                                </Button>
-                                <Button variant="outline" size="sm">
-                                    Filtre
-                                </Button>
+                                <Select
+                                    value={filters.status}
+                                    onValueChange={(value) =>
+                                        setFilters((prev) => ({ ...prev, status: value }))
+                                    }
+                                >
+                                    <SelectTrigger className="w-[140px]">
+                                        <SelectValue placeholder="Statut" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">Tous</SelectItem>
+                                        <SelectItem value="draft">Brouillon</SelectItem>
+                                        <SelectItem value="completed">Terminé</SelectItem>
+                                        <SelectItem value="archived">Archivé</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select
+                                    value={filters.sortBy}
+                                    onValueChange={(value) =>
+                                        setFilters((prev) => ({ ...prev, sortBy: value }))
+                                    }
+                                >
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Trier par" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="updated_at">Dernière modification</SelectItem>
+                                        <SelectItem value="created_at">Date de création</SelectItem>
+                                        <SelectItem value="title">Titre</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select
+                                    value={filters.sortOrder}
+                                    onValueChange={(value) =>
+                                        setFilters((prev) => ({ ...prev, sortOrder: value }))
+                                    }
+                                >
+                                    <SelectTrigger className="w-[140px]">
+                                        <SelectValue placeholder="Ordre" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="desc">Décroissant</SelectItem>
+                                        <SelectItem value="asc">Croissant</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -178,21 +242,58 @@ export default function LibraryPage() {
                         </Button>
                     </div>
 
-                    {/* Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {mockPlays.map((play) => (
-                            <PlayCard
-                                key={play.id}
-                                play={play}
-                                onClick={() => console.log("Navigate to", play.id)}
-                                onRename={openRenameModal}
-                                onDelete={openDeleteModal}
+                    {/* Loading State */}
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {[...Array(8)].map((_, i) => (
+                                <div key={i} className="space-y-3">
+                                    <Skeleton className="h-[120px] w-full rounded-lg" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : filteredPlays.length === 0 ? (
+                        /* Empty State */
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <p className="text-muted-foreground mb-4">
+                                {plays.length === 0
+                                    ? "Aucune pièce trouvée"
+                                    : "Aucun résultat pour votre recherche"}
+                            </p>
+                            {plays.length === 0 && (
+                                <Button onClick={() => setShowCreateModal(true)}>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Créer votre première pièce
+                                </Button>
+                            )}
+                        </div>
+                    ) : (
+                        /* Grid */
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {filteredPlays.map((play) => (
+                                    <PlayCard
+                                        key={play.id}
+                                        play={play}
+                                        onClick={() => navigate(`/plays/${play.id}`)}
+                                        onRename={openRenameModal}
+                                        onDelete={openDeleteModal}
+                                    />
+                                ))}
+                                <CreatePlayCard
+                                    onClick={() => setShowCreateModal(true)}
+                                />
+                            </div>
+
+                            {/* Pagination */}
+                            <Pagination
+                                currentPage={pagination.page}
+                                totalPages={pagination.totalPages}
+                                onPageChange={(page) =>
+                                    setPagination((prev) => ({ ...prev, page }))
+                                }
                             />
-                        ))}
-                        <CreatePlayCard
-                            onClick={() => setShowCreateModal(true)}
-                        />
-                    </div>
+                        </>
+                    )}
                 </main>
             </SidebarInset>
 
