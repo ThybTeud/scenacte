@@ -1,0 +1,79 @@
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+
+/**
+ * Section de sidebar collapsible avec support du mode icône.
+ * Gère automatiquement l'affichage expanded/collapsed.
+ *
+ * @param {Object} props
+ * @param {string} props.title - Titre de la section
+ * @param {React.ElementType} props.icon - Composant icône Lucide
+ * @param {boolean} props.defaultOpen - Section ouverte par défaut
+ * @param {string} props.tooltip - Tooltip en mode collapsed (défaut: title)
+ * @param {React.ReactNode} props.children - Contenu de la section
+ * @param {Function} props.onCollapsedClick - Action au clic en mode collapsed
+ */
+export function CollapsibleSection({
+  title,
+  icon: Icon,
+  defaultOpen = false,
+  tooltip,
+  children,
+  onCollapsedClick,
+}) {
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  // Mode collapsed : afficher uniquement l'icône avec tooltip
+  if (isCollapsed) {
+    return (
+      <SidebarGroup>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={tooltip || title}
+              className="cursor-pointer"
+              onClick={onCollapsedClick}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{title}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+
+  // Mode expanded : section collapsible complète
+  return (
+    <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
+      <SidebarGroup>
+        <SidebarGroupLabel asChild>
+          <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
+            <Icon className="h-4 w-4 mr-2" />
+            <span>{title}</span>
+            <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            {children}
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
+  );
+}
