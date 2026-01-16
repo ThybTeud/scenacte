@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +45,8 @@ export function EditorSidebar({
 }) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Gérer le cas où stats est null ou undefined
   const safeStats = stats || { totalScenes: 0, totalRepliques: 0, totalCharacters: 0 };
@@ -361,7 +364,12 @@ export function EditorSidebar({
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarUserFooter />
+        <SidebarUserFooter
+          user={user}
+          onLogout={logout}
+          onNavigateProfile={() => navigate("/profile")}
+          onNavigateSignup={() => navigate("/register")}
+        />
       </Sidebar>
 
       <ExportModal open={exportOpen} onOpenChange={setExportOpen} />

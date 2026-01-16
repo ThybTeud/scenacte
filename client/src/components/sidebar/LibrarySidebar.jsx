@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import {
     Sidebar,
     SidebarContent,
@@ -47,6 +49,9 @@ const navigationGroups = [
 ];
 
 export function LibrarySidebar() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
     return (
         <Sidebar collapsible="icon">
             <SidebarLogo />
@@ -84,7 +89,12 @@ export function LibrarySidebar() {
                 ))}
             </SidebarContent>
 
-            <SidebarUserFooter />
+            <SidebarUserFooter
+                user={user}
+                onLogout={logout}
+                onNavigateProfile={() => navigate("/profile")}
+                onNavigateSignup={() => navigate("/register")}
+            />
         </Sidebar>
     );
 }
