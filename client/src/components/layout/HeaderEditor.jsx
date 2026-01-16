@@ -31,7 +31,7 @@ export default function HeaderEditor({
             {/* Bloc de gauche dans le header : logo + trait + titre + indicateur de sauvegarde*/}
             <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                    <Link to="/plays">
+                    <Link to="/library">
                         <Logo variant="short" />
                     </Link>
                     <div className="w-0.5 h-6 bg-slate-900 mx-4 rounded"></div>

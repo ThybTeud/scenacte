@@ -25,7 +25,7 @@ export default function HeaderGlobal({ user, menuItems, className = '' }) {
       <div className="container-custom py-4">
         <div className="flex items-center justify-between">
           {/* Logo à gauche */}
-          <Link to="/plays" className="flex items-center">
+          <Link to="/library" className="flex items-center">
             <Logo variant="full" />
           </Link>
 

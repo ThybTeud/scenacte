@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -17,7 +17,14 @@ import { authService } from "@/services/auth.service";
 
 export default function AuthPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const { login, register, enableGuestMode } = useAuth();
+
+    // Détecter le mode depuis l'URL
+    const isResetPasswordMode = location.pathname === "/reset-password";
+    const isForgotPasswordMode = location.pathname === "/forgot-password";
+    const resetToken = searchParams.get("token");
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -36,6 +43,27 @@ export default function AuthPage() {
     // Forgot password
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotSent, setForgotSent] = useState(false);
+
+    // Reset password
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [resetSuccess, setResetSuccess] = useState(false);
+
+    // Déterminer l'onglet initial selon l'URL
+    const getInitialTab = () => {
+        if (location.pathname === "/register") return "register";
+        return "login";
+    };
+    const [activeTab, setActiveTab] = useState(getInitialTab);
+
+    // Mettre à jour le tab si l'URL change
+    useEffect(() => {
+        if (location.pathname === "/register") {
+            setActiveTab("register");
+        } else if (location.pathname === "/login") {
+            setActiveTab("login");
+        }
+    }, [location.pathname]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -93,8 +121,195 @@ export default function AuthPage() {
         navigate("/library");
     };
 
-    // Forgot Password View
-    if (showForgotPassword) {
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        if (!resetToken) {
+            setError("Token de réinitialisation manquant");
+            return;
+        }
+
+        if (newPassword.length < 12) {
+            setError("Le mot de passe doit contenir au moins 12 caractères");
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            setError("Les mots de passe ne correspondent pas");
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            await authService.resetPassword(resetToken, newPassword);
+            setResetSuccess(true);
+        } catch (err) {
+            setError(err.message || "Erreur lors de la réinitialisation");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Reset Password View (avec token)
+    if (isResetPasswordMode) {
+        // Pas de token = erreur
+        if (!resetToken) {
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Lien invalide</CardTitle>
+                            <CardDescription>
+                                Le lien de réinitialisation est invalide ou a expiré
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-sm text-destructive">
+                                Le token de réinitialisation est manquant ou invalide.
+                            </p>
+                            <Button
+                                className="w-full"
+                                onClick={() => navigate("/forgot-password")}
+                            >
+                                Demander un nouveau lien
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full"
+                                onClick={() => navigate("/login")}
+                            >
+                                Retour à la connexion
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        }
+
+        // Succès
+        if (resetSuccess) {
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Mot de passe réinitialisé</CardTitle>
+                            <CardDescription>
+                                Votre mot de passe a été modifié avec succès
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button
+                                className="w-full"
+                                onClick={() => navigate("/login")}
+                            >
+                                Se connecter
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        }
+
+        // Formulaire reset
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Nouveau mot de passe</CardTitle>
+                        <CardDescription>
+                            Entrez votre nouveau mot de passe
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleResetPassword} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="new-password">
+                                    Nouveau mot de passe
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="new-password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        required
+                                        minLength={12}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff size={16} />
+                                        ) : (
+                                            <Eye size={16} />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm-new-password">
+                                    Confirmer le mot de passe
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirm-new-password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={confirmNewPassword}
+                                        onChange={(e) =>
+                                            setConfirmNewPassword(e.target.value)
+                                        }
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff size={16} />
+                                        ) : (
+                                            <Eye size={16} />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {error && (
+                                <p className="text-sm text-destructive">{error}</p>
+                            )}
+
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isLoading}
+                            >
+                                {isLoading
+                                    ? "Réinitialisation..."
+                                    : "Réinitialiser le mot de passe"}
+                            </Button>
+
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="w-full"
+                                onClick={() => navigate("/login")}
+                            >
+                                Retour à la connexion
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // Forgot Password View (via state ou via URL directe)
+    if (showForgotPassword || isForgotPasswordMode) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <Card className="w-full max-w-md">
@@ -119,6 +334,9 @@ export default function AuthPage() {
                                         setShowForgotPassword(false);
                                         setForgotSent(false);
                                         setForgotEmail("");
+                                        if (isForgotPasswordMode) {
+                                            navigate("/login");
+                                        }
                                     }}
                                 >
                                     Retour à la connexion
@@ -161,7 +379,12 @@ export default function AuthPage() {
                                     type="button"
                                     variant="ghost"
                                     className="w-full"
-                                    onClick={() => setShowForgotPassword(false)}
+                                    onClick={() => {
+                                        setShowForgotPassword(false);
+                                        if (isForgotPasswordMode) {
+                                            navigate("/login");
+                                        }
+                                    }}
                                 >
                                     Retour
                                 </Button>
@@ -182,7 +405,7 @@ export default function AuthPage() {
                     <CardDescription>Éditeur de théâtre</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs defaultValue="login" className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="login">Connexion</TabsTrigger>
                             <TabsTrigger value="register">

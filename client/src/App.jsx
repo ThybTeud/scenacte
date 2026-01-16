@@ -1,35 +1,31 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-// import { Toaster } from 'react-hot-toast';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 
-import { Login } from './pages/auth/Login';
-import { Register } from './pages/auth/Register';
-import { ForgotPassword } from './pages/auth/ForgotPassword';
-import { ResetPassword } from './pages/auth/ResetPassword';
-import { PlaysList } from './pages/plays/PlaysList';
-import { PlayEditor } from './pages/plays/PlayEditor';
-import { UserProfile } from './pages/profile/UserProfile';
-import { Preferences } from './pages/preferences/Preferences';
-import { LegalNotice, PrivacyPolicy, TermsOfService } from './pages/legal';
+// Pages
+import AuthPage from './pages/auth/AuthPage';
+import LibraryPage from './pages/library/LibraryPage';
+import EditorPage from './pages/editor/EditorPage';
+import ProfilePage from './pages/profile/ProfilePage';
+import LegalPage from './pages/legal/LegalPage';
 import { NotFound } from './pages/NotFound';
-import DevPlayground from './pages/DevPlayground';
-import LibraryPage from './pages/LibraryPage';
-import EditorPage from './pages/plays/EditorPage';
-import AuthPage from './pages/dev/AuthPage';
-import LegalPage from './pages/dev/LegalPage';
-import ProfilePage from './pages/dev/ProfilePage';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
 
   if (user || guestMode) {
-    return <Navigate to="/plays" replace />;
+    return <Navigate to="/library" replace />;
   }
   return <Navigate to="/login" replace />;
+}
+
+// Redirection legacy /plays/:id vers /editor/:id
+function PlayIdRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/editor/${id}`} replace />;
 }
 
 function App() {
@@ -42,39 +38,28 @@ function App() {
           <Routes>
             <Route path="/" element={<RootRedirect />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            {/* Auth routes - toutes gérées par AuthPage */}
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
+            <Route path="/forgot-password" element={<AuthPage />} />
+            <Route path="/reset-password" element={<AuthPage />} />
 
-            <Route path="/legal" element={<LegalNotice />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
+            {/* Legal routes */}
+            <Route path="/legal/:docType" element={<LegalPage />} />
 
-            {import.meta.env.DEV && (
-              <>
-                <Route path="/dev" element={<DevPlayground />} />
-                <Route path="/library" element={<LibraryPage />} />
-                <Route path="/editor/:id" element={<EditorPage />} />
-                <Route path="/dev/auth" element={<AuthPage />} />
-                <Route path="/dev/legal/:docType" element={<LegalPage />} />
-                <Route path="/dev/profile" element={<ProfilePage />} />
-              </>
-            )}
-
+            {/* Protected routes */}
             <Route
-              path="/plays"
+              path="/library"
               element={
                 <PrivateRoute>
-                  <PlaysList />
+                  <LibraryPage />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/plays/:id"
+              path="/editor/:id"
               element={
                 <PrivateRoute>
-                  {/* <PlayEditor /> */}
                   <EditorPage />
                 </PrivateRoute>
               }
@@ -83,19 +68,16 @@ function App() {
               path="/profile"
               element={
                 <PrivateRoute requireAuth>
-                  <UserProfile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/preferences"
-              element={
-                <PrivateRoute requireAuth>
-                  <Preferences />
+                  <ProfilePage />
                 </PrivateRoute>
               }
             />
 
+            {/* Redirects pour rétrocompatibilité */}
+            <Route path="/plays" element={<Navigate to="/library" replace />} />
+            <Route path="/plays/:id" element={<PlayIdRedirect />} />
+
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
