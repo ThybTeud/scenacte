@@ -23,7 +23,7 @@ import {
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
 import { CollapsibleSection } from "./CollapsibleSection";
-import { ExportModal, SettingsModal } from "@/components/modals";
+import { SettingsModal } from "@/components/modals";
 
 export function EditorSidebar({
   stats,
@@ -32,6 +32,7 @@ export function EditorSidebar({
   activeSection,
   onSectionClick,
   onCharacterClick,
+  onExportClick,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -41,7 +42,6 @@ export function EditorSidebar({
     totalRepliques: 0,
     totalCharacters: 0,
   };
-  const [exportOpen, setExportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState("editor");
 
@@ -213,7 +213,7 @@ export function EditorSidebar({
                 <SidebarMenuButton
                   tooltip="Exporter"
                   className="cursor-pointer"
-                  onClick={() => setExportOpen(true)}
+                  onClick={onExportClick}
                 >
                   <Download className="h-4 w-4" />
                   <span>Export</span>
@@ -231,7 +231,6 @@ export function EditorSidebar({
         />
       </Sidebar>
 
-      <ExportModal open={exportOpen} onOpenChange={setExportOpen} />
       <SettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}

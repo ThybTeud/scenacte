@@ -13,6 +13,7 @@ import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
+import { PdfExportModal } from "@/components/pdf/PdfExportModal";
 
 export default function EditorPage() {
     const { id } = useParams();
@@ -324,6 +325,7 @@ export default function EditorPage() {
                 activeSection={activeSection}
                 onSectionClick={handleSectionClick}
                 onCharacterClick={handleCharacterClick}
+                onExportClick={() => setShowPdfExportModal(true)}
             />
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden">
@@ -379,6 +381,14 @@ export default function EditorPage() {
                     </div>
                 </main>
             </SidebarInset>
+
+            <PdfExportModal
+                isOpen={showPdfExportModal}
+                onClose={() => setShowPdfExportModal(false)}
+                playTitle={play?.title || "Sans titre"}
+                playSubtitle={play?.subtitle}
+                htmlContent={htmlContent}
+            />
         </SidebarProvider>
     );
 }
