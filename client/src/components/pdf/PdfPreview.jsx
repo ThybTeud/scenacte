@@ -5,20 +5,11 @@ import { cn } from "@/lib/utils";
 
 // Largeur d'une page A4 en pixels (à 96 DPI)
 const A4_WIDTH_PX = 794;
+// Hauteur estimée pour le contenu (sera ajustée dynamiquement)
+const IFRAME_HEIGHT = 3000;
 
 /**
  * PdfPreview - Composant de prévisualisation PDF avec PagedJS
- * Utilise une iframe pour isoler les styles PagedJS
- *
- * @param {Object} props
- * @param {string} props.htmlContent - HTML généré par astToHTML
- * @param {string} props.playTitle - Titre de la pièce
- * @param {string} [props.playSubtitle] - Sous-titre de la pièce
- * @param {string} props.template - Template CSS à utiliser
- * @param {string} props.pageFormat - Format de page (A4, A5, letter)
- * @param {number} [props.zoom=100] - Niveau de zoom en pourcentage
- * @param {Function} [props.onPagesRendered] - Callback appelé avec le nombre de pages
- * @param {Function} [props.onFitWidthZoom] - Callback appelé avec le zoom calculé pour fit-to-width
  */
 export const PdfPreview = forwardRef(function PdfPreview(
     {
@@ -44,27 +35,26 @@ export const PdfPreview = forwardRef(function PdfPreview(
         },
         calculateFitWidthZoom() {
             if (!containerRef.current) return 75;
-            const containerWidth = containerRef.current.clientWidth - 32; // padding
+            const containerWidth = containerRef.current.clientWidth - 32;
             const fitZoom = Math.floor((containerWidth / A4_WIDTH_PX) * 100);
             return Math.max(25, Math.min(150, fitZoom));
         },
     }));
 
-    // Calculer le fit-to-width zoom au montage et au resize
+    // Calculer le fit-to-width zoom au montage
     useEffect(() => {
         if (!containerRef.current || !onFitWidthZoom) return;
 
         const calculateAndNotify = () => {
+            if (!containerRef.current) return;
             const containerWidth = containerRef.current.clientWidth - 32;
             const fitZoom = Math.floor((containerWidth / A4_WIDTH_PX) * 100);
             const clampedZoom = Math.max(25, Math.min(150, fitZoom));
             onFitWidthZoom(clampedZoom);
         };
 
-        // Calculer au montage (avec un petit délai pour que le layout soit stable)
-        const timeoutId = setTimeout(calculateAndNotify, 50);
+        const timeoutId = setTimeout(calculateAndNotify, 100);
 
-        // Recalculer au resize
         const resizeObserver = new ResizeObserver(calculateAndNotify);
         resizeObserver.observe(containerRef.current);
 
@@ -82,7 +72,6 @@ export const PdfPreview = forwardRef(function PdfPreview(
         const iframe = iframeRef.current;
         const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-        // Générer le HTML complet avec PagedJS polyfill
         const fullHtml = generatePdfHtml({
             htmlContent,
             playTitle,
@@ -95,58 +84,66 @@ export const PdfPreview = forwardRef(function PdfPreview(
         doc.write(fullHtml);
         doc.close();
 
-        // Écouter l'événement PagedJS ready
         const handlePagedReady = () => {
             const pages = doc.querySelectorAll(".pagedjs_page");
             onPagesRendered?.(pages.length);
             setIsLoading(false);
         };
 
-        // Le polyfill dispatch cet événement quand le rendu est terminé
         iframe.contentWindow.addEventListener("pagedjs-ready", handlePagedReady);
 
-        // Timeout de sécurité
         const timeout = setTimeout(() => {
             setIsLoading(false);
             onPagesRendered?.(0);
         }, 10000);
 
         return () => {
-            iframe.contentWindow?.removeEventListener(
-                "pagedjs-ready",
-                handlePagedReady
-            );
+            iframe.contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
             clearTimeout(timeout);
         };
     }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered]);
 
     const scale = zoom / 100;
+    // Dimensions scalées pour éviter le scroll horizontal quand fit-to-width
+    const scaledWidth = A4_WIDTH_PX * scale;
+    const scaledHeight = IFRAME_HEIGHT * scale;
 
     return (
-        <div ref={containerRef} className="relative h-full w-full overflow-auto rounded-md border bg-muted/50 p-4">
+        <div
+            ref={containerRef}
+            className="h-full w-full overflow-auto bg-muted/30 p-4"
+        >
             {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
                     <Loader />
                     <span className="ml-2 text-sm text-muted-foreground">
                         Génération des pages...
                     </span>
                 </div>
             )}
+            {/* Wrapper avec dimensions scalées pour contenir l'iframe transformée */}
             <div
                 style={{
-                    width: A4_WIDTH_PX,
-                    minHeight: "100%",
-                    transform: `scale(${scale})`,
-                    transformOrigin: "top left",
+                    width: scaledWidth,
+                    height: scaledHeight,
+                    position: "relative",
                 }}
             >
                 <iframe
                     ref={iframeRef}
                     className={cn(
-                        "w-full border-0 bg-white",
+                        "border-0 bg-white shadow-lg",
                         isLoading && "opacity-0"
                     )}
-                    style={{ height: "2000px" }} // Hauteur suffisante pour plusieurs pages
+                    style={{
+                        width: A4_WIDTH_PX,
+                        height: IFRAME_HEIGHT,
+                        transform: `scale(${scale})`,
+                        transformOrigin: "top left",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                    }}
                     title="PDF Preview"
                 />
             </div>
