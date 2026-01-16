@@ -36,7 +36,11 @@ export function EditorSidebar({
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const safeStats = stats || { totalScenes: 0, totalRepliques: 0, totalCharacters: 0 };
+  const safeStats = stats || {
+    totalScenes: 0,
+    totalRepliques: 0,
+    totalCharacters: 0,
+  };
   const [exportOpen, setExportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState("editor");
@@ -86,6 +90,7 @@ export function EditorSidebar({
               {structure.items?.map((act, a) => (
                 <SidebarMenuItem key={a}>
                   <SidebarMenuButton
+                    size="sm"
                     onClick={() => onSectionClick(act.position)}
                     className={`cursor-pointer ${
                       activeSection === a ? "bg-muted font-medium" : ""
@@ -98,6 +103,7 @@ export function EditorSidebar({
                       {act.scenes.map((scene, s) => (
                         <SidebarMenuSubItem key={s}>
                           <SidebarMenuSubButton
+                            size="sm"
                             onClick={() => onSectionClick(scene.position)}
                             className={`cursor-pointer ${
                               activeSection === s ? "bg-muted font-medium" : ""
@@ -125,6 +131,7 @@ export function EditorSidebar({
               {characters.map((char, index) => (
                 <SidebarMenuSubItem key={index}>
                   <SidebarMenuSubButton
+                    size="sm"
                     onClick={() => onCharacterClick(char)}
                     className="cursor-pointer"
                   >
@@ -144,21 +151,21 @@ export function EditorSidebar({
           >
             <SidebarMenuSub>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild>
+                <SidebarMenuSubButton size="sm" asChild>
                   <span className="text-muted-foreground cursor-default">
                     {safeStats.totalScenes} scènes
                   </span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild>
+                <SidebarMenuSubButton size="sm" asChild>
                   <span className="text-muted-foreground cursor-default">
                     {safeStats.totalRepliques} répliques
                   </span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild>
+                <SidebarMenuSubButton size="sm" asChild>
                   <span className="text-muted-foreground cursor-default">
                     {safeStats.totalCharacters} personnages
                   </span>
@@ -178,6 +185,7 @@ export function EditorSidebar({
             <SidebarMenuSub>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  size="sm"
                   tooltip="Paramètres éditeur"
                   className="cursor-pointer"
                   onClick={openEditorSettings}
@@ -187,6 +195,7 @@ export function EditorSidebar({
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  size="sm"
                   tooltip="Paramètres mise en page"
                   className="cursor-pointer"
                   onClick={openPageSettings}
