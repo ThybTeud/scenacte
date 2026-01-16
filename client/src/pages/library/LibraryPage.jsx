@@ -103,7 +103,7 @@ export default function LibraryPage() {
             const response = await storageService.createPlay({ title, subtitle });
             toast.success("Pièce créée avec succès !");
             setShowCreateModal(false);
-            navigate(`/plays/${response.play.id}`);
+            navigate(`/editor/${response.play.id}`);
         } catch (error) {
             toast.error(error.message || "Erreur lors de la création");
         } finally {
@@ -141,7 +141,7 @@ export default function LibraryPage() {
         if (!selectedPlay) return;
         setIsSubmitting(true);
         try {
-            await storageService.savePlay(selectedPlay.id, { title, subtitle });
+            await storageService.renamePlay(selectedPlay.id, { title, subtitle });
             toast.success("Pièce renommée avec succès !");
             setShowRenameModal(false);
             setSelectedPlay(null);
@@ -274,7 +274,7 @@ export default function LibraryPage() {
                                     <PlayCard
                                         key={play.id}
                                         play={play}
-                                        onClick={() => navigate(`/plays/${play.id}`)}
+                                        onClick={() => navigate(`/editor/${play.id}`)}
                                         onRename={openRenameModal}
                                         onDelete={openDeleteModal}
                                     />
