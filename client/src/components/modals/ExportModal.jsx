@@ -8,7 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, FileCode, File } from "lucide-react";
+import { FileText, FileCode, File, Download, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PdfPreview } from "@/components/pdf/PdfPreview";
 import { printPdf } from "@/utils/pdfExport";
@@ -84,6 +84,7 @@ export default function ExportModal({
     const [format, setFormat] = useState("pdf");
     const [template, setTemplate] = useState("classic");
     const [pageCount, setPageCount] = useState(0);
+    const [showPreviewMobile, setShowPreviewMobile] = useState(false);
     const iframeRef = useRef(null);
 
     const handleDownload = () => {
@@ -92,7 +93,7 @@ export default function ExportModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-5xl">
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg md:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Exporter la pièce</DialogTitle>
                     <DialogDescription>
@@ -100,15 +101,15 @@ export default function ExportModal({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex gap-6 py-4">
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6 py-4">
                     {/* Panneau gauche - Options */}
-                    <div className="w-[250px] space-y-6 flex-shrink-0">
+                    <div className="w-full md:w-[220px] lg:w-[250px] space-y-4 md:space-y-6 flex-shrink-0">
                         {/* Format */}
                         <div className="space-y-3">
                             <label className="text-sm font-medium">
                                 Format
                             </label>
-                            <div className="grid grid-cols-1 gap-3">
+                            <div className="grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-3">
                                 {FORMATS.map((f) => (
                                     <ChoiceCard
                                         key={f.id}
@@ -117,12 +118,13 @@ export default function ExportModal({
                                             !f.disabled && setFormat(f.id)
                                         }
                                         disabled={f.disabled}
+                                        className="p-2 md:p-4"
                                     >
-                                        <f.icon size={20} className="mb-1" />
-                                        <span className="font-medium">
+                                        <f.icon size={20} className="mb-1 hidden md:block" />
+                                        <span className="font-medium text-sm md:text-base">
                                             {f.label}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-muted-foreground hidden md:block">
                                             {f.description}
                                         </span>
                                     </ChoiceCard>
@@ -136,17 +138,18 @@ export default function ExportModal({
                                 <label className="text-sm font-medium">
                                     Template
                                 </label>
-                                <div className="grid grid-cols-1 gap-3">
+                                <div className="grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-3">
                                     {TEMPLATES.map((t) => (
                                         <ChoiceCard
                                             key={t.id}
                                             selected={template === t.id}
                                             onClick={() => setTemplate(t.id)}
+                                            className="p-2 md:p-4"
                                         >
-                                            <span className="font-medium">
+                                            <span className="font-medium text-sm md:text-base">
                                                 {t.label}
                                             </span>
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-muted-foreground hidden md:block">
                                                 {t.description}
                                             </span>
                                         </ChoiceCard>
@@ -161,10 +164,36 @@ export default function ExportModal({
                                 {pageCount} page{pageCount > 1 ? "s" : ""}
                             </div>
                         )}
+
+                        {/* Bouton toggle preview sur mobile */}
+                        {format === "pdf" && htmlContent && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full md:hidden"
+                                onClick={() => setShowPreviewMobile(!showPreviewMobile)}
+                            >
+                                {showPreviewMobile ? (
+                                    <>
+                                        <EyeOff size={16} className="mr-2" />
+                                        Masquer l'aperçu
+                                    </>
+                                ) : (
+                                    <>
+                                        <Eye size={16} className="mr-2" />
+                                        Voir l'aperçu
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
 
-                    {/* Panneau droit - Preview */}
-                    <div className="flex-1 min-h-[600px]">
+                    {/* Panneau droit - Preview (masqué sur mobile sauf si toggle) */}
+                    <div className={cn(
+                        "flex-1 min-h-[300px] md:min-h-[500px] lg:min-h-[600px]",
+                        "hidden md:block",
+                        showPreviewMobile && "!block"
+                    )}>
                         {format === "pdf" && htmlContent && (
                             <PdfPreview
                                 ref={iframeRef}
@@ -179,14 +208,21 @@ export default function ExportModal({
                     </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
+                        className="w-full sm:w-auto"
                     >
                         Annuler
                     </Button>
-                    <Button onClick={handleDownload}>Télécharger PDF</Button>
+                    <Button
+                        onClick={handleDownload}
+                        className="w-full sm:w-auto"
+                    >
+                        <Download size={16} className="mr-2" />
+                        Télécharger PDF
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -32,6 +32,9 @@ export function EditorSidebar({
   activeSection,
   onSectionClick,
   onCharacterClick,
+  htmlContent,
+  playTitle,
+  playSubtitle,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -231,7 +234,13 @@ export function EditorSidebar({
         />
       </Sidebar>
 
-      <ExportModal open={exportOpen} onOpenChange={setExportOpen} />
+      <ExportModal
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        htmlContent={htmlContent}
+        playTitle={playTitle}
+        playSubtitle={playSubtitle}
+      />
       <SettingsModal
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
