@@ -141,7 +141,7 @@ export default function LibraryPage() {
         if (!selectedPlay) return;
         setIsSubmitting(true);
         try {
-            await storageService.savePlay(selectedPlay.id, { title, subtitle });
+            await storageService.renamePlay(selectedPlay.id, { title, subtitle });
             toast.success("Pièce renommée avec succès !");
             setShowRenameModal(false);
             setSelectedPlay(null);

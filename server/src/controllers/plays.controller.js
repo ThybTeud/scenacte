@@ -539,6 +539,105 @@ export async function getPlayAST(req, res, next) {
 }
 
 /**
+ * PATCH /api/plays/:id
+ * Mise à jour partielle d'une pièce (renommage)
+ * Ne crée pas de nouvelle version
+ */
+export async function updatePlay(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { title, subtitle } = req.body;
+    const userId = req.user.id;
+
+    // Validation UUID
+    const idValidation = validateUUID(id);
+    if (!idValidation.valid) {
+      throw new ValidationError(idValidation.message);
+    }
+
+    // Au moins un champ à mettre à jour
+    if (title === undefined && subtitle === undefined) {
+      throw new ValidationError('Au moins un champ (title ou subtitle) est requis');
+    }
+
+    // Validation du titre si fourni
+    if (title !== undefined) {
+      const titleValidation = validateTitle(title);
+      if (!titleValidation.valid) {
+        throw new ValidationError(titleValidation.message);
+      }
+    }
+
+    // Vérifier que la pièce existe et appartient à l'utilisateur
+    const checkQuery = `SELECT id, user_id FROM plays WHERE id = $1`;
+    const checkResult = await pool.query(checkQuery, [id]);
+
+    if (checkResult.rows.length === 0) {
+      throw new NotFoundError('Pièce non trouvée');
+    }
+
+    const play = checkResult.rows[0];
+
+    if (play.user_id !== userId) {
+      throw new ForbiddenError('Accès non autorisé à cette pièce');
+    }
+
+    // Construction dynamique de la requête UPDATE
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      updates.push(`title = $${paramIndex}`);
+      values.push(title.trim());
+      paramIndex++;
+    }
+
+    if (subtitle !== undefined) {
+      updates.push(`subtitle = $${paramIndex}`);
+      values.push(subtitle?.trim() || null);
+      paramIndex++;
+    }
+
+    updates.push('updated_at = NOW()');
+    values.push(id);
+
+    const updateQuery = `
+      UPDATE plays
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const updateResult = await pool.query(updateQuery, values);
+
+    // Récupérer les stats
+    const statsQuery = `SELECT * FROM play_statistics WHERE play_id = $1`;
+    const statsResult = await pool.query(statsQuery, [id]);
+
+    const updatedPlay = updateResult.rows[0];
+
+    res.json({
+      play: {
+        id: updatedPlay.id,
+        userId: updatedPlay.user_id,
+        title: updatedPlay.title,
+        subtitle: updatedPlay.subtitle,
+        contentVersion: updatedPlay.content_version,
+        status: updatedPlay.status,
+        createdAt: updatedPlay.created_at,
+        updatedAt: updatedPlay.updated_at,
+        lastEditedAt: updatedPlay.last_edited_at,
+        statistics: statsResult.rows[0] || null
+      },
+      message: 'Pièce mise à jour avec succès'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * PATCH /api/plays/:id/status
  * Changer le statut d'une pièce
  */

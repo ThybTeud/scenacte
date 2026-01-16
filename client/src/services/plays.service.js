@@ -26,6 +26,10 @@ export const playsService = {
     return api.put(`/plays/${id}`, data);
   },
 
+  async renamePlay(id, data) {
+    return api.patch(`/plays/${id}`, data);
+  },
+
   async deletePlay(id) {
     return api.delete(`/plays/${id}`);
   },
