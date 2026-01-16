@@ -4,6 +4,7 @@ import {
   createPlay,
   getPlay,
   savePlay,
+  updatePlay,
   deletePlay,
   updatePlayStatus,
   getPlayAST
@@ -66,6 +67,15 @@ router.put('/:id', savePlay);
  * Requiert: Authorization header avec Bearer token
  */
 router.delete('/:id', deletePlay);
+
+/**
+ * PATCH /api/plays/:id
+ * Mise à jour partielle d'une pièce (renommage)
+ * Body: { title?, subtitle? }
+ * Requiert: Authorization header avec Bearer token
+ * Note: Ne crée pas de nouvelle version
+ */
+router.patch('/:id', updatePlay);
 
 /**
  * PATCH /api/plays/:id/status

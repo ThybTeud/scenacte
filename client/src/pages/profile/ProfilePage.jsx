@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import {
     Card,
@@ -12,30 +13,50 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { usersService } from "@/services/users.service";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
+    const navigate = useNavigate();
+    const { user, updateUser, logout } = useAuth();
+
     // États formulaires
-    const [email, setEmail] = useState("utilisateur@exemple.com");
+    const [email, setEmail] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [deletePassword, setDeletePassword] = useState("");
     const [showPasswords, setShowPasswords] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+
+    // États de chargement séparés pour chaque action
+    const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
     const [error, setError] = useState("");
 
-    // TODO: Récupérer depuis AuthContext
-    const user = {
-        email: "utilisateur@exemple.com",
-        createdAt: "2024-06-15T10:30:00Z",
-    };
+    // Initialiser l'email depuis le user
+    useEffect(() => {
+        if (user?.email) {
+            setEmail(user.email);
+        }
+    }, [user]);
 
     const handleUpdateEmail = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
+        setIsUpdatingEmail(true);
         setError("");
-        // TODO: Connecter à l'API
-        console.log("Update email:", email);
-        setTimeout(() => setIsLoading(false), 1000);
+
+        try {
+            const response = await usersService.updateProfile({ email });
+            updateUser({ email: response.user?.email || email });
+            toast.success("Email mis à jour avec succès");
+        } catch (err) {
+            toast.error(err.message || "Erreur lors de la mise à jour de l'email");
+        } finally {
+            setIsUpdatingEmail(false);
+        }
     };
 
     const handleUpdatePassword = async (e) => {
@@ -47,39 +68,57 @@ export default function ProfilePage() {
             return;
         }
 
-        setIsLoading(true);
-        // TODO: Connecter à l'API
-        console.log("Update password");
-        setTimeout(() => {
-            setIsLoading(false);
+        if (newPassword.length < 12) {
+            setError("Le mot de passe doit contenir au moins 12 caractères");
+            return;
+        }
+
+        setIsUpdatingPassword(true);
+
+        try {
+            await usersService.updateProfile({
+                currentPassword,
+                newPassword,
+            });
+            toast.success("Mot de passe modifié avec succès");
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
-        }, 1000);
-    };
-
-    const handleExportData = async () => {
-        setIsLoading(true);
-        // TODO: Connecter à l'API - télécharger un JSON/ZIP
-        console.log("Export data");
-        setTimeout(() => setIsLoading(false), 1000);
+        } catch (err) {
+            toast.error(err.message || "Erreur lors de la modification du mot de passe");
+        } finally {
+            setIsUpdatingPassword(false);
+        }
     };
 
     const handleDeleteAccount = async () => {
-        // TODO: Ajouter une modale de confirmation
-        if (
-            window.confirm(
-                "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible."
-            )
-        ) {
-            setIsLoading(true);
-            // TODO: Connecter à l'API
-            console.log("Delete account");
-            setTimeout(() => setIsLoading(false), 1000);
+        if (!deletePassword) {
+            toast.error("Veuillez entrer votre mot de passe pour confirmer");
+            return;
+        }
+
+        if (!window.confirm(
+            "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible."
+        )) {
+            return;
+        }
+
+        setIsDeletingAccount(true);
+
+        try {
+            await usersService.deleteAccount(deletePassword);
+            toast.success("Compte supprimé avec succès");
+            logout();
+            navigate("/login");
+        } catch (err) {
+            toast.error(err.message || "Erreur lors de la suppression du compte");
+        } finally {
+            setIsDeletingAccount(false);
         }
     };
 
     const formatDate = (dateString) => {
+        if (!dateString) return "Date inconnue";
         return new Date(dateString).toLocaleDateString("fr-FR", {
             day: "numeric",
             month: "long",
@@ -95,7 +134,7 @@ export default function ProfilePage() {
                     <CardHeader>
                         <CardTitle>Informations du compte</CardTitle>
                         <CardDescription>
-                            Membre depuis le {formatDate(user.createdAt)}
+                            Membre depuis le {formatDate(user?.createdAt)}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -113,8 +152,8 @@ export default function ProfilePage() {
                                     required
                                 />
                             </div>
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading
+                            <Button type="submit" disabled={isUpdatingEmail || email === user?.email}>
+                                {isUpdatingEmail
                                     ? "Mise à jour..."
                                     : "Mettre à jour l'email"}
                             </Button>
@@ -201,8 +240,8 @@ export default function ProfilePage() {
                                 </p>
                             )}
 
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading
+                            <Button type="submit" disabled={isUpdatingPassword}>
+                                {isUpdatingPassword
                                     ? "Mise à jour..."
                                     : "Modifier le mot de passe"}
                             </Button>
@@ -226,10 +265,11 @@ export default function ProfilePage() {
                                     personnelles
                                 </p>
                             </div>
+                            {/* TODO: Implémenter l'export des données côté backend */}
                             <Button
                                 variant="outline"
-                                onClick={handleExportData}
-                                disabled={isLoading}
+                                disabled
+                                title="Fonctionnalité à venir"
                             >
                                 Exporter
                             </Button>
@@ -237,22 +277,33 @@ export default function ProfilePage() {
 
                         <Separator />
 
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-destructive">
-                                    Supprimer mon compte
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    Cette action est irréversible
-                                </p>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-medium text-destructive">
+                                        Supprimer mon compte
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Cette action est irréversible
+                                    </p>
+                                </div>
                             </div>
-                            <Button
-                                variant="destructive"
-                                onClick={handleDeleteAccount}
-                                disabled={isLoading}
-                            >
-                                Supprimer
-                            </Button>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="password"
+                                    placeholder="Entrez votre mot de passe pour confirmer"
+                                    value={deletePassword}
+                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDeleteAccount}
+                                    disabled={isDeletingAccount || !deletePassword}
+                                >
+                                    {isDeletingAccount ? "Suppression..." : "Supprimer"}
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

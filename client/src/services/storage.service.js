@@ -192,12 +192,20 @@ export const storageService = {
     return playsService.createPlay(data);
   },
 
-  // Sauvegarde une pièce existante
+  // Sauvegarde une pièce existante (crée une version)
   async savePlay(id, data) {
     if (isGuest()) {
       return saveLocalPlay(id, data);
     }
     return playsService.savePlay(id, data);
+  },
+
+  // Renomme une pièce (ne crée pas de version)
+  async renamePlay(id, data) {
+    if (isGuest()) {
+      return saveLocalPlay(id, data);
+    }
+    return playsService.renamePlay(id, data);
   },
 
   // Supprime une pièce

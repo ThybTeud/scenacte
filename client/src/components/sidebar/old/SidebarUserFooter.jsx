@@ -10,20 +10,19 @@ import {
 import { ChevronUp, User, LogOut, UserRound } from "lucide-react"
 
 /**
- * Génère les initiales depuis un email
- * @param {string} email - L'email (ex: "jean.dupont@gmail.com")
+ * Génère les initiales depuis un nom complet
+ * @param {string} name - Le nom complet (ex: "Jean DUPONT")
  * @returns {string} Les initiales (ex: "JD")
  */
-function getInitialsFromEmail(email) {
-  if (!email) return "?"
-  
-  const localPart = email.split("@")[0]
-  const parts = localPart.split(/[._-]/)
-  
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase()
+function getInitials(name) {
+  if (!name) return "?"
+
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase()
   }
-  return localPart.substring(0, 2).toUpperCase()
+
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export function SidebarUserFooter({
@@ -41,16 +40,16 @@ export function SidebarUserFooter({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Se connecter" onClick={onNavigateSignup}>
+            <SidebarMenuButton size="lg" tooltip="Mode invité" onClick={onNavigateSignup}>
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
                   <UserRound className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">Invité</span>
-                <span className="text-xs text-primary">
-                  Se connecter →
+                <span className="font-semibold">Mode invité</span>
+                <span className="text-xs text-primary text-left">
+                  Créer un compte
                 </span>
               </div>
             </SidebarMenuButton>
@@ -61,7 +60,7 @@ export function SidebarUserFooter({
   }
 
   // État connecté avec dropdown
-  const initials = getInitialsFromEmail(user.email)
+  const initials = getInitials(user.name)
 
   return (
     <SidebarFooter>
@@ -69,15 +68,16 @@ export function SidebarUserFooter({
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton size="lg" tooltip={user.email}>
+              <SidebarMenuButton size="lg" tooltip={user.name}>
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <span className="flex-1 truncate text-sm font-medium">
-                  {user.email}
-                </span>
+                <div className="flex flex-1 flex-col gap-0.5 leading-none">
+                  <span className="font-semibold">{user.name}</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                </div>
                 {isExpanded && (
-                  <ChevronUp className="ml-auto h-4 w-4 shrink-0" />
+                  <ChevronUp className="ml-auto h-4 w-4" />
                 )}
               </SidebarMenuButton>
             </DropdownMenuTrigger>

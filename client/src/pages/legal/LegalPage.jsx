@@ -1,68 +1,89 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { marked } from 'marked';
-import { Button } from '../../components/ui/Button';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { marked } from "marked";
+import AppLayout from "@/components/layout/AppLayout";
 
-// Configuration marked
-marked.setOptions({
-  gfm: true,        // GitHub Flavored Markdown (tableaux, etc.)
-  breaks: true,     // Convertir \n en <br>
-});
+const LEGAL_DOCS = {
+    legal: {
+        title: "Mentions Légales",
+        file: "/legal/LEGAL_NOTICE.md",
+    },
+    privacy: {
+        title: "Politique de Confidentialité",
+        file: "/legal/PRIVACY_POLICY.md",
+    },
+    terms: {
+        title: "Conditions Générales d'Utilisation",
+        file: "/legal/TERMS_OF_SERVICE.md",
+    },
+};
 
-export default function LegalPage({ file, title }) {
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+export default function LegalPage() {
+    const { docType } = useParams();
+    const [content, setContent] = useState("");
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    document.title = `${title} - Scenacte`;
-    fetch(`/legal/${file}`)
-      .then(res => res.text())
-      .then(text => {
-        setContent(marked.parse(text));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [file, title]);
+    const doc = LEGAL_DOCS[docType];
 
-  if (loading) {
+    useEffect(() => {
+        if (!doc) return;
+
+        setLoading(true);
+        fetch(doc.file)
+            .then((res) => res.text())
+            .then((md) => {
+                setContent(marked.parse(md));
+                setLoading(false);
+            })
+            .catch(() => {
+                setContent("<p>Erreur de chargement du document.</p>");
+                setLoading(false);
+            });
+    }, [docType, doc]);
+
+    if (!doc) {
+        return (
+            <AppLayout title="Document non trouvé">
+                <p>Ce document n'existe pas.</p>
+            </AppLayout>
+        );
+    }
+
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <p className="text-gray-600">Chargement...</p>
-      </div>
+        <AppLayout title={doc.title}>
+            <div className="max-w-3xl mx-auto">
+                {loading ? (
+                    <p className="text-muted-foreground">Chargement...</p>
+                ) : (
+                    <article
+                        className="prose prose-neutral prose-lg max-w-none dark:prose-invert"
+                        dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                )}
+
+                <footer className="mt-16 pt-6 border-t">
+                    <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <Link
+                            to="/legal/legal"
+                            className="hover:text-foreground"
+                        >
+                            Mentions légales
+                        </Link>
+                        <Link
+                            to="/legal/privacy"
+                            className="hover:text-foreground"
+                        >
+                            Confidentialité
+                        </Link>
+                        <Link
+                            to="/legal/terms"
+                            className="hover:text-foreground"
+                        >
+                            CGU
+                        </Link>
+                    </nav>
+                </footer>
+            </div>
+        </AppLayout>
     );
-  }
-
-  return (
-    <div className="min-h-screen bg-cream">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Bouton retour */}
-        <Button
-          variant='secondary'
-          onClick={() => navigate(-1)}
-          className="mb-8 inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-medium"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Retour
-        </Button>
-
-        {/* Contenu */}
-        <article
-          className="legal-content bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 md:p-12"
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      </div>
-    </div>
-  );
 }

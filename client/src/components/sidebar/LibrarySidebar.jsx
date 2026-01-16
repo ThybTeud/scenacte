@@ -33,16 +33,19 @@ const navigationGroups = [
     {
         label: "Paramètres",
         icon: Settings,
-        items: ["Editeur", "Mise en page"],
+        items: [
+            { label: "Editeur", path: null },
+            { label: "Mise en page", path: null },
+        ],
         openByDefault: true,
     },
     {
         label: "Légal",
         icon: Scale,
         items: [
-            "Conditions d'utilisation",
-            "Mentions légales",
-            "Politique de confidentialité",
+            { label: "Conditions d'utilisation", path: "/legal/terms" },
+            { label: "Mentions légales", path: "/legal/legal" },
+            { label: "Politique de confidentialité", path: "/legal/privacy" },
         ],
         openByDefault: false,
     },
@@ -76,8 +79,12 @@ export function LibrarySidebar() {
                                     <SidebarMenuSub>
                                         {group.items.map((item, index) => (
                                             <SidebarMenuSubItem key={index}>
-                                                <SidebarMenuSubButton className="cursor-pointer">
-                                                    {item}
+                                                <SidebarMenuSubButton
+                                                    className="cursor-pointer"
+                                                    onClick={() => item.path && navigate(item.path)}
+                                                    disabled={!item.path}
+                                                >
+                                                    {item.label}
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>
                                         ))}

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -17,7 +17,11 @@ import { authService } from "@/services/auth.service";
 
 export default function AuthPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, register, enableGuestMode } = useAuth();
+
+    // Détecter le mode depuis l'URL
+    const isForgotPasswordMode = location.pathname === "/forgot-password";
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -36,6 +40,22 @@ export default function AuthPage() {
     // Forgot password
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotSent, setForgotSent] = useState(false);
+
+    // Déterminer l'onglet initial selon l'URL
+    const getInitialTab = () => {
+        if (location.pathname === "/register") return "register";
+        return "login";
+    };
+    const [activeTab, setActiveTab] = useState(getInitialTab);
+
+    // Mettre à jour le tab si l'URL change
+    useEffect(() => {
+        if (location.pathname === "/register") {
+            setActiveTab("register");
+        } else if (location.pathname === "/login") {
+            setActiveTab("login");
+        }
+    }, [location.pathname]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -93,8 +113,8 @@ export default function AuthPage() {
         navigate("/library");
     };
 
-    // Forgot Password View
-    if (showForgotPassword) {
+    // Forgot Password View (via state ou via URL directe)
+    if (showForgotPassword || isForgotPasswordMode) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <Card className="w-full max-w-md">
@@ -119,6 +139,9 @@ export default function AuthPage() {
                                         setShowForgotPassword(false);
                                         setForgotSent(false);
                                         setForgotEmail("");
+                                        if (isForgotPasswordMode) {
+                                            navigate("/login");
+                                        }
                                     }}
                                 >
                                     Retour à la connexion
@@ -161,7 +184,12 @@ export default function AuthPage() {
                                     type="button"
                                     variant="ghost"
                                     className="w-full"
-                                    onClick={() => setShowForgotPassword(false)}
+                                    onClick={() => {
+                                        setShowForgotPassword(false);
+                                        if (isForgotPasswordMode) {
+                                            navigate("/login");
+                                        }
+                                    }}
                                 >
                                     Retour
                                 </Button>
@@ -182,7 +210,7 @@ export default function AuthPage() {
                     <CardDescription>Éditeur de théâtre</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs defaultValue="login" className="w-full">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="login">Connexion</TabsTrigger>
                             <TabsTrigger value="register">
@@ -393,6 +421,30 @@ export default function AuthPage() {
                         <p className="mt-2 text-xs text-center text-muted-foreground">
                             Vos pièces seront sauvegardées localement
                         </p>
+                    </div>
+
+                    {/* Legal links */}
+                    <div className="mt-6 pt-4 border-t">
+                        <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+                            <Link
+                                to="/legal/terms"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                CGU
+                            </Link>
+                            <Link
+                                to="/legal/legal"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                Mentions légales
+                            </Link>
+                            <Link
+                                to="/legal/privacy"
+                                className="hover:text-foreground hover:underline"
+                            >
+                                Confidentialité
+                            </Link>
+                        </nav>
                     </div>
                 </CardContent>
             </Card>
