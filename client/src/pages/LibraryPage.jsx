@@ -186,16 +186,16 @@ export default function LibraryPage() {
                             </div>
                             <div className="flex gap-2">
                                 <Select
-                                    value={filters.status}
+                                    value={filters.status || "all"}
                                     onValueChange={(value) =>
-                                        setFilters((prev) => ({ ...prev, status: value }))
+                                        setFilters((prev) => ({ ...prev, status: value === "all" ? "" : value }))
                                     }
                                 >
                                     <SelectTrigger className="w-[140px]">
                                         <SelectValue placeholder="Statut" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">Tous</SelectItem>
+                                        <SelectItem value="all">Tous</SelectItem>
                                         <SelectItem value="draft">Brouillon</SelectItem>
                                         <SelectItem value="completed">Terminé</SelectItem>
                                         <SelectItem value="archived">Archivé</SelectItem>
