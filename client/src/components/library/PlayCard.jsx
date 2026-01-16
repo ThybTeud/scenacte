@@ -9,7 +9,8 @@ import {
 import { MoreVertical, Pencil, History, Trash2 } from "lucide-react"
 
 const formatDate = (date) => {
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date)
+  const dateObj = date instanceof Date ? date : new Date(date)
+  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(dateObj)
 }
 
 export function PlayCard({ play, onClick, onRename, onDelete }) {
