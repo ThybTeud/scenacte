@@ -7,11 +7,13 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
 import AuthPage from './pages/auth/AuthPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import LibraryPage from './pages/library/LibraryPage';
 import EditorPage from './pages/editor/EditorPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import LegalPage from './pages/legal/LegalPage';
 import { NotFound } from './pages/NotFound';
+import DevPlayground from './pages/DevPlayground';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -38,11 +40,16 @@ function App() {
           <Routes>
             <Route path="/" element={<RootRedirect />} />
 
-            {/* Auth routes - toutes gérées par AuthPage */}
+            {/* Auth routes */}
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
             <Route path="/forgot-password" element={<AuthPage />} />
-            <Route path="/reset-password" element={<AuthPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* DEV only */}
+            {import.meta.env.DEV && (
+              <Route path="/dev" element={<DevPlayground />} />
+            )}
 
             {/* Legal routes */}
             <Route path="/legal/:docType" element={<LegalPage />} />
