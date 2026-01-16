@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -11,8 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { authService } from "@/services/auth.service";
 
 export default function AuthPage() {
+    const navigate = useNavigate();
+    const { login, register, enableGuestMode } = useAuth();
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -35,9 +41,15 @@ export default function AuthPage() {
         e.preventDefault();
         setError("");
         setIsLoading(true);
-        // TODO: Connecter à auth.service.js
-        console.log("Login:", { loginEmail, loginPassword });
-        setTimeout(() => setIsLoading(false), 1000);
+
+        try {
+            await login(loginEmail, loginPassword);
+            navigate("/library");
+        } catch (err) {
+            setError(err.message || "Erreur de connexion");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleRegister = async (e) => {
@@ -50,26 +62,35 @@ export default function AuthPage() {
         }
 
         setIsLoading(true);
-        // TODO: Connecter à auth.service.js
-        console.log("Register:", { registerEmail, registerPassword });
-        setTimeout(() => setIsLoading(false), 1000);
+
+        try {
+            await register(registerEmail, registerPassword);
+            navigate("/library");
+        } catch (err) {
+            setError(err.message || "Erreur lors de l'inscription");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         setError("");
         setIsLoading(true);
-        // TODO: Connecter à auth.service.js
-        console.log("Forgot password:", { forgotEmail });
-        setTimeout(() => {
-            setIsLoading(false);
+
+        try {
+            await authService.forgotPassword(forgotEmail);
             setForgotSent(true);
-        }, 1000);
+        } catch (err) {
+            setError(err.message || "Erreur lors de l'envoi du lien");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGuestMode = () => {
-        // TODO: Connecter au guestMode du AuthContext
-        console.log("Guest mode activated");
+        enableGuestMode();
+        navigate("/library");
     };
 
     // Forgot Password View
