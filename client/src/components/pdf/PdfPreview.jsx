@@ -110,11 +110,17 @@ export const PdfPreview = forwardRef(function PdfPreview(
         }
 
         styleEl.textContent = `
-            .pagedjs_pages {
-                transform: scale(${scale});
-                transform-origin: top center;
-            }
-        `;
+    @media screen {
+        .pagedjs_pages {
+            transform: scale(${scale});
+            transform-origin: top center;
+        }
+        .pagedjs_page {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            margin-bottom: 16px;
+        }
+    }
+`;
     }, [scale, isLoading]);
 
     return (
