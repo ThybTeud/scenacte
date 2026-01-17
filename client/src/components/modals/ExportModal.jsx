@@ -12,14 +12,26 @@ import { ExternalLink } from "lucide-react";
 import { PdfPreview } from "@/components/pdf/PdfPreview";
 import { printPdf } from "@/utils/pdfExport";
 
+/**
+ * Modal d'export PDF
+ * @param {Object} props
+ * @param {boolean} props.open - Modal ouvert ou ferme
+ * @param {Function} props.onOpenChange - Callback pour changer l'etat du modal
+ * @param {string} props.htmlContent - Contenu HTML de la piece
+ * @param {string} props.playTitle - Titre de la piece
+ * @param {string} [props.playSubtitle] - Sous-titre de la piece
+ * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
+ * @param {Object} [props.template] - Objet template avec name et settings
+ * @param {Function} [props.onOpenLayoutModal] - Callback pour ouvrir le modal de mise en page
+ */
 export default function ExportModal({
     open,
     onOpenChange,
     htmlContent,
     playTitle,
     playSubtitle,
-    pageFormat = "A4",
-    template = "classic",
+    pageFormat = "A5",
+    template = null,
     onOpenLayoutModal,
 }) {
     const [format, setFormat] = useState("pdf");
@@ -35,13 +47,17 @@ export default function ExportModal({
         onOpenChange(false);
     };
 
-    const templateLabel = template === "classic" ? "Classique" : "Moderne";
+    // Afficher le nom du template ou "Par defaut" si aucun template
+    const templateLabel = template?.name || "Par defaut";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent
+                className="max-w-[calc(100%-2rem)] sm:max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
+                aria-describedby={undefined}
+            >
                 <DialogHeader className="px-6 py-4 border-b shrink-0">
-                    <DialogTitle>Exporter la pièce</DialogTitle>
+                    <DialogTitle>Exporter la piece</DialogTitle>
                 </DialogHeader>
 
                 <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -97,13 +113,13 @@ export default function ExportModal({
                             </div>
                         </div>
 
-                        {/* Bouton Télécharger */}
+                        {/* Bouton Telecharger */}
                         <Button
                             className="w-full mt-auto"
                             onClick={handleDownload}
                             disabled={format !== "pdf"}
                         >
-                            Télécharger
+                            Telecharger
                         </Button>
                     </div>
 
@@ -123,8 +139,8 @@ export default function ExportModal({
                             <div className="h-full w-full flex items-center justify-center text-muted-foreground">
                                 <p className="text-sm">
                                     {format !== "pdf"
-                                        ? `Export ${format.toUpperCase()} bientôt disponible`
-                                        : "Aucun contenu à afficher"}
+                                        ? `Export ${format.toUpperCase()} bientot disponible`
+                                        : "Aucun contenu a afficher"}
                                 </p>
                             </div>
                         )}

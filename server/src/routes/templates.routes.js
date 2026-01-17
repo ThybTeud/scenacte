@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   listTemplates,
+  listPublicTemplates,
   createTemplate,
   getTemplate,
   updateTemplate,
@@ -11,15 +12,22 @@ import { apiLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
-// Toutes les routes nécessitent l'authentification
-router.use(authMiddleware);
-
 // Rate limiting pour prévenir les abus
 router.use(apiLimiter);
 
 /**
+ * GET /api/templates/public
+ * Liste des templates système (user_id IS NULL)
+ * Ne requiert PAS d'authentification
+ */
+router.get('/public', listPublicTemplates);
+
+// Routes suivantes nécessitent l'authentification
+router.use(authMiddleware);
+
+/**
  * GET /api/templates
- * Liste des templates de l'utilisateur connecté
+ * Liste des templates de l'utilisateur connecté + templates système
  * Query params: playId? (filtre par pièce spécifique)
  * Requiert: Authorization header avec Bearer token
  */

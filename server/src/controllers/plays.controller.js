@@ -232,14 +232,16 @@ export async function getPlay(req, res, next) {
       throw new ValidationError(idValidation.message);
     }
 
-    // Récupération de la pièce avec stats
+    // Récupération de la pièce avec stats et template
     const query = `
-      SELECT 
+      SELECT
         p.*,
-        s.total_acts, s.total_scenes, s.total_characters, s.total_lines, 
-        s.word_count, s.estimated_duration_minutes, s.calculated_at, s.content_version as stats_content_version
+        s.total_acts, s.total_scenes, s.total_characters, s.total_lines,
+        s.word_count, s.estimated_duration_minutes, s.calculated_at, s.content_version as stats_content_version,
+        t.id as template_id_val, t.name as template_name, t.settings as template_settings
       FROM plays p
       LEFT JOIN play_statistics s ON s.play_id = p.id
+      LEFT JOIN export_templates t ON t.id = p.template_id
       WHERE p.id = $1
     `;
     const result = await pool.query(query, [id]);
@@ -265,6 +267,13 @@ export async function getPlay(req, res, next) {
         htmlContent: row.html_content,
         contentVersion: row.content_version,
         status: row.status,
+        paperSize: row.paper_size || 'A5',
+        templateId: row.template_id,
+        template: row.template_id_val ? {
+          id: row.template_id_val,
+          name: row.template_name,
+          settings: row.template_settings
+        } : null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         lastEditedAt: row.last_edited_at,
@@ -540,13 +549,13 @@ export async function getPlayAST(req, res, next) {
 
 /**
  * PATCH /api/plays/:id
- * Mise à jour partielle d'une pièce (renommage)
+ * Mise à jour partielle d'une pièce (renommage, paramètres de mise en page)
  * Ne crée pas de nouvelle version
  */
 export async function updatePlay(req, res, next) {
   try {
     const { id } = req.params;
-    const { title, subtitle } = req.body;
+    const { title, subtitle, paperSize, templateId } = req.body;
     const userId = req.user.id;
 
     // Validation UUID
@@ -556,8 +565,8 @@ export async function updatePlay(req, res, next) {
     }
 
     // Au moins un champ à mettre à jour
-    if (title === undefined && subtitle === undefined) {
-      throw new ValidationError('Au moins un champ (title ou subtitle) est requis');
+    if (title === undefined && subtitle === undefined && paperSize === undefined && templateId === undefined) {
+      throw new ValidationError('Au moins un champ (title, subtitle, paperSize ou templateId) est requis');
     }
 
     // Validation du titre si fourni
@@ -565,6 +574,32 @@ export async function updatePlay(req, res, next) {
       const titleValidation = validateTitle(title);
       if (!titleValidation.valid) {
         throw new ValidationError(titleValidation.message);
+      }
+    }
+
+    // Validation de paperSize si fourni
+    if (paperSize !== undefined) {
+      const validPaperSizes = ['A4', 'A5'];
+      if (!validPaperSizes.includes(paperSize)) {
+        throw new ValidationError(`paperSize doit être l'un de: ${validPaperSizes.join(', ')}`);
+      }
+    }
+
+    // Validation de templateId si fourni
+    if (templateId !== undefined && templateId !== null) {
+      const templateIdValidation = validateUUID(templateId);
+      if (!templateIdValidation.valid) {
+        throw new ValidationError('templateId invalide');
+      }
+
+      // Vérifier que le template existe (système ou appartient à l'utilisateur)
+      const templateCheckQuery = `
+        SELECT id FROM export_templates
+        WHERE id = $1 AND (user_id IS NULL OR user_id = $2)
+      `;
+      const templateCheckResult = await pool.query(templateCheckQuery, [templateId, userId]);
+      if (templateCheckResult.rows.length === 0) {
+        throw new NotFoundError('Template non trouvé ou non accessible');
       }
     }
 
@@ -599,6 +634,18 @@ export async function updatePlay(req, res, next) {
       paramIndex++;
     }
 
+    if (paperSize !== undefined) {
+      updates.push(`paper_size = $${paramIndex}`);
+      values.push(paperSize);
+      paramIndex++;
+    }
+
+    if (templateId !== undefined) {
+      updates.push(`template_id = $${paramIndex}`);
+      values.push(templateId || null);
+      paramIndex++;
+    }
+
     updates.push('updated_at = NOW()');
     values.push(id);
 
@@ -611,11 +658,16 @@ export async function updatePlay(req, res, next) {
 
     const updateResult = await pool.query(updateQuery, values);
 
-    // Récupérer les stats
-    const statsQuery = `SELECT * FROM play_statistics WHERE play_id = $1`;
-    const statsResult = await pool.query(statsQuery, [id]);
+    // Récupérer les stats et le template
+    const [statsResult, templateResult] = await Promise.all([
+      pool.query(`SELECT * FROM play_statistics WHERE play_id = $1`, [id]),
+      updateResult.rows[0].template_id
+        ? pool.query(`SELECT id, name, settings FROM export_templates WHERE id = $1`, [updateResult.rows[0].template_id])
+        : Promise.resolve({ rows: [] })
+    ]);
 
     const updatedPlay = updateResult.rows[0];
+    const template = templateResult.rows[0] || null;
 
     res.json({
       play: {
@@ -625,6 +677,13 @@ export async function updatePlay(req, res, next) {
         subtitle: updatedPlay.subtitle,
         contentVersion: updatedPlay.content_version,
         status: updatedPlay.status,
+        paperSize: updatedPlay.paper_size || 'A5',
+        templateId: updatedPlay.template_id,
+        template: template ? {
+          id: template.id,
+          name: template.name,
+          settings: template.settings
+        } : null,
         createdAt: updatedPlay.created_at,
         updatedAt: updatedPlay.updated_at,
         lastEditedAt: updatedPlay.last_edited_at,
