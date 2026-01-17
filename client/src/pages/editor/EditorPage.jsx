@@ -324,6 +324,9 @@ export default function EditorPage() {
                 activeSection={activeSection}
                 onSectionClick={handleSectionClick}
                 onCharacterClick={handleCharacterClick}
+                htmlContent={htmlContent}
+                playTitle={play?.title}
+                playSubtitle={play?.subtitle}
             />
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden">

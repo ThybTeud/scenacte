@@ -2,75 +2,43 @@ import { useState, useRef } from "react";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileText, FileCode, File } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { FileText, FileCode, File, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PdfPreview } from "@/components/pdf/PdfPreview";
 import { printPdf } from "@/utils/pdfExport";
 
 const FORMATS = [
-    {
-        id: "pdf",
-        label: "PDF",
-        description: "Prêt à imprimer",
-        icon: FileText,
-        disabled: false,
-    },
-    {
-        id: "md",
-        label: "Markdown",
-        description: "Format source",
-        icon: FileCode,
-        disabled: true,
-    },
-    {
-        id: "txt",
-        label: "Texte brut",
-        description: "Sans mise en forme",
-        icon: File,
-        disabled: true,
-    },
+    { id: "pdf", label: "PDF", icon: FileText, disabled: false },
+    { id: "md", label: "Markdown", icon: FileCode, disabled: true },
+    { id: "txt", label: "Texte", icon: File, disabled: true },
 ];
 
-const TEMPLATES = [
-    {
-        id: "classic",
-        label: "Classique",
-        description: "Style traditionnel",
-    },
-    {
-        id: "modern",
-        label: "Moderne",
-        description: "Lignes épurées",
-    },
-    {
-        id: "minimal",
-        label: "Minimaliste",
-        description: "Sobre et compact",
-    },
-];
-
-function ChoiceCard({ selected, onClick, children, className, disabled }) {
+function FormatToggle({ formats, value, onChange }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            disabled={disabled}
-            className={cn(
-                "flex flex-col items-start gap-1 rounded-lg border p-4 text-left transition-colors",
-                !disabled && "hover:bg-accent hover:text-accent-foreground",
-                selected && "border-primary bg-primary/5 ring-1 ring-primary",
-                disabled && "opacity-50 cursor-not-allowed",
-                className
-            )}
-        >
-            {children}
-        </button>
+        <div className="flex flex-col gap-1">
+            {formats.map((format) => (
+                <button
+                    key={format.id}
+                    type="button"
+                    onClick={() => !format.disabled && onChange(format.id)}
+                    disabled={format.disabled}
+                    className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        value === format.id && "bg-primary text-primary-foreground hover:bg-primary/90",
+                        format.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                    )}
+                >
+                    <format.icon size={16} />
+                    <span>{format.label}</span>
+                </button>
+            ))}
+        </div>
     );
 }
 
@@ -82,7 +50,6 @@ export default function ExportModal({
     playSubtitle,
 }) {
     const [format, setFormat] = useState("pdf");
-    const [template, setTemplate] = useState("classic");
     const [pageCount, setPageCount] = useState(0);
     const iframeRef = useRef(null);
 
@@ -92,102 +59,80 @@ export default function ExportModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-5xl">
-                <DialogHeader>
-                    <DialogTitle>Exporter la pièce</DialogTitle>
-                    <DialogDescription>
-                        Choisissez le format et le style d'export
-                    </DialogDescription>
+            <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+                <DialogHeader className="px-6 py-4 border-b shrink-0">
+                    <div className="flex items-center justify-between">
+                        <DialogTitle>Exporter la pièce</DialogTitle>
+                        {pageCount > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                                {pageCount} page{pageCount > 1 ? "s" : ""}
+                            </span>
+                        )}
+                    </div>
                 </DialogHeader>
 
-                <div className="flex gap-6 py-4">
-                    {/* Panneau gauche - Options */}
-                    <div className="w-[250px] space-y-6 flex-shrink-0">
-                        {/* Format */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium">
+                <div className="flex flex-1 min-h-0 overflow-hidden">
+                    {/* Colonne gauche */}
+                    <div className="w-[140px] flex flex-col border-r bg-muted/30 shrink-0">
+                        <div className="flex-1 p-4">
+                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                                 Format
                             </label>
-                            <div className="grid grid-cols-1 gap-3">
-                                {FORMATS.map((f) => (
-                                    <ChoiceCard
-                                        key={f.id}
-                                        selected={format === f.id}
-                                        onClick={() =>
-                                            !f.disabled && setFormat(f.id)
-                                        }
-                                        disabled={f.disabled}
-                                    >
-                                        <f.icon size={20} className="mb-1" />
-                                        <span className="font-medium">
-                                            {f.label}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {f.description}
-                                        </span>
-                                    </ChoiceCard>
-                                ))}
+                            <div className="mt-3">
+                                <FormatToggle
+                                    formats={FORMATS}
+                                    value={format}
+                                    onChange={setFormat}
+                                />
                             </div>
                         </div>
 
-                        {/* Template PDF (visible uniquement si format PDF) */}
-                        {format === "pdf" && (
-                            <div className="space-y-3">
-                                <label className="text-sm font-medium">
-                                    Template
-                                </label>
-                                <div className="grid grid-cols-1 gap-3">
-                                    {TEMPLATES.map((t) => (
-                                        <ChoiceCard
-                                            key={t.id}
-                                            selected={template === t.id}
-                                            onClick={() => setTemplate(t.id)}
-                                        >
-                                            <span className="font-medium">
-                                                {t.label}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {t.description}
-                                            </span>
-                                        </ChoiceCard>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <Separator />
 
-                        {/* Nombre de pages */}
-                        {format === "pdf" && pageCount > 0 && (
-                            <div className="text-sm text-muted-foreground">
-                                {pageCount} page{pageCount > 1 ? "s" : ""}
-                            </div>
-                        )}
+                        <div className="p-4 space-y-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => onOpenChange(false)}
+                            >
+                                Annuler
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={handleDownload}
+                                disabled={format !== "pdf"}
+                            >
+                                <Download size={14} />
+                                Télécharger
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Panneau droit - Preview */}
-                    <div className="flex-1 min-h-[600px]">
-                        {format === "pdf" && htmlContent && (
+                    {/* Colonne droite - Preview */}
+                    <div className="flex-1 min-h-0 overflow-hidden bg-muted/20">
+                        {format === "pdf" && htmlContent ? (
                             <PdfPreview
                                 ref={iframeRef}
                                 htmlContent={htmlContent}
                                 playTitle={playTitle}
                                 playSubtitle={playSubtitle}
-                                template={template}
+                                template="classic"
                                 pageFormat="A4"
                                 onPagesRendered={setPageCount}
                             />
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-muted-foreground">
+                                <p className="text-sm">
+                                    {format !== "pdf"
+                                        ? `Export ${format.toUpperCase()} bientôt disponible`
+                                        : "Aucun contenu à afficher"}
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>
-
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                    >
-                        Annuler
-                    </Button>
-                    <Button onClick={handleDownload}>Télécharger PDF</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
