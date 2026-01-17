@@ -84,11 +84,18 @@ export function generatePdfHtml({
     /* Reset et base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Cacher le contenu jusqu'a ce que PagedJS soit pret */
     body {
       font-family: '${fontFamily}', ${fontFallback};
       font-size: ${fontSize}pt;
       line-height: ${lineHeight};
       color: #1a1a1a;
+      visibility: hidden;
+    }
+
+    /* PagedJS ajoute .pagedjs_pages quand la pagination est terminee */
+    .pagedjs_pages {
+      visibility: visible;
     }
 
     /* Page de titre */
@@ -212,4 +219,87 @@ export function printPdf(iframeRef) {
   const iframe = iframeRef.current;
   iframe.contentWindow.focus();
   iframe.contentWindow.print();
+}
+
+/**
+ * Genere les styles CSS inline pour la preview de l'editeur
+ * @param {Object} templateSettings - Settings du template depuis la BDD
+ * @returns {Object} - Objet de styles CSS React
+ */
+export function getPreviewStyles(templateSettings) {
+  if (!templateSettings) {
+    return {};
+  }
+
+  const fontFamily = templateSettings.fontFamily || 'Crimson Text';
+  const fontSize = templateSettings.fontSize || 12;
+  const lineHeight = templateSettings.lineHeight || 1.6;
+  const fontFallback = FONT_FALLBACKS[fontFamily] || 'serif';
+
+  return {
+    fontFamily: `'${fontFamily}', ${fontFallback}`,
+    fontSize: `${fontSize}pt`,
+    lineHeight: lineHeight,
+  };
+}
+
+/**
+ * Genere le CSS pour les elements theatraux de la preview
+ * @param {Object} templateSettings - Settings du template depuis la BDD
+ * @returns {string} - Styles CSS sous forme de string
+ */
+export function getPreviewCSS(templateSettings) {
+  const settings = templateSettings || {
+    fontFamily: 'Crimson Text',
+    fontSize: 12,
+    lineHeight: 1.6,
+  };
+
+  const fontFamily = settings.fontFamily || 'Crimson Text';
+  const fontSize = settings.fontSize || 12;
+  const lineHeight = settings.lineHeight || 1.6;
+  const fontFallback = FONT_FALLBACKS[fontFamily] || 'serif';
+
+  return `
+    .preview-content {
+      font-family: '${fontFamily}', ${fontFallback};
+      font-size: ${fontSize}pt;
+      line-height: ${lineHeight};
+    }
+
+    .preview-content .acte {
+      font-size: ${Math.round(fontSize * 1.33)}pt;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 2rem 0 1rem;
+    }
+
+    .preview-content .scene {
+      font-size: ${Math.round(fontSize * 1.17)}pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .preview-content .personnage {
+      font-weight: 600;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .preview-content .didascalie {
+      font-style: italic;
+      text-align: right;
+      margin: 0.75rem 0;
+      padding-left: 4rem;
+    }
+
+    .preview-content .dialogue {
+      text-align: justify;
+      margin: 0.5rem 0;
+    }
+  `;
 }

@@ -14,6 +14,7 @@ import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
 import SettingsModal from "@/components/modals/SettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
+import { getPreviewCSS } from "@/utils/pdfExport";
 
 export default function EditorPage() {
     const { id } = useParams();
@@ -59,6 +60,9 @@ export default function EditorPage() {
     const [paperSize, setPaperSize] = useState("A5");
     const [templateId, setTemplateId] = useState(null);
     const [template, setTemplate] = useState(null);
+
+    // CSS dynamique pour la preview basé sur le template
+    const previewCSS = useMemo(() => getPreviewCSS(template?.settings), [template?.settings]);
 
     // Instance du parser (créée une seule fois)
     const parser = useMemo(() => new PlayParser(), []);
@@ -422,11 +426,12 @@ export default function EditorPage() {
                             </div>
                         </div>
 
-                        {/* Preview - masquée sous md */}
+                        {/* Preview - masquee sous md */}
                         {showPreview && (
                             <div className="hidden md:flex flex-1 min-w-0 h-full">
+                                <style>{previewCSS}</style>
                                 <div
-                                    className="h-full w-full bg-white rounded-lg border overflow-auto p-4 prose prose-sm max-w-none"
+                                    className="preview-content h-full w-full bg-white rounded-lg border overflow-auto p-4"
                                     dangerouslySetInnerHTML={{
                                         __html: htmlContent,
                                     }}
