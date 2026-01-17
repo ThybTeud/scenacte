@@ -6,8 +6,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { PdfPreview } from "@/components/pdf/PdfPreview";
 import { printPdf } from "@/utils/pdfExport";
 
@@ -38,14 +39,14 @@ export default function ExportModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-[768px] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="px-6 py-4 border-b shrink-0">
                     <DialogTitle>Exporter la pièce</DialogTitle>
                 </DialogHeader>
 
                 <div className="flex flex-1 min-h-0 overflow-hidden">
                     {/* Sidebar */}
-                    <div className="w-48 flex flex-col border-r bg-muted/30 shrink-0 p-4 justify-between">
+                    <div className="w-full md:w-48 flex flex-col md:border-r bg-muted/30 shrink-0 p-4 justify-between">
                         <div className="space-y-6">
                             {/* Section Document */}
                             <div>
@@ -83,27 +84,16 @@ export default function ExportModal({
                                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                                     Format d'export
                                 </label>
-                                <div className="mt-3 flex flex-col gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormat("pdf")}
-                                        className={cn(
-                                            "px-3 py-2 rounded-md text-sm font-medium transition-colors text-left",
-                                            format === "pdf"
-                                                ? "bg-primary text-primary-foreground"
-                                                : "hover:bg-accent hover:text-accent-foreground"
-                                        )}
-                                    >
-                                        PDF
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled
-                                        className="px-3 py-2 rounded-md text-sm font-medium text-left opacity-50 cursor-not-allowed"
-                                    >
-                                        Word
-                                    </button>
-                                </div>
+                                <RadioGroup value={format} onValueChange={setFormat} className="mt-3">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="pdf" id="pdf" />
+                                        <Label htmlFor="pdf">PDF</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2 opacity-50">
+                                        <RadioGroupItem value="word" id="word" disabled />
+                                        <Label htmlFor="word">Word</Label>
+                                    </div>
+                                </RadioGroup>
                             </div>
                         </div>
 
