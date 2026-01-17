@@ -39,7 +39,7 @@ export default function ExportModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-[768px] h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="px-6 py-4 border-b shrink-0">
                     <DialogTitle>Exporter la pièce</DialogTitle>
                 </DialogHeader>
