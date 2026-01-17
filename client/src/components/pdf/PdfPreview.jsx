@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState, forwardRef } from "react";
+import { useEffect, useRef, useState, forwardRef, useCallback } from "react";
 import { generatePdfHtml } from "@/utils/pdfExport";
 import { Loader } from "@/components/ui/Loader";
+
+// Largeurs des pages en pixels (96 DPI)
+const PAGE_WIDTHS = {
+    A4: 794, // 210mm
+    A5: 559, // 148mm
+};
 
 /**
  * PdfPreview - Prévisualisation PDF avec PagedJS (fit-to-width automatique)
@@ -9,17 +15,46 @@ export const PdfPreview = forwardRef(function PdfPreview(
     { htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered },
     ref
 ) {
+    const containerRef = useRef(null);
     const internalRef = useRef(null);
     const iframeRef = ref || internalRef;
     const [isLoading, setIsLoading] = useState(true);
+    const [scale, setScale] = useState(1);
 
+    // Calcul du scale pour fit-to-width
+    const updateScale = useCallback(() => {
+        if (!containerRef.current) return;
+
+        const containerWidth = containerRef.current.clientWidth;
+        const pageWidth = PAGE_WIDTHS[pageFormat] || PAGE_WIDTHS.A4;
+        const padding = 32; // Marges visuelles
+        const availableWidth = containerWidth - padding;
+        const newScale = Math.min(1, availableWidth / pageWidth);
+
+        setScale(newScale);
+    }, [pageFormat]);
+
+    // Observer le resize du conteneur
     useEffect(() => {
-        if (!iframeRef.current) return;
+        const container = containerRef.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver(updateScale);
+        resizeObserver.observe(container);
+        updateScale();
+
+        return () => resizeObserver.disconnect();
+    }, [updateScale]);
+
+    // Injection du HTML et gestion PagedJS
+    useEffect(() => {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
 
         setIsLoading(true);
 
-        const iframe = iframeRef.current;
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
 
         const fullHtml = generatePdfHtml({
             htmlContent,
@@ -33,27 +68,57 @@ export const PdfPreview = forwardRef(function PdfPreview(
         doc.write(fullHtml);
         doc.close();
 
+        // Référence stable pour le cleanup
+        const contentWindow = iframe.contentWindow;
+        let timeoutId;
+
         const handlePagedReady = () => {
+            clearTimeout(timeoutId);
             const pages = doc.querySelectorAll(".pagedjs_page");
             onPagesRendered?.(pages.length);
             setIsLoading(false);
+            updateScale();
         };
 
-        iframe.contentWindow.addEventListener("pagedjs-ready", handlePagedReady);
+        contentWindow?.addEventListener("pagedjs-ready", handlePagedReady);
 
-        const timeout = setTimeout(() => {
+        // Timeout de sécurité
+        timeoutId = setTimeout(() => {
             setIsLoading(false);
             onPagesRendered?.(0);
         }, 10000);
 
         return () => {
-            iframe.contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
-            clearTimeout(timeout);
+            contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
+            clearTimeout(timeoutId);
         };
-    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered]);
+    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered, updateScale]);
+
+    // Injection du style de scale dans l'iframe
+    useEffect(() => {
+        const iframe = iframeRef.current;
+        const doc = iframe?.contentDocument;
+        if (!doc?.head) return;
+
+        const styleId = "pdf-preview-scale";
+        let styleEl = doc.getElementById(styleId);
+
+        if (!styleEl) {
+            styleEl = doc.createElement("style");
+            styleEl.id = styleId;
+            doc.head.appendChild(styleEl);
+        }
+
+        styleEl.textContent = `
+            .pagedjs_pages {
+                transform: scale(${scale});
+                transform-origin: top center;
+            }
+        `;
+    }, [scale, isLoading]);
 
     return (
-        <div className="relative h-full w-full">
+        <div ref={containerRef} className="relative h-full w-full overflow-y-auto">
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
                     <Loader />
