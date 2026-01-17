@@ -108,7 +108,7 @@ export default function ExportModal({
                     </div>
 
                     {/* Preview */}
-                    <div className="flex-1 min-h-0 overflow-hidden bg-muted/20 hidden md:flex">
+                    <div className="flex-1 min-h-0 overflow-hidden bg-muted/20 flex max-md:absolute max-md:invisible max-md:pointer-events-none">
                         {format === "pdf" && htmlContent ? (
                             <PdfPreview
                                 ref={iframeRef}
