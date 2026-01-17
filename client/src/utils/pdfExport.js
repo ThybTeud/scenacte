@@ -3,37 +3,67 @@
  */
 
 /**
- * Génère le HTML complet pour le rendu PDF avec PagedJS
+ * Mapping des polices pour les imports Google Fonts
+ */
+const FONT_IMPORTS = {
+  'Crimson Text': "family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400",
+  'Inter': "family=Inter:wght@400;500;600;700",
+  'Space Grotesk': "family=Space+Grotesk:wght@400;500;600;700",
+};
+
+/**
+ * Polices de fallback pour chaque famille
+ */
+const FONT_FALLBACKS = {
+  'Crimson Text': 'Georgia, serif',
+  'Inter': 'system-ui, -apple-system, sans-serif',
+  'Space Grotesk': 'system-ui, -apple-system, sans-serif',
+};
+
+/**
+ * Genere le HTML complet pour le rendu PDF avec PagedJS
  * @param {Object} params
- * @param {string} params.htmlContent - HTML généré par astToHTML
- * @param {string} params.playTitle - Titre de la pièce
- * @param {string} [params.playSubtitle] - Sous-titre de la pièce
- * @param {string} [params.template='classic'] - Template CSS à utiliser
- * @param {string} [params.pageFormat='A4'] - Format de page
+ * @param {string} params.htmlContent - HTML genere par astToHTML
+ * @param {string} params.playTitle - Titre de la piece
+ * @param {string} [params.playSubtitle] - Sous-titre de la piece
+ * @param {string} [params.pageFormat='A5'] - Format de page (A4 ou A5)
+ * @param {Object} [params.templateSettings] - Settings du template depuis la BDD
  * @returns {string} - HTML complet pour le PDF
  */
 export function generatePdfHtml({
   htmlContent,
   playTitle,
   playSubtitle,
-  template = 'classic',
-  pageFormat = 'A4',
+  pageFormat = 'A5',
+  templateSettings = null,
 }) {
-  const pageSize = {
-    'A4': 'A4',
-    'A5': 'A5',
-    'letter': 'letter',
-  }[pageFormat];
+  // Settings par defaut si aucun template fourni
+  const settings = templateSettings || {
+    fontFamily: 'Crimson Text',
+    fontSize: 12,
+    lineHeight: 1.6,
+    margins: { top: 20, bottom: 25, left: 15, right: 15 },
+  };
 
-  // CSS de base pour PagedJS
-  const baseStyles = `
+  const fontFamily = settings.fontFamily || 'Crimson Text';
+  const fontSize = settings.fontSize || 12;
+  const lineHeight = settings.lineHeight || 1.6;
+  const margins = settings.margins || { top: 20, bottom: 25, left: 15, right: 15 };
+
+  // Construire l'URL Google Fonts
+  const fontImport = FONT_IMPORTS[fontFamily] || FONT_IMPORTS['Crimson Text'];
+  const fontFallback = FONT_FALLBACKS[fontFamily] || 'serif';
+  const googleFontsUrl = `https://fonts.googleapis.com/css2?${fontImport}&display=swap`;
+
+  // CSS @page avec format et marges
+  const pageStyles = `
     @page {
-      size: ${pageSize};
-      margin: 25mm 20mm;
+      size: ${pageFormat};
+      margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
 
       @bottom-center {
         content: counter(page);
-        font-family: 'Inter', sans-serif;
+        font-family: '${fontFamily}', ${fontFallback};
         font-size: 10pt;
       }
     }
@@ -43,20 +73,21 @@ export function generatePdfHtml({
         content: none;
       }
     }
+
+    @page title-page {
+      @bottom-center { content: none; }
+    }
   `;
 
-  // Charger le template CSS correspondant
-  const templateStyles = getTemplateStyles(template);
-
-  // Styles de contenu
+  // Styles de contenu avec les settings du template
   const contentStyles = `
     /* Reset et base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Crimson Text', Georgia, serif;
-      font-size: 12pt;
-      line-height: 1.6;
+      font-family: '${fontFamily}', ${fontFallback};
+      font-size: ${fontSize}pt;
+      line-height: ${lineHeight};
       color: #1a1a1a;
     }
 
@@ -68,27 +99,24 @@ export function generatePdfHtml({
     }
 
     .title-page h1 {
-      font-size: 28pt;
+      font-size: ${Math.round(fontSize * 2.3)}pt;
       font-weight: 700;
       margin-bottom: 1rem;
     }
 
     .title-page .subtitle {
-      font-size: 18pt;
+      font-size: ${Math.round(fontSize * 1.5)}pt;
       font-style: italic;
       color: #555;
     }
 
-    @page title-page {
-      @bottom-center { content: none; }
-    }
-
-    /* Contenu théâtral - hérite de PlayPreview */
+    /* Contenu theatral */
     .play-content {
       break-before: page;
     }
 
     .play-content .acte {
+      font-size: ${Math.round(fontSize * 1.33)}pt;
       font-weight: 900;
       text-transform: uppercase;
       text-align: center;
@@ -97,6 +125,7 @@ export function generatePdfHtml({
     }
 
     .play-content .scene {
+      font-size: ${Math.round(fontSize * 1.17)}pt;
       font-weight: 700;
       text-transform: uppercase;
       text-align: center;
@@ -121,6 +150,12 @@ export function generatePdfHtml({
       text-align: justify;
       margin: 0.5rem 0;
     }
+
+    /* Controle des veuves et orphelins */
+    p {
+      orphans: 3;
+      widows: 3;
+    }
   `;
 
   return `
@@ -130,10 +165,9 @@ export function generatePdfHtml({
   <meta charset="UTF-8">
   <title>${escapeHtml(playTitle)}</title>
   <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="${googleFontsUrl}" rel="stylesheet">
   <style>
-    ${baseStyles}
-    ${templateStyles}
+    ${pageStyles}
     ${contentStyles}
   </style>
 </head>
@@ -144,7 +178,7 @@ export function generatePdfHtml({
     ${playSubtitle ? `<p class="subtitle">${escapeHtml(playSubtitle)}</p>` : ''}
   </section>
 
-  <!-- Contenu de la pièce -->
+  <!-- Contenu de la piece -->
   <section class="play-content">
     ${htmlContent}
   </section>
@@ -154,42 +188,9 @@ export function generatePdfHtml({
 }
 
 /**
- * Retourne les styles CSS spécifiques au template
- * @param {string} template - Nom du template
- * @returns {string} - Styles CSS
- */
-function getTemplateStyles(template) {
-  const templates = {
-    classic: `
-      body { font-family: 'Crimson Text', Georgia, serif; }
-      .play-content .acte { font-size: 16pt; }
-      .play-content .scene { font-size: 14pt; }
-    `,
-    modern: `
-      body { font-family: 'Inter', sans-serif; font-size: 11pt; }
-      .play-content .acte {
-        font-size: 14pt;
-        border-bottom: 2px solid #1a1a1a;
-        padding-bottom: 0.5rem;
-      }
-      .play-content .scene { font-size: 12pt; color: #444; }
-      .play-content .personnage { letter-spacing: 0.1em; }
-    `,
-    minimal: `
-      body { font-family: 'Inter', sans-serif; font-size: 10pt; line-height: 1.5; }
-      .play-content .acte { font-size: 12pt; margin: 1rem 0; }
-      .play-content .scene { font-size: 11pt; }
-      @page { margin: 20mm 15mm; }
-    `,
-  };
-
-  return templates[template] || templates.classic;
-}
-
-/**
- * Échappe les caractères HTML pour éviter les injections
- * @param {string} str - Chaîne à échapper
- * @returns {string} - Chaîne échappée
+ * Echappe les caracteres HTML pour eviter les injections
+ * @param {string} str - Chaine a echapper
+ * @returns {string} - Chaine echappee
  */
 function escapeHtml(str) {
   if (!str) return '';
@@ -202,8 +203,8 @@ function escapeHtml(str) {
 }
 
 /**
- * Déclenche l'impression/téléchargement PDF depuis une iframe
- * @param {React.RefObject} iframeRef - Référence à l'iframe
+ * Declenche l'impression/telechargement PDF depuis une iframe
+ * @param {React.RefObject} iframeRef - Reference a l'iframe
  */
 export function printPdf(iframeRef) {
   if (!iframeRef?.current) return;

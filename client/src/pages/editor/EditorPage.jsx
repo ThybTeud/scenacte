@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { storageService } from "@/services/storage.service";
-import { cn } from "@/utils/cn";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
@@ -13,6 +12,8 @@ import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
+import SettingsModal from "@/components/modals/SettingsModal";
+import ExportModal from "@/components/modals/ExportModal";
 
 export default function EditorPage() {
     const { id } = useParams();
@@ -49,9 +50,15 @@ export default function EditorPage() {
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
 
-    // States modals --> A REPRENDRE PLUS TARD
+    // States modals
     const [showPdfExportModal, setShowPdfExportModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [settingsModalTab, setSettingsModalTab] = useState("editor");
+
+    // Settings de mise en page
+    const [paperSize, setPaperSize] = useState("A5");
+    const [templateId, setTemplateId] = useState(null);
+    const [template, setTemplate] = useState(null);
 
     // Instance du parser (créée une seule fois)
     const parser = useMemo(() => new PlayParser(), []);
@@ -86,9 +93,13 @@ export default function EditorPage() {
             setContent(rawContent);
             setLastSavedContent(rawContent);
             setHasUnsavedChanges(false);
+
+            // Charger les settings de mise en page
+            setPaperSize(response.play.paperSize || "A5");
+            setTemplateId(response.play.templateId || null);
+            setTemplate(response.play.template || null);
         } catch (error) {
-            toast.error("Erreur lors du chargement de la pièce");
-            // Error already handled by toast notification
+            toast.error("Erreur lors du chargement de la piece");
             navigate("/library");
         } finally {
             setIsLoading(false);
@@ -310,10 +321,53 @@ export default function EditorPage() {
         [editorScrollRef]
     );
 
-    // A REACTIVER APRES CONNEXION A LA BDD
-    // if (!play) {
-    //     return null;
-    // }
+    /**
+     * Ouvre le modal de mise en page
+     */
+    const handleOpenLayoutModal = useCallback(() => {
+        setSettingsModalTab("page");
+        setShowSettingsModal(true);
+    }, []);
+
+    /**
+     * Ouvre le modal des parametres editeur
+     */
+    const handleOpenEditorSettings = useCallback(() => {
+        setSettingsModalTab("editor");
+        setShowSettingsModal(true);
+    }, []);
+
+    /**
+     * Ouvre le modal d'export PDF
+     */
+    const handleOpenExport = useCallback(() => {
+        setShowPdfExportModal(true);
+    }, []);
+
+    /**
+     * Gere les changements de settings de mise en page
+     */
+    const handleSettingsChange = useCallback(
+        async (newSettings) => {
+            // Mettre a jour les etats locaux
+            setPaperSize(newSettings.paperSize);
+            setTemplateId(newSettings.templateId);
+            setTemplate(newSettings.template);
+
+            // Sauvegarder sur le serveur
+            try {
+                await storageService.updatePlaySettings(id, {
+                    paperSize: newSettings.paperSize,
+                    templateId: newSettings.templateId,
+                });
+                toast.success("Parametres de mise en page enregistres");
+            } catch (error) {
+                toast.error("Erreur lors de la sauvegarde des parametres");
+                throw error;
+            }
+        },
+        [id]
+    );
 
     return (
         <SidebarProvider className="h-dvh">
@@ -324,9 +378,9 @@ export default function EditorPage() {
                 activeSection={activeSection}
                 onSectionClick={handleSectionClick}
                 onCharacterClick={handleCharacterClick}
-                htmlContent={htmlContent}
-                playTitle={play?.title}
-                playSubtitle={play?.subtitle}
+                onOpenExport={handleOpenExport}
+                onOpenEditorSettings={handleOpenEditorSettings}
+                onOpenPageSettings={handleOpenLayoutModal}
             />
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden">
@@ -382,6 +436,30 @@ export default function EditorPage() {
                     </div>
                 </main>
             </SidebarInset>
+
+            {/* Modal Settings */}
+            <SettingsModal
+                open={showSettingsModal}
+                onOpenChange={setShowSettingsModal}
+                defaultTab={settingsModalTab}
+                playId={id}
+                currentPaperSize={paperSize}
+                currentTemplateId={templateId}
+                currentTemplate={template}
+                onSettingsChange={handleSettingsChange}
+            />
+
+            {/* Modal Export PDF */}
+            <ExportModal
+                open={showPdfExportModal}
+                onOpenChange={setShowPdfExportModal}
+                htmlContent={htmlContent}
+                playTitle={play?.title}
+                playSubtitle={play?.subtitle}
+                pageFormat={paperSize}
+                template={template}
+                onOpenLayoutModal={handleOpenLayoutModal}
+            />
         </SidebarProvider>
     );
 }

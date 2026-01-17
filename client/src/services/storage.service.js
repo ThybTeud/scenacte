@@ -1,6 +1,8 @@
 import { playsService } from './plays.service';
+import { templatesService } from './templates.service';
 
 const GUEST_DATA_KEY = 'scenacte_guest_data';
+const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
 
 // Génère un UUID simple pour les IDs des pièces invitées
 const generateGuestId = () => {
@@ -273,5 +275,64 @@ export const storageService = {
       total: data.plays.length,
       failed: data.plays.length - successCount,
     };
+  },
+
+  // ============================================
+  // SETTINGS DE MISE EN PAGE
+  // ============================================
+
+  /**
+   * Récupère les templates publics (système)
+   * Fonctionne en mode invité et connecté
+   */
+  async getPublicTemplates() {
+    return templatesService.getPublicTemplates();
+  },
+
+  /**
+   * Met à jour les paramètres de mise en page d'une pièce
+   * @param {string} playId - ID de la pièce
+   * @param {object} settings - { paperSize, templateId }
+   */
+  async updatePlaySettings(playId, settings) {
+    if (isGuest()) {
+      // En mode invité, on sauvegarde dans localStorage
+      const data = getGuestData();
+      const playIndex = data.plays.findIndex((p) => p.id === playId);
+
+      if (playIndex !== -1) {
+        data.plays[playIndex] = {
+          ...data.plays[playIndex],
+          paperSize: settings.paperSize,
+          templateId: settings.templateId,
+          updatedAt: new Date().toISOString(),
+        };
+        setGuestData(data);
+      }
+
+      // Aussi sauvegarder comme settings par défaut
+      localStorage.setItem(GUEST_SETTINGS_KEY, JSON.stringify(settings));
+
+      return { success: true };
+    }
+
+    // Mode connecté: appel API
+    return playsService.renamePlay(playId, {
+      paperSize: settings.paperSize,
+      templateId: settings.templateId,
+    });
+  },
+
+  /**
+   * Récupère les settings de mise en page par défaut (mode invité)
+   */
+  getGuestPageSettings() {
+    try {
+      const raw = localStorage.getItem(GUEST_SETTINGS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   },
 };

@@ -9,10 +9,17 @@ const PAGE_WIDTHS = {
 };
 
 /**
- * PdfPreview - Prévisualisation PDF avec PagedJS (fit-to-width automatique)
+ * PdfPreview - Previsualisation PDF avec PagedJS (fit-to-width automatique)
+ * @param {Object} props
+ * @param {string} props.htmlContent - Contenu HTML de la piece
+ * @param {string} props.playTitle - Titre de la piece
+ * @param {string} [props.playSubtitle] - Sous-titre de la piece
+ * @param {Object} [props.template] - Objet template avec settings (depuis BDD)
+ * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
+ * @param {Function} [props.onPagesRendered] - Callback avec le nombre de pages
  */
 export const PdfPreview = forwardRef(function PdfPreview(
-    { htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered },
+    { htmlContent, playTitle, playSubtitle, template, pageFormat = 'A5', onPagesRendered },
     ref
 ) {
     const containerRef = useRef(null);
@@ -60,8 +67,8 @@ export const PdfPreview = forwardRef(function PdfPreview(
             htmlContent,
             playTitle,
             playSubtitle,
-            template,
             pageFormat,
+            templateSettings: template?.settings || null,
         });
 
         doc.open();

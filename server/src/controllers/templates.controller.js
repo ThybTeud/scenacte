@@ -71,6 +71,39 @@ export async function listTemplates(req, res, next) {
 }
 
 /**
+ * GET /api/templates/public
+ * Liste des templates système (user_id IS NULL)
+ * Ne requiert pas d'authentification
+ */
+export async function listPublicTemplates(req, res, next) {
+  try {
+    const query = `
+      SELECT
+        id, name, is_default, settings, created_at, updated_at
+      FROM export_templates
+      WHERE user_id IS NULL
+      ORDER BY is_default DESC, name ASC
+    `;
+
+    const result = await pool.query(query);
+
+    const templates = result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      isDefault: row.is_default,
+      settings: row.settings,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isSystem: true
+    }));
+
+    res.json({ templates });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * POST /api/templates
  * Créer un nouveau template
  */

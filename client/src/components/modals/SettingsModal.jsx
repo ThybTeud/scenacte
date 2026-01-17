@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -10,8 +10,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { storageService } from "@/services/storage.service";
+import { Loader2 } from "lucide-react";
 
 // === DATA ===
 
@@ -30,40 +31,27 @@ const SIZES = [
 const THEMES = [
     { id: "light", label: "Clair" },
     { id: "dark", label: "Sombre" },
-    { id: "system", label: "Système" },
+    { id: "system", label: "Systeme" },
 ];
 
 const FORMATS = [
-    { id: "a4", label: "A4", dimensions: "210 × 297 mm" },
-    { id: "a5", label: "A5", dimensions: "148 × 210 mm" },
-    { id: "letter", label: "Letter", dimensions: "216 × 279 mm" },
-];
-
-const TEMPLATES = [
-    {
-        id: "standard",
-        label: "Standard",
-        description: "Mise en page classique",
-    },
-    {
-        id: "actes-sud",
-        label: "Actes Sud",
-        description: "Style Actes Sud-Papiers",
-    },
-    { id: "arche", label: "L'Arche", description: "Style Éditions L'Arche" },
+    { id: "A5", label: "A5", dimensions: "148 x 210 mm" },
+    { id: "A4", label: "A4", dimensions: "210 x 297 mm" },
 ];
 
 // === CHOICE CARD ===
 
-function ChoiceCard({ selected, onClick, children, className }) {
+function ChoiceCard({ selected, onClick, children, className, disabled }) {
     return (
         <button
             type="button"
             onClick={onClick}
+            disabled={disabled}
             className={cn(
                 "flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-center transition-colors",
                 "hover:bg-accent hover:text-accent-foreground",
                 selected && "border-primary bg-primary/5 ring-1 ring-primary",
+                disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
         >
@@ -78,6 +66,12 @@ export default function SettingsModal({
     open,
     onOpenChange,
     defaultTab = "editor",
+    // Props pour les settings de mise en page
+    playId,
+    currentPaperSize = "A5",
+    currentTemplateId = null,
+    currentTemplate = null,
+    onSettingsChange,
 }) {
     // Editor settings
     const [font, setFont] = useState("inter");
@@ -85,52 +79,87 @@ export default function SettingsModal({
     const [theme, setTheme] = useState("system");
 
     // Page settings
-    const [format, setFormat] = useState("a4");
-    const [template, setTemplate] = useState("standard");
-    const [margins, setMargins] = useState({
-        top: 20,
-        bottom: 25,
-        left: 15,
-        right: 15,
-    });
+    const [paperSize, setPaperSize] = useState(currentPaperSize);
+    const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplateId);
 
-    const handleMarginChange = (side, value) => {
-        const num = parseInt(value, 10);
-        if (!isNaN(num) && num >= 0) {
-            setMargins((prev) => ({ ...prev, [side]: num }));
+    // Templates chargés depuis l'API
+    const [templates, setTemplates] = useState([]);
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Charger les templates au mount
+    useEffect(() => {
+        if (open) {
+            loadTemplates();
+            // Synchroniser avec les props
+            setPaperSize(currentPaperSize);
+            setSelectedTemplateId(currentTemplateId);
+        }
+    }, [open, currentPaperSize, currentTemplateId]);
+
+    const loadTemplates = async () => {
+        setIsLoadingTemplates(true);
+        try {
+            const response = await storageService.getPublicTemplates();
+            setTemplates(response.templates || []);
+
+            // Si pas de template selectionne, prendre le defaut
+            if (!currentTemplateId && response.templates?.length > 0) {
+                const defaultTemplate = response.templates.find(t => t.isDefault);
+                if (defaultTemplate) {
+                    setSelectedTemplateId(defaultTemplate.id);
+                }
+            }
+        } catch (error) {
+            console.error("Erreur chargement templates:", error);
+        } finally {
+            setIsLoadingTemplates(false);
         }
     };
 
-    const handleSave = () => {
-        // TODO: Sauvegarder dans localStorage ou contexte
-        console.log("Settings:", {
-            font,
-            size,
-            theme,
-            format,
-            template,
-            margins,
-        });
-        onOpenChange(false);
+    const handleSave = async () => {
+        const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+
+        // Notifier le parent des changements
+        if (onSettingsChange) {
+            setIsSaving(true);
+            try {
+                await onSettingsChange({
+                    paperSize,
+                    templateId: selectedTemplateId,
+                    template: selectedTemplate || null,
+                });
+                onOpenChange(false);
+            } catch (error) {
+                console.error("Erreur sauvegarde settings:", error);
+            } finally {
+                setIsSaving(false);
+            }
+        } else {
+            onOpenChange(false);
+        }
     };
+
+    // Trouver le template selectionne pour afficher ses details
+    const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || currentTemplate;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Paramètres</DialogTitle>
+                    <DialogTitle>Parametres</DialogTitle>
                     <DialogDescription>
-                        Personnalisez l'éditeur et la mise en page
+                        Personnalisez l'editeur et la mise en page
                     </DialogDescription>
                 </DialogHeader>
 
                 <Tabs defaultValue={defaultTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="editor">Éditeur</TabsTrigger>
+                        <TabsTrigger value="editor">Editeur</TabsTrigger>
                         <TabsTrigger value="page">Mise en page</TabsTrigger>
                     </TabsList>
 
-                    {/* === TAB ÉDITEUR === */}
+                    {/* === TAB EDITEUR === */}
                     <TabsContent value="editor" className="space-y-6 pt-4">
                         {/* Police */}
                         <div className="space-y-3">
@@ -142,9 +171,7 @@ export default function SettingsModal({
                                         selected={font === f.id}
                                         onClick={() => setFont(f.id)}
                                     >
-                                        <span
-                                            className={cn("text-lg", f.style)}
-                                        >
+                                        <span className={cn("text-lg", f.style)}>
                                             Aa
                                         </span>
                                         <span className="text-xs">
@@ -176,9 +203,9 @@ export default function SettingsModal({
                             </div>
                         </div>
 
-                        {/* Thème */}
+                        {/* Theme */}
                         <div className="space-y-3">
-                            <Label>Thème</Label>
+                            <Label>Theme</Label>
                             <div className="grid grid-cols-3 gap-3">
                                 {THEMES.map((t) => (
                                     <ChoiceCard
@@ -200,12 +227,12 @@ export default function SettingsModal({
                         {/* Format papier */}
                         <div className="space-y-3">
                             <Label>Format</Label>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 {FORMATS.map((f) => (
                                     <ChoiceCard
                                         key={f.id}
-                                        selected={format === f.id}
-                                        onClick={() => setFormat(f.id)}
+                                        selected={paperSize === f.id}
+                                        onClick={() => setPaperSize(f.id)}
                                     >
                                         <span className="font-medium">
                                             {f.label}
@@ -221,100 +248,67 @@ export default function SettingsModal({
                         {/* Template */}
                         <div className="space-y-3">
                             <Label>Template</Label>
-                            <div className="grid grid-cols-1 gap-2">
-                                {TEMPLATES.map((t) => (
-                                    <ChoiceCard
-                                        key={t.id}
-                                        selected={template === t.id}
-                                        onClick={() => setTemplate(t.id)}
-                                        className="flex-row items-center justify-between px-4"
-                                    >
-                                        <div className="text-left">
-                                            <span className="font-medium">
-                                                {t.label}
-                                            </span>
-                                            <span className="ml-2 text-xs text-muted-foreground">
-                                                {t.description}
-                                            </span>
-                                        </div>
-                                        {template === t.id && (
-                                            <div className="h-2 w-2 rounded-full bg-primary" />
-                                        )}
-                                    </ChoiceCard>
-                                ))}
-                            </div>
+                            {isLoadingTemplates ? (
+                                <div className="flex items-center justify-center py-4">
+                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                    <span className="ml-2 text-sm text-muted-foreground">
+                                        Chargement...
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-2">
+                                    {templates.map((t) => (
+                                        <ChoiceCard
+                                            key={t.id}
+                                            selected={selectedTemplateId === t.id}
+                                            onClick={() => setSelectedTemplateId(t.id)}
+                                            className="flex-row items-center justify-between px-4"
+                                        >
+                                            <div className="text-left">
+                                                <span className="font-medium">
+                                                    {t.name}
+                                                </span>
+                                                {t.settings?.fontFamily && (
+                                                    <span className="ml-2 text-xs text-muted-foreground">
+                                                        {t.settings.fontFamily}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {selectedTemplateId === t.id && (
+                                                <div className="h-2 w-2 rounded-full bg-primary" />
+                                            )}
+                                        </ChoiceCard>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
-                        {/* Marges */}
-                        <div className="space-y-3">
-                            <Label>Marges (mm)</Label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <span className="text-xs text-muted-foreground">
-                                        Haut
-                                    </span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={margins.top}
-                                        onChange={(e) =>
-                                            handleMarginChange(
-                                                "top",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs text-muted-foreground">
-                                        Bas
-                                    </span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={margins.bottom}
-                                        onChange={(e) =>
-                                            handleMarginChange(
-                                                "bottom",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs text-muted-foreground">
-                                        Gauche
-                                    </span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={margins.left}
-                                        onChange={(e) =>
-                                            handleMarginChange(
-                                                "left",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-xs text-muted-foreground">
-                                        Droite
-                                    </span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={margins.right}
-                                        onChange={(e) =>
-                                            handleMarginChange(
-                                                "right",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
+                        {/* Apercu des marges du template */}
+                        {selectedTemplate?.settings?.margins && (
+                            <div className="space-y-3">
+                                <Label className="text-muted-foreground">
+                                    Marges du template (mm)
+                                </Label>
+                                <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">Haut</span>
+                                        <span>{selectedTemplate.settings.margins.top}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">Bas</span>
+                                        <span>{selectedTemplate.settings.margins.bottom}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">Gauche</span>
+                                        <span>{selectedTemplate.settings.margins.left}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-muted-foreground block">Droite</span>
+                                        <span>{selectedTemplate.settings.margins.right}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </TabsContent>
                 </Tabs>
 
@@ -322,10 +316,20 @@ export default function SettingsModal({
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
+                        disabled={isSaving}
                     >
                         Annuler
                     </Button>
-                    <Button onClick={handleSave}>Enregistrer</Button>
+                    <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Enregistrement...
+                            </>
+                        ) : (
+                            "Enregistrer"
+                        )}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
