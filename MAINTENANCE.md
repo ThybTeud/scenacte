@@ -83,7 +83,9 @@ npm run preview        # Test build local
 - `play_history` : Historique versions (+ statistics JSONB, sans html_content)
 - `export_templates` : Templates PDF
 
-**Migrations** : `server/migrations/init.sql` + `server/db/migrations/*.sql`
+**Migrations** :
+- `server/migrations/init.sql` : Schéma complet (nouvelles installations)
+- `server/db/migrations/*.sql` : Migrations incrémentales (bases existantes)
 
 ## Déploiement Render
 
