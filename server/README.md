@@ -91,7 +91,7 @@ createuser scenacte_user -P  # Entrez le mot de passe
 # 6. Appliquer les migrations
 npm run db:migrate
 # ou manuellement :
-# psql -U scenacte_user -d scenacte_db -f migrations/init.sql
+# psql -U scenacte_user -d scenacte_db -f db/migrations/000_init.sql
 ```
 
 ## ⚙️ Configuration
@@ -874,17 +874,16 @@ Job de nettoyage quotidien à 3h du matin :
 
 ### Migrations SQL
 
-Les migrations se trouvent dans `migrations/` et `db/` :
-- `migrations/init.sql` : Schema initial avec toutes les tables
-- `db/schema.sql` : Schema complet de référence
-- `db/migrate.js` : Script utilitaire de migration
+Les migrations se trouvent dans `db/migrations/` :
+- `000_init.sql` : Schema complet (nouvelles installations)
+- `001+` : Migrations incrémentales (bases existantes)
 
 ```bash
 # Appliquer les migrations
 npm run db:migrate
 
 # Ou manuellement avec psql
-psql $DATABASE_URL -f migrations/init.sql
+psql $DATABASE_URL -f db/migrations/000_init.sql
 ```
 
 ### Test manuel du cleanup

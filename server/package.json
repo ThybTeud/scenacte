@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "psql $DATABASE_URL -f migrations/init.sql",
+    "db:migrate": "psql $DATABASE_URL -f db/migrations/000_init.sql",
     "pretest": "bash scripts/start-test-services.sh",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --runInBand",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest --watch --runInBand",
