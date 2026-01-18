@@ -131,6 +131,12 @@ export async function createPlay(req, res, next) {
     // Calcul des statistiques côté serveur (ignore les stats envoyées par le client pour sécurité)
     const stats = calculatePlayStatistics(rawContent || '');
 
+    // Parser et stocker l'AST
+    const { PlayParser } = await import('../utils/playStatistics.js');
+    const parser = new PlayParser();
+    const ast = parser.parse(rawContent || '');
+    const astContent = JSON.stringify(ast.toJSON());
+
     // Calcul de la taille du fichier pour la version initiale
     const fileSizeBytes = Buffer.byteLength(rawContent || '', 'utf8') + 
                          Buffer.byteLength(htmlContent || '', 'utf8');
@@ -148,11 +154,11 @@ export async function createPlay(req, res, next) {
 
     await client.query('BEGIN');
 
-    // 1. Créer la pièce avec statistics embarquées
+    // 1. Créer la pièce avec statistics embarquées et AST
     const insertPlayQuery = `
-      INSERT INTO plays (user_id, title, subtitle, raw_content, html_content, content_version, status, statistics, last_edited_at)
-      VALUES ($1, $2, $3, $4, $5, 1, 'draft', $6, NOW())
-      RETURNING id, user_id, title, subtitle, raw_content, html_content, content_version, status, statistics, created_at, updated_at, last_edited_at
+      INSERT INTO plays (user_id, title, subtitle, raw_content, html_content, ast_content, content_version, status, statistics, last_edited_at)
+      VALUES ($1, $2, $3, $4, $5, $6, 1, 'draft', $7, NOW())
+      RETURNING id, user_id, title, subtitle, raw_content, html_content, ast_content, content_version, status, statistics, created_at, updated_at, last_edited_at
     `;
     const playResult = await client.query(insertPlayQuery, [
       userId,
@@ -160,6 +166,7 @@ export async function createPlay(req, res, next) {
       subtitle?.trim() || null,
       rawContent || '',
       htmlContent || '',
+      astContent,
       JSON.stringify(statisticsJson)
     ]);
     const play = playResult.rows[0];
@@ -188,6 +195,7 @@ export async function createPlay(req, res, next) {
         subtitle: play.subtitle,
         rawContent: play.raw_content,
         htmlContent: play.html_content,
+        astContent: play.ast_content,
         contentVersion: play.content_version,
         status: play.status,
         createdAt: play.created_at,
@@ -249,6 +257,7 @@ export async function getPlay(req, res, next) {
         subtitle: row.subtitle,
         rawContent: row.raw_content,
         htmlContent: row.html_content,
+        astContent: row.ast_content,
         contentVersion: row.content_version,
         status: row.status,
         paperSize: row.paper_size || 'A5',
@@ -323,6 +332,12 @@ export async function savePlay(req, res, next) {
     // Calcul des statistiques côté serveur (ignore les stats envoyées par le client pour sécurité)
     const calculatedStats = calculatePlayStatistics(rawContent);
 
+    // Parser et stocker l'AST
+    const { PlayParser } = await import('../utils/playStatistics.js');
+    const parser = new PlayParser();
+    const ast = parser.parse(rawContent);
+    const astContent = JSON.stringify(ast.toJSON());
+
     const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
 
     // Récupérer le prochain numéro de version (protégé par FOR UPDATE sur la table plays)
@@ -343,11 +358,11 @@ export async function savePlay(req, res, next) {
       contentVersion: newContentVersion
     };
 
-    // 1. Mettre à jour la pièce avec statistics embarquées
+    // 1. Mettre à jour la pièce avec statistics embarquées et AST
     const updatePlayQuery = `
       UPDATE plays
-      SET title = $1, subtitle = $2, raw_content = $3, html_content = $4, content_version = $5, statistics = $6, last_edited_at = NOW(), updated_at = NOW()
-      WHERE id = $7
+      SET title = $1, subtitle = $2, raw_content = $3, html_content = $4, ast_content = $5, content_version = $6, statistics = $7, last_edited_at = NOW(), updated_at = NOW()
+      WHERE id = $8
       RETURNING *
     `;
     const playResult = await client.query(updatePlayQuery, [
@@ -355,6 +370,7 @@ export async function savePlay(req, res, next) {
       subtitle?.trim() || null,
       rawContent,
       htmlContent,
+      astContent,
       newContentVersion,
       JSON.stringify(statisticsJson),
       id
@@ -390,6 +406,7 @@ export async function savePlay(req, res, next) {
         subtitle: play.subtitle,
         rawContent: play.raw_content,
         htmlContent: play.html_content,
+        astContent: play.ast_content,
         contentVersion: play.content_version,
         status: play.status,
         createdAt: play.created_at,
