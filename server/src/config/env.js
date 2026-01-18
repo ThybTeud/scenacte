@@ -61,31 +61,13 @@ const env = cleanEnv(process.env, {
   }),
 
   // Email configuration
-  SENDGRID_API_KEY: str({
-    desc: 'SendGrid API key (optional)',
+  RESEND_API_KEY: str({
+    desc: 'Resend API key (optional)',
     default: ''
   }),
   EMAIL_FROM: email({
     desc: 'Sender email address',
-    default: 'noreply@scenacte.com'
-  }),
-
-  // SMTP configuration (fallback)
-  SMTP_HOST: str({
-    desc: 'SMTP server host',
-    default: ''
-  }),
-  SMTP_PORT: str({
-    desc: 'SMTP server port',
-    default: '2525'
-  }),
-  SMTP_USER: str({
-    desc: 'SMTP username',
-    default: ''
-  }),
-  SMTP_PASSWORD: str({
-    desc: 'SMTP password',
-    default: ''
+    default: 'noreply@scenacte.fr'
   }),
 
   // Server
@@ -128,15 +110,8 @@ export const config = {
   },
 
   email: {
-    sendgridApiKey: env.SENDGRID_API_KEY,
+    resendApiKey: env.RESEND_API_KEY,
     from: env.EMAIL_FROM
-  },
-
-  smtp: {
-    host: env.SMTP_HOST,
-    port: parseInt(env.SMTP_PORT, 10),
-    user: env.SMTP_USER,
-    password: env.SMTP_PASSWORD
   },
 
   server: {

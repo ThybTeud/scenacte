@@ -1,103 +1,64 @@
-import nodemailer from 'nodemailer';
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { queueEmail, setEmailSenders } from './queue.service.js';
 
 /**
- * Configuration du service d'email
- * Supporte 3 modes :
+ * Configuration du service d'email avec Resend
+ * Supporte 2 modes :
  * 1. Développement : emails loggés dans la console
- * 2. SendGrid : API HTTP (recommandé pour Render.com - pas de problème de port)
- * 3. SMTP : serveur SMTP classique (port 2525 recommandé sur Render.com free tier)
+ * 2. Production : Resend API (recommandé)
  */
 
 const isDevelopment = config.server.env === 'development';
 
-// Configuration SendGrid (prioritaire)
-const isSendGridConfigured = !!config.email.sendgridApiKey;
-if (!isDevelopment && isSendGridConfigured) {
-  sgMail.setApiKey(config.email.sendgridApiKey);
-  logger.info('✓ SendGrid API configuré (mode HTTP)');
-  logger.info({ from: config.email.from }, '📧 Adresse d\'expédition');
-  logger.warn('⚠️  Cette adresse doit être vérifiée sur SendGrid (Settings → Sender Authentication)');
-}
+// Configuration Resend
+const isResendConfigured = !!config.email.resendApiKey;
+let resend = null;
 
-// Configuration SMTP (fallback)
-const isSmtpConfigured = config.smtp.host && config.smtp.user && config.smtp.password;
-let transporter = null;
-
-if (!isDevelopment && !isSendGridConfigured && isSmtpConfigured) {
-  // Mode production avec SMTP configuré : créer le transporteur SMTP
-  transporter = nodemailer.createTransport({
-    host: config.smtp.host,
-    port: config.smtp.port,
-    secure: config.smtp.port === 465,
-    auth: {
-      user: config.smtp.user,
-      pass: config.smtp.password
-    },
-    // Timeouts courts pour ne pas bloquer le démarrage
-    connectionTimeout: 10000,  // 10 secondes max pour la connexion
-    greetingTimeout: 10000,    // 10 secondes max pour le greeting
-    socketTimeout: 10000       // 10 secondes max pour les opérations socket
-  });
-  logger.info({ host: config.smtp.host, port: config.smtp.port }, '✓ Transporteur SMTP configuré');
+if (!isDevelopment && isResendConfigured) {
+  resend = new Resend(config.email.resendApiKey);
+  logger.info('✓ Resend API configuré');
   logger.info({ from: config.email.from }, '📧 Adresse d\'expédition');
-} else if (!isDevelopment && !isSendGridConfigured && !isSmtpConfigured) {
-  logger.warn('⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
-  logger.warn('💡 Configurez SENDGRID_API_KEY ou SMTP_HOST/SMTP_USER/SMTP_PASSWORD');
+} else if (!isDevelopment && !isResendConfigured) {
+  logger.warn('⚠️  Resend API non configuré : les emails ne seront pas envoyés');
+  logger.warn('💡 Configurez RESEND_API_KEY dans vos variables d\'environnement');
 } else if (isDevelopment) {
   logger.info('✓ Mode développement : les emails seront affichés dans la console uniquement');
 }
 
 // Initialiser les fonctions d'envoi dans queue.service pour éviter les dépendances circulaires
-setEmailSenders({ sendViaSendGrid, sendViaSmtp });
+setEmailSenders({ sendViaResend });
 
-// Fonction interne pour envoyer via SendGrid
-// Exportée pour être utilisée par queue.service.js
-export async function sendViaSendGrid(mailContent) {
-  const msg = {
-    to: mailContent.to,
-    from: mailContent.from || config.email.from,
-    subject: mailContent.subject,
-    text: mailContent.text,
-    html: mailContent.html
-  };
+/**
+ * Fonction interne pour envoyer via Resend
+ * Exportée pour être utilisée par queue.service.js
+ */
+export async function sendViaResend(mailContent) {
+  if (!resend) {
+    throw new Error('Resend API non configuré');
+  }
 
   try {
-    await sgMail.send(msg);
-    logger.info({ to: mailContent.to }, '✓ Email envoyé via SendGrid');
-  } catch (error) {
-    // Erreurs SendGrid détaillées
-    if (error.response) {
-      const { statusCode, body } = error.response;
-      logger.error({ statusCode, body }, '✗ Erreur SendGrid');
+    const { data, error } = await resend.emails.send({
+      from: mailContent.from || config.email.from,
+      to: mailContent.to,
+      subject: mailContent.subject,
+      text: mailContent.text,
+      html: mailContent.html
+    });
 
-      if (statusCode === 403) {
-        throw new Error(`Erreur SendGrid (403 Forbidden): L'adresse email "${msg.from}" n'est pas vérifiée sur SendGrid. Allez dans Settings → Sender Authentication pour la vérifier.`);
-      } else if (statusCode === 401) {
-        throw new Error('Erreur SendGrid (401 Unauthorized): API Key invalide ou sans permissions.');
-      } else {
-        throw new Error(`Erreur SendGrid (${statusCode}): ${JSON.stringify(body)}`);
-      }
+    if (error) {
+      logger.error({ error }, '✗ Erreur Resend');
+      throw new Error(`Erreur Resend: ${error.message || JSON.stringify(error)}`);
     }
+
+    logger.info({ to: mailContent.to, id: data?.id }, '✓ Email envoyé via Resend');
+    return data;
+  } catch (error) {
+    logger.error({ error: error.message }, '✗ Erreur lors de l\'envoi via Resend');
     throw error;
   }
-}
-
-// Fonction interne pour envoyer via SMTP
-// Exportée pour être utilisée par queue.service.js
-export async function sendViaSmtp(mailContent) {
-  if (!transporter) {
-    throw new Error('Transporteur SMTP non configuré');
-  }
-
-  await transporter.sendMail({
-    ...mailContent,
-    from: mailContent.from || config.email.from
-  });
-  logger.info({ to: mailContent.to }, 'Email envoyé via SMTP');
 }
 
 /**
@@ -118,14 +79,7 @@ Votre compte a été créé avec succès. Vous pouvez maintenant commencer à é
 
 Si vous avez des questions, n'hésitez pas à nous contacter.
 
-L'équipe Scenacte`,
-    html: `
-      <h2>Bonjour ${username},</h2>
-      <p>Bienvenue sur <strong>Scenacte</strong> !</p>
-      <p>Votre compte a été créé avec succès. Vous pouvez maintenant commencer à écrire vos pièces de théâtre.</p>
-      <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
-      <p>L'équipe Scenacte</p>
-    `
+L'équipe Scenacte`
   };
 
   if (isDevelopment) {
@@ -143,20 +97,14 @@ L'équipe Scenacte`,
 
   // Mode production : ajouter à la queue pour envoi asynchrone avec retry
   try {
-    if (isSendGridConfigured) {
+    if (isResendConfigured) {
       await queueEmail({
         ...mailContent,
-        service: 'sendgrid'
+        service: 'resend'
       });
-      logger.info({ email }, 'Email de bienvenue ajouté à la queue (SendGrid)');
-    } else if (isSmtpConfigured) {
-      await queueEmail({
-        ...mailContent,
-        service: 'smtp'
-      });
-      logger.info({ email }, 'Email de bienvenue ajouté à la queue (SMTP)');
+      logger.info({ email }, 'Email de bienvenue ajouté à la queue (Resend)');
     } else {
-      logger.warn({ email }, '⚠️  Aucun service d\'email configuré : email de bienvenue non envoyé');
+      logger.warn({ email }, '⚠️  Resend non configuré : email de bienvenue non envoyé');
     }
   } catch (error) {
     logger.error({ error: error.message }, 'Erreur lors de l\'ajout de l\'email de bienvenue à la queue');
@@ -188,22 +136,7 @@ Ce lien est valable pendant 1 heure.
 
 Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
 
-L'équipe Scenacte`,
-    html: `
-      <h2>Bonjour ${username},</h2>
-      <p>Vous avez demandé la réinitialisation de votre mot de passe sur <strong>Scenacte</strong>.</p>
-      <p>Pour réinitialiser votre mot de passe, cliquez sur le bouton ci-dessous :</p>
-      <p style="text-align: center; margin: 30px 0;">
-        <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-          Réinitialiser mon mot de passe
-        </a>
-      </p>
-      <p>Ou copiez ce lien dans votre navigateur :</p>
-      <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-      <p><strong>Ce lien est valable pendant 1 heure.</strong></p>
-      <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-      <p>L'équipe Scenacte</p>
-    `
+L'équipe Scenacte`
   };
 
   if (isDevelopment) {
@@ -224,18 +157,12 @@ L'équipe Scenacte`,
 
   // Mode production : ajouter à la queue pour envoi asynchrone avec retry
   try {
-    if (isSendGridConfigured) {
+    if (isResendConfigured) {
       await queueEmail({
         ...mailContent,
-        service: 'sendgrid'
+        service: 'resend'
       });
-      logger.info({ email }, 'Email de réinitialisation ajouté à la queue (SendGrid)');
-    } else if (isSmtpConfigured) {
-      await queueEmail({
-        ...mailContent,
-        service: 'smtp'
-      });
-      logger.info({ email }, 'Email de réinitialisation ajouté à la queue (SMTP)');
+      logger.info({ email }, 'Email de réinitialisation ajouté à la queue (Resend)');
     } else {
       throw new Error('Service d\'email non configuré. Contactez l\'administrateur.');
     }
@@ -246,7 +173,7 @@ L'équipe Scenacte`,
 }
 
 /**
- * Vérifie la connexion email au démarrage
+ * Vérifie la configuration email au démarrage
  */
 export async function verifyEmailConnection() {
   if (isDevelopment) {
@@ -254,30 +181,11 @@ export async function verifyEmailConnection() {
     return true;
   }
 
-  // SendGrid : pas de vérification nécessaire (API key validée lors de l'envoi)
-  if (isSendGridConfigured) {
-    logger.info('✓ SendGrid configuré (vérification lors de l\'envoi)');
+  if (isResendConfigured) {
+    logger.info('✓ Resend configuré et prêt à l\'emploi');
     return true;
   }
 
-  // SMTP : vérifier la connexion de manière non-bloquante
-  if (!transporter) {
-    logger.warn('⚠️  Aucun service d\'email configuré : les emails ne seront pas envoyés');
-    return false;
-  }
-
-  // Lancer la vérification en arrière-plan sans bloquer le démarrage
-  transporter.verify()
-    .then(() => {
-      logger.info('✓ Connexion SMTP établie avec succès');
-    })
-    .catch((error) => {
-      logger.error({ error: error.message }, '✗ Erreur de connexion SMTP');
-      logger.warn('⚠️  Les emails ne seront pas envoyés');
-      logger.warn('💡 Conseil : Sur Render.com (plan gratuit), utilisez SendGrid ou le port 2525');
-    });
-
-  // Retourner immédiatement true pour ne pas bloquer le démarrage
-  logger.info('🔄 Vérification SMTP en cours (arrière-plan)...');
-  return true;
+  logger.warn('⚠️  Resend non configuré : les emails ne seront pas envoyés');
+  return false;
 }
