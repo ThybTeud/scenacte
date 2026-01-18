@@ -35,16 +35,42 @@ export async function startQueue() {
       retryDelay: 60, // Délai entre les tentatives (secondes)
       expireInHours: 24, // Les jobs expirent après 24h
       archiveCompletedAfterSeconds: 86400, // Archive les jobs terminés après 24h
+      // Options de polling - forcer le polling actif
+      newJobCheckInterval: 2000, // Vérifier les nouveaux jobs toutes les 2 secondes
+      newJobCheckIntervalSeconds: 2, // Équivalent en secondes
     });
 
     // Démarrer PgBoss
     await boss.start();
+    logger.info('✓ [QUEUE] PgBoss démarré');
 
     // Créer la queue explicitement avant d'enregistrer le worker
     await boss.createQueue('send-email');
+    logger.info('✓ [QUEUE] Queue "send-email" créée');
+
+    // Vérifier si emailSenders est déjà défini
+    if (emailSenders) {
+      logger.info('✓ [QUEUE] emailSenders est déjà défini au démarrage');
+    } else {
+      logger.warn('⚠️ [QUEUE] emailSenders n\'est pas encore défini au démarrage');
+    }
+
+    // Événement de monitoring pour les jobs
+    boss.on('error', error => {
+      logger.error({ error: error.message, stack: error.stack }, '❌ [QUEUE] Erreur PgBoss');
+    });
+
+    boss.on('monitor-states', (states) => {
+      logger.info({ states }, '📊 [QUEUE] État de la queue');
+    });
+
+    // Événement déclenché quand un worker commence à traiter un job
+    boss.on('wip', data => {
+      logger.info({ data }, '⚙️ [QUEUE] Worker en train de traiter un job (WIP)');
+    });
 
     // Enregistrer le worker pour traiter les emails
-    await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
+    const workerId = await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
       const { to, from, subject, text, html, service } = job.data;
 
       try {
@@ -96,7 +122,8 @@ export async function startQueue() {
       }
     });
 
-    logger.info('✓ PgBoss initialisé et worker configuré');
+    logger.info({ workerId }, '✓ [QUEUE] Worker enregistré pour "send-email"');
+    logger.info('✓ [QUEUE] PgBoss initialisé et worker configuré - prêt à traiter les jobs');
   } catch (error) {
     logger.error({ error: error.message }, 'Erreur lors du démarrage de la queue');
     throw error;
@@ -126,6 +153,15 @@ export async function queueEmail(emailData) {
     });
 
     logger.info({ to: emailData.to, jobId }, 'Email ajouté à la queue');
+
+    // Vérifier l'état de la queue après l'ajout
+    try {
+      const queueSize = await boss.getQueueSize('send-email');
+      logger.info({ queueSize }, '📊 [QUEUE] Taille de la queue après ajout');
+    } catch (err) {
+      logger.warn({ error: err.message }, '⚠️ [QUEUE] Impossible de récupérer la taille de la queue');
+    }
+
     return jobId;
   } catch (error) {
     logger.error({ to: emailData.to, error: error.message }, 'Erreur lors de l\'ajout de l\'email à la queue');
