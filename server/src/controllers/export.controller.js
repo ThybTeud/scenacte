@@ -53,18 +53,20 @@ export async function exportPlayToPDF(req, res, next) {
     };
 
     // Si versionId fourni, exporter une version spécifique
+    // Note: l'historique (play_history) ne stocke plus html_content
+    // Pour exporter une version historique, il faudrait régénérer le HTML depuis raw_content
     if (versionId) {
       const versionIdValidation = validateUUID(versionId);
       if (!versionIdValidation.valid) {
         throw new ValidationError('versionId invalide');
       }
 
-      const version = await prisma.playVersion.findUnique({
+      const version = await prisma.playHistory.findUnique({
         where: { id: versionId },
         select: {
           playId: true,
           title: true,
-          htmlContent: true
+          rawContent: true
         }
       });
 
@@ -77,10 +79,9 @@ export async function exportPlayToPDF(req, res, next) {
         throw new ForbiddenError('Cette version n\'appartient pas à cette pièce');
       }
 
-      contentToExport = {
-        title: version.title,
-        htmlContent: version.htmlContent
-      };
+      // L'historique ne stocke plus html_content - on utilise la version courante de la pièce
+      // Le client doit régénérer le HTML à partir de raw_content avant l'export
+      throw new ValidationError('L\'export de versions historiques n\'est plus supporté directement. Restaurez d\'abord la version puis exportez.');
     }
 
     // Récupérer le template

@@ -181,10 +181,8 @@ export async function deleteAccount(req, res, next) {
 
     // Suppression de l'utilisateur
     // Les relations en CASCADE supprimeront automatiquement :
-    // - plays
-    // - play_versions (via plays)
-    // - play_statistics (via plays)
-    // - version_statistics (via play_versions)
+    // - plays (avec statistics embarquées en JSONB)
+    // - play_history (historique des versions, avec statistics embarquées)
     // - export_templates
     await prisma.user.delete({
       where: { id: userId }

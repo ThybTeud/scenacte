@@ -21,7 +21,7 @@ export async function cleanupOldVersions() {
 
     // 1. Marquer toutes les versions manuelles comme préservées
     const manualUpdateQuery = `
-      UPDATE play_versions
+      UPDATE play_history
       SET preserved_reason = 'manual'
       WHERE version_type = 'manual' AND preserved_reason IS NULL
     `;
@@ -30,7 +30,7 @@ export async function cleanupOldVersions() {
 
     // 2. Marquer toutes les auto-saves récentes (< 7 jours) comme préservées
     const recentUpdateQuery = `
-      UPDATE play_versions
+      UPDATE play_history
       SET preserved_reason = 'recent'
       WHERE version_type = 'auto' 
         AND created_at >= $1 
@@ -43,7 +43,7 @@ export async function cleanupOldVersions() {
     // Récupérer toutes les pièces qui ont des auto-saves anciennes
     const playsQuery = `
       SELECT DISTINCT play_id
-      FROM play_versions
+      FROM play_history
       WHERE version_type = 'auto'
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
@@ -60,7 +60,7 @@ export async function cleanupOldVersions() {
       // Récupérer toutes les anciennes auto-saves pour cette pièce, groupées par jour
       const oldVersionsQuery = `
         SELECT id, created_at
-        FROM play_versions
+        FROM play_history
         WHERE play_id = $1
           AND version_type = 'auto'
           AND created_at < $2
@@ -85,7 +85,7 @@ export async function cleanupOldVersions() {
 
       if (snapshotIds.length > 0) {
         const updateSnapshotsQuery = `
-          UPDATE play_versions
+          UPDATE play_history
           SET preserved_reason = 'daily_snapshot'
           WHERE id = ANY($1) AND preserved_reason IS NULL
         `;
@@ -98,7 +98,7 @@ export async function cleanupOldVersions() {
 
     // 4. Supprimer toutes les versions auto anciennes sans preserved_reason
     const deleteQuery = `
-      DELETE FROM play_versions
+      DELETE FROM play_history
       WHERE version_type = 'auto'
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
@@ -106,15 +106,6 @@ export async function cleanupOldVersions() {
     `;
     const deleteResult = await client.query(deleteQuery, [sevenDaysAgo]);
     console.log('[CLEANUP] Anciennes auto-saves supprimées:', deleteResult.rowCount);
-
-    // 5. Supprimer les statistiques orphelines
-    // (normalement géré par CASCADE, mais vérification supplémentaire)
-    const deleteOrphanStatsQuery = `
-      DELETE FROM version_statistics
-      WHERE version_id NOT IN (SELECT id FROM play_versions)
-    `;
-    const statsResult = await client.query(deleteOrphanStatsQuery);
-    console.log('[CLEANUP] Statistiques orphelines supprimées:', statsResult.rowCount);
 
     await client.query('COMMIT');
 
@@ -127,7 +118,6 @@ export async function cleanupOldVersions() {
       recentPreserved: recentResult.rowCount,
       dailySnapshotsPreserved: dailySnapshotsMarked,
       versionsDeleted: deleteResult.rowCount,
-      statsDeleted: statsResult.rowCount,
       duration
     };
 
@@ -150,14 +140,14 @@ export async function cleanupOldVersions() {
 export async function getRetentionStats() {
   try {
     // Total
-    const totalQuery = `SELECT COUNT(*) as count FROM play_versions`;
+    const totalQuery = `SELECT COUNT(*) as count FROM play_history`;
     const totalResult = await pool.query(totalQuery);
     const total = parseInt(totalResult.rows[0].count, 10);
 
     // Par type
     const byTypeQuery = `
       SELECT version_type, COUNT(*) as count
-      FROM play_versions
+      FROM play_history
       GROUP BY version_type
     `;
     const byTypeResult = await pool.query(byTypeQuery);
@@ -171,7 +161,7 @@ export async function getRetentionStats() {
       SELECT 
         COALESCE(preserved_reason, 'none') as reason, 
         COUNT(*) as count
-      FROM play_versions
+      FROM play_history
       GROUP BY preserved_reason
     `;
     const byReasonResult = await pool.query(byReasonQuery);
@@ -186,7 +176,7 @@ export async function getRetentionStats() {
 
     const eligibleQuery = `
       SELECT COUNT(*) as count
-      FROM play_versions
+      FROM play_history
       WHERE version_type = 'auto'
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
