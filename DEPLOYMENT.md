@@ -367,7 +367,7 @@ Si `npm run db:migrate` échoue :
 
 ```bash
 cd server
-cat migrations/init.sql | psql $DATABASE_URL
+cat db/migrations/000_init.sql | psql $DATABASE_URL
 ```
 
 ---

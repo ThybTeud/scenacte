@@ -49,15 +49,13 @@ export async function listPlays(req, res, next) {
       paramIndex++;
     }
 
-    // Requête pour récupérer les pièces avec stats
+    // Requête pour récupérer les pièces avec stats (statistics embarquées en JSONB)
     const playsQuery = `
-      SELECT 
+      SELECT
         p.id, p.title, p.subtitle, p.status, p.content_version,
         p.created_at, p.updated_at, p.last_edited_at,
-        s.word_count, s.total_acts, s.total_scenes, s.total_characters,
-        s.total_lines, s.estimated_duration_minutes
+        p.statistics
       FROM plays p
-      LEFT JOIN play_statistics s ON s.play_id = p.id
       ${whereClause}
       ORDER BY p.last_edited_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -83,14 +81,7 @@ export async function listPlays(req, res, next) {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       lastEditedAt: row.last_edited_at,
-      statistics: row.word_count !== null ? {
-        wordCount: row.word_count,
-        totalActs: row.total_acts,
-        totalScenes: row.total_scenes,
-        totalCharacters: row.total_characters,
-        totalLines: row.total_lines,
-        estimatedDurationMinutes: row.estimated_duration_minutes
-      } : null
+      statistics: row.statistics && Object.keys(row.statistics).length > 0 ? row.statistics : null
     }));
 
     const total = parseInt(countResult.rows[0].count, 10);
@@ -144,51 +135,47 @@ export async function createPlay(req, res, next) {
     const fileSizeBytes = Buffer.byteLength(rawContent || '', 'utf8') + 
                          Buffer.byteLength(htmlContent || '', 'utf8');
 
+    // Construire l'objet statistics JSONB
+    const statisticsJson = {
+      totalActs: stats.totalActs,
+      totalScenes: stats.totalScenes,
+      totalCharacters: stats.totalCharacters,
+      totalLines: stats.totalLines,
+      wordCount: stats.wordCount,
+      estimatedDurationMinutes: stats.estimatedDurationMinutes,
+      contentVersion: 1
+    };
+
     await client.query('BEGIN');
 
-    // 1. Créer la pièce
+    // 1. Créer la pièce avec statistics embarquées
     const insertPlayQuery = `
-      INSERT INTO plays (user_id, title, subtitle, raw_content, html_content, content_version, status, last_edited_at)
-      VALUES ($1, $2, $3, $4, $5, 1, 'draft', NOW())
-      RETURNING id, user_id, title, subtitle, raw_content, html_content, content_version, status, created_at, updated_at, last_edited_at
+      INSERT INTO plays (user_id, title, subtitle, raw_content, html_content, content_version, status, statistics, last_edited_at)
+      VALUES ($1, $2, $3, $4, $5, 1, 'draft', $6, NOW())
+      RETURNING id, user_id, title, subtitle, raw_content, html_content, content_version, status, statistics, created_at, updated_at, last_edited_at
     `;
     const playResult = await client.query(insertPlayQuery, [
       userId,
       title.trim(),
       subtitle?.trim() || null,
       rawContent || '',
-      htmlContent || ''
+      htmlContent || '',
+      JSON.stringify(statisticsJson)
     ]);
     const play = playResult.rows[0];
 
-    // 2. Créer la version initiale
-    const insertVersionQuery = `
-      INSERT INTO play_versions (play_id, version_number, title, raw_content, html_content, version_type, manual_label, file_size_bytes, preserved_reason)
-      VALUES ($1, 1, $2, $3, $4, 'manual', 'Version initiale', $5, 'manual')
+    // 2. Créer la version initiale dans play_history (sans html_content, avec statistics JSONB)
+    const insertHistoryQuery = `
+      INSERT INTO play_history (play_id, version_number, title, raw_content, version_type, manual_label, file_size_bytes, preserved_reason, statistics)
+      VALUES ($1, 1, $2, $3, 'manual', 'Version initiale', $4, 'manual', $5)
       RETURNING id
     `;
-    await client.query(insertVersionQuery, [
+    await client.query(insertHistoryQuery, [
       play.id,
       play.title,
       play.raw_content,
-      play.html_content,
-      fileSizeBytes
-    ]);
-
-    // 3. Créer les statistiques
-    const insertStatsQuery = `
-      INSERT INTO play_statistics (play_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, content_version)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 1)
-      RETURNING id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes
-    `;
-    const statsResult = await client.query(insertStatsQuery, [
-      play.id,
-      stats.totalActs,
-      stats.totalScenes,
-      stats.totalCharacters,
-      stats.totalLines,
-      stats.wordCount,
-      stats.estimatedDurationMinutes
+      fileSizeBytes,
+      JSON.stringify(statisticsJson)
     ]);
 
     await client.query('COMMIT');
@@ -206,7 +193,7 @@ export async function createPlay(req, res, next) {
         createdAt: play.created_at,
         updatedAt: play.updated_at,
         lastEditedAt: play.last_edited_at,
-        statistics: statsResult.rows[0]
+        statistics: play.statistics
       }
     });
   } catch (error) {
@@ -232,15 +219,12 @@ export async function getPlay(req, res, next) {
       throw new ValidationError(idValidation.message);
     }
 
-    // Récupération de la pièce avec stats et template
+    // Récupération de la pièce avec template (statistics embarquées en JSONB)
     const query = `
       SELECT
         p.*,
-        s.total_acts, s.total_scenes, s.total_characters, s.total_lines,
-        s.word_count, s.estimated_duration_minutes, s.calculated_at, s.content_version as stats_content_version,
         t.id as template_id_val, t.name as template_name, t.settings as template_settings
       FROM plays p
-      LEFT JOIN play_statistics s ON s.play_id = p.id
       LEFT JOIN export_templates t ON t.id = p.template_id
       WHERE p.id = $1
     `;
@@ -277,16 +261,7 @@ export async function getPlay(req, res, next) {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         lastEditedAt: row.last_edited_at,
-        statistics: row.word_count !== null ? {
-          totalActs: row.total_acts,
-          totalScenes: row.total_scenes,
-          totalCharacters: row.total_characters,
-          totalLines: row.total_lines,
-          wordCount: row.word_count,
-          estimatedDurationMinutes: row.estimated_duration_minutes,
-          calculatedAt: row.calculated_at,
-          contentVersion: row.stats_content_version
-        } : null
+        statistics: row.statistics && Object.keys(row.statistics).length > 0 ? row.statistics : null
       }
     });
   } catch (error) {
@@ -351,16 +326,28 @@ export async function savePlay(req, res, next) {
     const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
 
     // Récupérer le prochain numéro de version (protégé par FOR UPDATE sur la table plays)
-    const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_versions WHERE play_id = $1`;
+    const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_history WHERE play_id = $1`;
     const maxVersionResult = await client.query(maxVersionQuery, [id]);
     const nextVersionNumber = maxVersionResult.rows[0].max_version + 1;
     const newContentVersion = existingPlay.content_version + 1;
 
-    // 1. Mettre à jour la pièce
+    // Construire l'objet statistics JSONB
+    const statisticsJson = {
+      totalActs: calculatedStats.totalActs,
+      totalScenes: calculatedStats.totalScenes,
+      totalCharacters: calculatedStats.totalCharacters,
+      totalLines: calculatedStats.totalLines,
+      wordCount: calculatedStats.wordCount,
+      estimatedDurationMinutes: calculatedStats.estimatedDurationMinutes,
+      calculatedAt: new Date().toISOString(),
+      contentVersion: newContentVersion
+    };
+
+    // 1. Mettre à jour la pièce avec statistics embarquées
     const updatePlayQuery = `
       UPDATE plays
-      SET title = $1, subtitle = $2, raw_content = $3, html_content = $4, content_version = $5, last_edited_at = NOW(), updated_at = NOW()
-      WHERE id = $6
+      SET title = $1, subtitle = $2, raw_content = $3, html_content = $4, content_version = $5, statistics = $6, last_edited_at = NOW(), updated_at = NOW()
+      WHERE id = $7
       RETURNING *
     `;
     const playResult = await client.query(updatePlayQuery, [
@@ -369,68 +356,31 @@ export async function savePlay(req, res, next) {
       rawContent,
       htmlContent,
       newContentVersion,
+      JSON.stringify(statisticsJson),
       id
     ]);
 
-    // 2. Créer nouvelle version
-    const insertVersionQuery = `
-      INSERT INTO play_versions (play_id, version_number, title, raw_content, html_content, version_type, manual_label, file_size_bytes, preserved_reason)
+    // 2. Créer nouvelle entrée dans play_history (sans html_content, avec statistics JSONB)
+    const insertHistoryQuery = `
+      INSERT INTO play_history (play_id, version_number, title, raw_content, version_type, manual_label, file_size_bytes, preserved_reason, statistics)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
     `;
-    const versionResult = await client.query(insertVersionQuery, [
+    await client.query(insertHistoryQuery, [
       id,
       nextVersionNumber,
       title.trim(),
       rawContent,
-      htmlContent,
       versionType,
       versionType === 'manual' ? (manualLabel || null) : null,
       fileSizeBytes,
-      versionType === 'manual' ? 'manual' : null
-    ]);
-    const versionId = versionResult.rows[0].id;
-
-    // 3. Upsert play_statistics
-    const upsertStatsQuery = `
-      INSERT INTO play_statistics (play_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, content_version, calculated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-      ON CONFLICT (play_id)
-      DO UPDATE SET
-        total_acts = $2, total_scenes = $3, total_characters = $4, total_lines = $5,
-        word_count = $6, estimated_duration_minutes = $7, content_version = $8, calculated_at = NOW()
-      RETURNING *
-    `;
-    const statsResult = await client.query(upsertStatsQuery, [
-      id,
-      calculatedStats.totalActs,
-      calculatedStats.totalScenes,
-      calculatedStats.totalCharacters,
-      calculatedStats.totalLines,
-      calculatedStats.wordCount,
-      calculatedStats.estimatedDurationMinutes,
-      newContentVersion
-    ]);
-
-    // 4. Créer version_statistics
-    const insertVersionStatsQuery = `
-      INSERT INTO version_statistics (version_id, total_acts, total_scenes, total_characters, total_lines, word_count, estimated_duration_minutes, calculated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-    `;
-    await client.query(insertVersionStatsQuery, [
-      versionId,
-      calculatedStats.totalActs,
-      calculatedStats.totalScenes,
-      calculatedStats.totalCharacters,
-      calculatedStats.totalLines,
-      calculatedStats.wordCount,
-      calculatedStats.estimatedDurationMinutes
+      versionType === 'manual' ? 'manual' : null,
+      JSON.stringify(statisticsJson)
     ]);
 
     await client.query('COMMIT');
 
     const play = playResult.rows[0];
-    const stats = statsResult.rows[0];
 
     res.json({
       play: {
@@ -445,7 +395,7 @@ export async function savePlay(req, res, next) {
         createdAt: play.created_at,
         updatedAt: play.updated_at,
         lastEditedAt: play.last_edited_at,
-        statistics: stats
+        statistics: play.statistics
       },
       versionNumber: nextVersionNumber,
       message: 'Pièce sauvegardée avec succès'
@@ -658,16 +608,17 @@ export async function updatePlay(req, res, next) {
 
     const updateResult = await pool.query(updateQuery, values);
 
-    // Récupérer les stats et le template
-    const [statsResult, templateResult] = await Promise.all([
-      pool.query(`SELECT * FROM play_statistics WHERE play_id = $1`, [id]),
-      updateResult.rows[0].template_id
-        ? pool.query(`SELECT id, name, settings FROM export_templates WHERE id = $1`, [updateResult.rows[0].template_id])
-        : Promise.resolve({ rows: [] })
-    ]);
-
     const updatedPlay = updateResult.rows[0];
-    const template = templateResult.rows[0] || null;
+
+    // Récupérer le template si nécessaire
+    let template = null;
+    if (updatedPlay.template_id) {
+      const templateResult = await pool.query(
+        `SELECT id, name, settings FROM export_templates WHERE id = $1`,
+        [updatedPlay.template_id]
+      );
+      template = templateResult.rows[0] || null;
+    }
 
     res.json({
       play: {
@@ -687,7 +638,7 @@ export async function updatePlay(req, res, next) {
         createdAt: updatedPlay.created_at,
         updatedAt: updatedPlay.updated_at,
         lastEditedAt: updatedPlay.last_edited_at,
-        statistics: statsResult.rows[0] || null
+        statistics: updatedPlay.statistics && Object.keys(updatedPlay.statistics).length > 0 ? updatedPlay.statistics : null
       },
       message: 'Pièce mise à jour avec succès'
     });
@@ -740,17 +691,21 @@ export async function updatePlayStatus(req, res, next) {
       RETURNING *
     `;
     const updateResult = await pool.query(updateQuery, [status, id]);
-
-    // Récupérer les stats
-    const statsQuery = `SELECT * FROM play_statistics WHERE play_id = $1`;
-    const statsResult = await pool.query(statsQuery, [id]);
-
     const updatedPlay = updateResult.rows[0];
 
     res.json({
       play: {
-        ...updatedPlay,
-        statistics: statsResult.rows[0] || null
+        id: updatedPlay.id,
+        userId: updatedPlay.user_id,
+        title: updatedPlay.title,
+        subtitle: updatedPlay.subtitle,
+        contentVersion: updatedPlay.content_version,
+        status: updatedPlay.status,
+        paperSize: updatedPlay.paper_size || 'A5',
+        createdAt: updatedPlay.created_at,
+        updatedAt: updatedPlay.updated_at,
+        lastEditedAt: updatedPlay.last_edited_at,
+        statistics: updatedPlay.statistics && Object.keys(updatedPlay.statistics).length > 0 ? updatedPlay.statistics : null
       },
       message: 'Statut mis à jour avec succès'
     });

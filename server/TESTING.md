@@ -11,7 +11,7 @@ Ce document explique comment configurer et exécuter les tests du backend Scenac
 createdb scenacte_test
 
 # Initialiser le schéma (utiliser la même migration que la DB principale)
-psql scenacte_test < migrations/init.sql
+psql scenacte_test < db/migrations/000_init.sql
 ```
 
 ### 2. Créer le fichier .env.test
@@ -188,7 +188,7 @@ Exemple pour GitHub Actions :
 - name: Setup test database
   run: |
     createdb scenacte_test
-    psql scenacte_test < migrations/init.sql
+    psql scenacte_test < db/migrations/000_init.sql
 
 - name: Run tests
   env:

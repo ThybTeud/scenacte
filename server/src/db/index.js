@@ -169,10 +169,10 @@ const prisma = {
     }
   },
 
-  playVersion: {
+  playHistory: {
     async findUnique({ where } = {}) {
       if (!where || !where.id) return null;
-      const res = await query('SELECT * FROM play_versions WHERE id = $1 LIMIT 1', [where.id]);
+      const res = await query('SELECT * FROM play_history WHERE id = $1 LIMIT 1', [where.id]);
       return camelizeRow(res.rows[0]);
     },
 
@@ -185,7 +185,7 @@ const prisma = {
         parts.push(`play_id = $${i++}`);
         values.push(where.playId);
       }
-      let text = `SELECT * FROM play_versions`;
+      let text = `SELECT * FROM play_history`;
       if (parts.length) text += ` WHERE ${parts.join(' AND ')}`;
       if (orderBy && Array.isArray(orderBy)) {
         const ob = orderBy[0];

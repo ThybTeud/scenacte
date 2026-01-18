@@ -40,7 +40,7 @@ describe('Version Cleanup Service', () => {
   afterAll(async () => {
     // Nettoyer les données de test
     if (testPlayId) {
-      await pool.query('DELETE FROM play_versions WHERE play_id = $1', [testPlayId]);
+      await pool.query('DELETE FROM play_history WHERE play_id = $1', [testPlayId]);
       await pool.query('DELETE FROM plays WHERE id = $1', [testPlayId]);
     }
     if (testUserId) {
@@ -52,7 +52,7 @@ describe('Version Cleanup Service', () => {
 
   beforeEach(async () => {
     // Nettoyer les versions existantes avant chaque test
-    await pool.query('DELETE FROM play_versions WHERE play_id = $1', [testPlayId]);
+    await pool.query('DELETE FROM play_history WHERE play_id = $1', [testPlayId]);
   });
 
   describe('Safety Window - 5 minutes protection', () => {
@@ -62,9 +62,9 @@ describe('Version Cleanup Service', () => {
       threeMinutesAgo.setMinutes(threeMinutesAgo.getMinutes() - 3);
 
       const recentVersionResult = await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
         [
           testPlayId,
@@ -72,7 +72,6 @@ describe('Version Cleanup Service', () => {
           'Test play',
           'auto',
           'Recent auto-save content',
-          '<p>Recent auto-save content</p>',
           100,
           threeMinutesAgo
         ]
@@ -84,16 +83,15 @@ describe('Version Cleanup Service', () => {
       eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
 
       await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           testPlayId,
           2,
           'Test play',
           'auto',
           'Old auto-save content',
-          '<p>Old auto-save content</p>',
           100,
           eightDaysAgo
         ]
@@ -106,14 +104,14 @@ describe('Version Cleanup Service', () => {
 
       // Vérifier que la version récente existe toujours
       const recentCheck = await pool.query(
-        'SELECT id FROM play_versions WHERE id = $1',
+        'SELECT id FROM play_history WHERE id = $1',
         [recentVersionId]
       );
       expect(recentCheck.rows.length).toBe(1);
 
       // Vérifier que la version ancienne a été supprimée
       const oldCheck = await pool.query(
-        'SELECT id FROM play_versions WHERE play_id = $1 AND created_at < $2',
+        'SELECT id FROM play_history WHERE play_id = $1 AND created_at < $2',
         [testPlayId, eightDaysAgo]
       );
       expect(oldCheck.rows.length).toBe(0);
@@ -129,18 +127,18 @@ describe('Version Cleanup Service', () => {
 
       // Version 1: il y a 10 jours
       await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [testPlayId, 1, 'Test play', 'auto', 'Content 1', '<p>Content 1</p>', 100, tenDaysAgo]
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [testPlayId, 1, 'Test play', 'auto', 'Content 1', 100, tenDaysAgo]
       );
 
       // Version 2: il y a 8 jours (daily snapshot - dernière du jour)
       await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [testPlayId, 2, 'Test play', 'auto', 'Content 2', '<p>Content 2</p>', 100, eightDaysAgo]
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [testPlayId, 2, 'Test play', 'auto', 'Content 2', 100, eightDaysAgo]
       );
 
       // Exécuter le cleanup
@@ -151,7 +149,7 @@ describe('Version Cleanup Service', () => {
       // Vérifier qu'au moins une version a été supprimée (la plus ancienne)
       // et qu'au moins un daily snapshot a été préservé
       const remainingVersions = await pool.query(
-        'SELECT id, preserved_reason FROM play_versions WHERE play_id = $1',
+        'SELECT id, preserved_reason FROM play_history WHERE play_id = $1',
         [testPlayId]
       );
 
@@ -169,18 +167,18 @@ describe('Version Cleanup Service', () => {
       eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
 
       await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [testPlayId, 1, 'Test play', 'auto', 'Old content', '<p>Old content</p>', 100, eightDaysAgo]
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [testPlayId, 1, 'Test play', 'auto', 'Old content', 100, eightDaysAgo]
       );
 
       // 2. Simuler une version créée "pendant" le cleanup (juste maintenant)
       const justNow = new Date();
       const newVersionResult = await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
         [
           testPlayId,
@@ -188,7 +186,6 @@ describe('Version Cleanup Service', () => {
           'Test play',
           'auto',
           'Just created content',
-          '<p>Just created content</p>',
           100,
           justNow
         ]
@@ -202,7 +199,7 @@ describe('Version Cleanup Service', () => {
 
       // 4. Vérifier que la version récente n'a PAS été supprimée
       const newVersionCheck = await pool.query(
-        'SELECT id FROM play_versions WHERE id = $1',
+        'SELECT id FROM play_history WHERE id = $1',
         [newVersionId]
       );
       expect(newVersionCheck.rows.length).toBe(1);
@@ -214,9 +211,9 @@ describe('Version Cleanup Service', () => {
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
       const manualVersionResult = await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at, manual_label)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at, manual_label)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id`,
         [
           testPlayId,
@@ -224,7 +221,6 @@ describe('Version Cleanup Service', () => {
           'Test play',
           'manual',
           'Manual save content',
-          '<p>Manual save content</p>',
           100,
           oneYearAgo,
           'Important version'
@@ -239,7 +235,7 @@ describe('Version Cleanup Service', () => {
 
       // Vérifier que la version manuelle existe toujours
       const manualCheck = await pool.query(
-        'SELECT id, preserved_reason FROM play_versions WHERE id = $1',
+        'SELECT id, preserved_reason FROM play_history WHERE id = $1',
         [manualVersionId]
       );
       expect(manualCheck.rows.length).toBe(1);
@@ -254,9 +250,9 @@ describe('Version Cleanup Service', () => {
       fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
       const recentVersionResult = await pool.query(
-        `INSERT INTO play_versions
-         (play_id, version_number, title, version_type, raw_content, html_content, file_size_bytes, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO play_history
+         (play_id, version_number, title, version_type, raw_content, file_size_bytes, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
         [
           testPlayId,
@@ -264,7 +260,6 @@ describe('Version Cleanup Service', () => {
           'Test play',
           'auto',
           'Recent content',
-          '<p>Recent content</p>',
           100,
           fiveDaysAgo
         ]
@@ -278,7 +273,7 @@ describe('Version Cleanup Service', () => {
 
       // Vérifier que la version existe toujours et est marquée 'recent'
       const versionCheck = await pool.query(
-        'SELECT id, preserved_reason FROM play_versions WHERE id = $1',
+        'SELECT id, preserved_reason FROM play_history WHERE id = $1',
         [recentVersionId]
       );
       expect(versionCheck.rows.length).toBe(1);

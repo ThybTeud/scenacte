@@ -91,7 +91,7 @@ createuser scenacte_user -P  # Entrez le mot de passe
 # 6. Appliquer les migrations
 npm run db:migrate
 # ou manuellement :
-# psql -U scenacte_user -d scenacte_db -f migrations/init.sql
+# psql -U scenacte_user -d scenacte_db -f db/migrations/000_init.sql
 ```
 
 ## ⚙️ Configuration
@@ -638,7 +638,6 @@ Récupérer une version spécifique avec contenu complet (🔒 protégé).
     "versionNumber": 42,
     "title": "Ma pièce",
     "rawContent": "...",
-    "htmlContent": "...",
     "versionType": "manual",
     "manualLabel": "...",
     "fileSizeBytes": 52384,
@@ -648,6 +647,8 @@ Récupérer une version spécifique avec contenu complet (🔒 protégé).
   }
 }
 ```
+
+> Note: `htmlContent` n'est plus stocké dans l'historique (régénérable depuis rawContent).
 
 #### POST /plays/:id/versions/restore
 
@@ -760,16 +761,15 @@ Supprimer un template (🔒 protégé).
 
 Exporter une pièce en PDF (🔒 protégé).
 
-**Body (tous optionnels)** :
+**Body (optionnel)** :
 ```json
 {
-  "templateId": "uuid",
-  "versionId": "uuid"
+  "templateId": "uuid"
 }
 ```
 
 - Si `templateId` non fourni : utilise le template par défaut
-- Si `versionId` non fourni : exporte la version courante
+- L'export de versions historiques n'est plus supporté (restaurez d'abord la version)
 
 **Réponse (200)** :
 - Content-Type: `application/pdf`
@@ -829,18 +829,15 @@ server/
 ### Tables principales
 
 - **users** : Utilisateurs
-- **plays** : Pièces de théâtre (version courante)
-- **play_versions** : Historique des versions
-- **play_statistics** : Statistiques version courante
-- **version_statistics** : Statistiques par version
+- **plays** : Pièces de théâtre (version courante + statistics JSONB)
+- **play_history** : Historique des versions (+ statistics JSONB, sans html_content)
 - **export_templates** : Templates d'export PDF
 
 ### Relations
 
 - Un utilisateur peut avoir plusieurs pièces
-- Une pièce a plusieurs versions
-- Une pièce a des statistiques (1:1)
-- Chaque version a des statistiques (1:1)
+- Une pièce a plusieurs entrées d'historique
+- Les statistiques sont embarquées en JSONB (plays.statistics, play_history.statistics)
 - CASCADE sur suppression utilisateur/pièce
 
 ## ⏰ Stratégie de versionning
@@ -877,17 +874,15 @@ Job de nettoyage quotidien à 3h du matin :
 
 ### Migrations SQL
 
-Les migrations se trouvent dans `migrations/` et `db/` :
-- `migrations/init.sql` : Schema initial avec toutes les tables
-- `db/schema.sql` : Schema complet de référence
-- `db/migrate.js` : Script utilitaire de migration
+Les migrations se trouvent dans `db/migrations/` :
+- `000_init.sql` : Schéma complet
 
 ```bash
 # Appliquer les migrations
 npm run db:migrate
 
 # Ou manuellement avec psql
-psql $DATABASE_URL -f migrations/init.sql
+psql $DATABASE_URL -f db/migrations/000_init.sql
 ```
 
 ### Test manuel du cleanup

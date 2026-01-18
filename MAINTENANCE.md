@@ -79,13 +79,12 @@ npm run preview        # Test build local
 
 **Tables principales** :
 - `users` : Utilisateurs
-- `plays` : Pièces (version courante)
-- `play_versions` : Historique versions
-- `play_statistics` : Stats version courante
-- `version_statistics` : Stats par version
+- `plays` : Pièces (version courante + statistics JSONB)
+- `play_history` : Historique versions (+ statistics JSONB, sans html_content)
 - `export_templates` : Templates PDF
 
-**Migrations** : `server/migrations/init.sql` + `server/db/schema.sql`
+**Migrations** : `server/db/migrations/`
+- `000_init.sql` : Schéma complet
 
 ## Déploiement Render
 
