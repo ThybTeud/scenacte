@@ -14,6 +14,10 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust proxy - Nécessaire pour express-rate-limit derrière un proxy (Codespaces, Render)
+// Permet de récupérer la vraie IP du client via X-Forwarded-For
+app.set('trust proxy', 1);
+
 /**
  * Middlewares globaux
  */
