@@ -84,8 +84,7 @@ npm run preview        # Test build local
 - `export_templates` : Templates PDF
 
 **Migrations** : `server/db/migrations/`
-- `000_init.sql` : Schéma complet (nouvelles installations)
-- `001+` : Migrations incrémentales (bases existantes)
+- `000_init.sql` : Schéma complet
 
 ## Déploiement Render
 

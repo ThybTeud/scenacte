@@ -875,8 +875,7 @@ Job de nettoyage quotidien à 3h du matin :
 ### Migrations SQL
 
 Les migrations se trouvent dans `db/migrations/` :
-- `000_init.sql` : Schema complet (nouvelles installations)
-- `001+` : Migrations incrémentales (bases existantes)
+- `000_init.sql` : Schéma complet
 
 ```bash
 # Appliquer les migrations
