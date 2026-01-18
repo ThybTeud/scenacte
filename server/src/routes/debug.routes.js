@@ -26,16 +26,19 @@ router.get('/queue-status', async (req, res) => {
         name,
         state,
         priority,
-        startafter,
-        startedon,
-        completedon,
-        createdon,
+        retry_limit,
+        retry_count,
+        start_after,
+        started_on,
+        completed_on,
+        created_on,
+        expire_in,
         data->>'to' as email_to,
         data->>'subject' as subject,
         output
       FROM pgboss.job
       WHERE name = 'send-email'
-      ORDER BY createdon DESC
+      ORDER BY created_on DESC
       LIMIT 20
     `);
 
@@ -45,7 +48,7 @@ router.get('/queue-status', async (req, res) => {
       FROM pgboss.job
       WHERE name = 'send-email'
         AND state = 'active'
-        AND startedon < NOW() - INTERVAL '5 minutes'
+        AND started_on < NOW() - INTERVAL '5 minutes'
     `);
 
     res.json({

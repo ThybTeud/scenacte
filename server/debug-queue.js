@@ -32,18 +32,18 @@ async function debugQueue() {
         name,
         state,
         priority,
-        retrycount,
-        retrylimit,
-        startafter,
-        startedon,
-        completedon,
-        expirein,
-        createdon,
+        retry_count,
+        retry_limit,
+        start_after,
+        started_on,
+        completed_on,
+        expire_in,
+        created_on,
         data->>'to' as email_to,
         data->>'subject' as subject
       FROM pgboss.job
       WHERE name = 'send-email'
-      ORDER BY createdon DESC
+      ORDER BY created_on DESC
       LIMIT 10
     `);
 
@@ -54,13 +54,13 @@ async function debugQueue() {
       console.log(`État: ${job.state}`);
       console.log(`Email: ${job.email_to}`);
       console.log(`Sujet: ${job.subject}`);
-      console.log(`Créé: ${job.createdon}`);
-      console.log(`Start After: ${job.startafter}`);
-      console.log(`Started On: ${job.startedon}`);
-      console.log(`Completed On: ${job.completedon}`);
-      console.log(`Retry: ${job.retrycount}/${job.retrylimit}`);
+      console.log(`Créé: ${job.created_on}`);
+      console.log(`Start After: ${job.start_after}`);
+      console.log(`Started On: ${job.started_on}`);
+      console.log(`Completed On: ${job.completed_on}`);
+      console.log(`Retry: ${job.retry_count}/${job.retry_limit}`);
       console.log(`Priority: ${job.priority}`);
-      console.log(`Expire In: ${job.expirein}`);
+      console.log(`Expire In: ${job.expire_in}`);
     });
 
     // 4. Vérifier les jobs bloqués
@@ -69,7 +69,7 @@ async function debugQueue() {
       FROM pgboss.job
       WHERE name = 'send-email'
         AND state = 'active'
-        AND startedon < NOW() - INTERVAL '5 minutes'
+        AND started_on < NOW() - INTERVAL '5 minutes'
     `);
     console.log(`\n⚠️  Jobs bloqués (actifs depuis >5min): ${blockedResult.rows[0].count}`);
 
