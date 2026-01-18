@@ -48,26 +48,50 @@ export async function startQueue() {
       const { to, from, subject, text, html, service } = job.data;
 
       try {
-        logger.info({ to, service }, 'Traitement email depuis la queue');
+        logger.info({
+          to,
+          service,
+          jobId: job.id,
+          from,
+          subject
+        }, '🔄 [WORKER] Début traitement email depuis la queue');
 
         // Vérifier que les fonctions d'envoi sont définies
         if (!emailSenders) {
+          logger.error('❌ [WORKER] emailSenders est null ou undefined');
           throw new Error('Fonctions d\'envoi d\'email non initialisées');
         }
 
-        // Envoyer l'email via le service approprié
-        if (service === 'resend') {
-          await emailSenders.sendViaResend({ to, from, subject, text, html });
-        } else if (service === 'sendgrid' || service === 'smtp') {
-          // Services obsolètes - migration vers Resend
-          throw new Error(`Service d'email obsolète: ${service}. Utilisez 'resend' à la place.`);
-        } else {
-          throw new Error(`Service d'email inconnu: ${service}`);
+        logger.info('✓ [WORKER] emailSenders est bien défini');
+
+        // Vérifier que sendViaResend existe
+        if (!emailSenders.sendViaResend) {
+          logger.error('❌ [WORKER] emailSenders.sendViaResend est undefined');
+          throw new Error('Fonction sendViaResend non disponible');
         }
 
-        logger.info({ to, jobId: job.id }, 'Email envoyé avec succès depuis la queue');
+        logger.info('✓ [WORKER] sendViaResend est disponible');
+
+        // Envoyer l'email via le service approprié
+        if (service === 'resend') {
+          logger.info('📨 [WORKER] Appel de sendViaResend...');
+          await emailSenders.sendViaResend({ to, from, subject, text, html });
+          logger.info({ to, jobId: job.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
+        } else if (service === 'sendgrid' || service === 'smtp') {
+          // Services obsolètes - migration vers Resend
+          logger.error({ service }, '❌ [WORKER] Service obsolète détecté');
+          throw new Error(`Service d'email obsolète: ${service}. Utilisez 'resend' à la place.`);
+        } else {
+          logger.error({ service }, '❌ [WORKER] Service inconnu');
+          throw new Error(`Service d'email inconnu: ${service}`);
+        }
       } catch (error) {
-        logger.error({ to, jobId: job.id, error: error.message }, 'Erreur lors de l\'envoi d\'email depuis la queue');
+        logger.error({
+          to,
+          jobId: job.id,
+          error: error.message,
+          stack: error.stack
+        }, '❌ [WORKER] Erreur lors de l\'envoi d\'email depuis la queue');
         throw error; // Relancer l'erreur pour que PgBoss puisse gérer le retry
       }
     });
