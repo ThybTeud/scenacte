@@ -10,6 +10,15 @@ const router = Router();
  */
 router.get('/queue-status', async (req, res) => {
   try {
+    // 0. D'abord, lister toutes les colonnes disponibles
+    const columnsResult = await pool.query(`
+      SELECT column_name, data_type
+      FROM information_schema.columns
+      WHERE table_schema = 'pgboss'
+        AND table_name = 'job'
+      ORDER BY ordinal_position
+    `);
+
     // 1. Compter les jobs par état
     const countResult = await pool.query(`
       SELECT state, COUNT(*) as count
@@ -19,26 +28,12 @@ router.get('/queue-status', async (req, res) => {
       ORDER BY count DESC
     `);
 
-    // 2. Récupérer les derniers jobs
+    // 2. Récupérer les derniers jobs (en utilisant * pour avoir toutes les colonnes)
     const jobsResult = await pool.query(`
-      SELECT
-        id,
-        name,
-        state,
-        priority,
-        retry_limit,
-        retry_count,
-        start_after,
-        started_on,
-        completed_on,
-        created_on,
-        expire_in,
-        data->>'to' as email_to,
-        data->>'subject' as subject,
-        output
+      SELECT *
       FROM pgboss.job
       WHERE name = 'send-email'
-      ORDER BY created_on DESC
+      ORDER BY createdon DESC
       LIMIT 20
     `);
 
@@ -48,10 +43,11 @@ router.get('/queue-status', async (req, res) => {
       FROM pgboss.job
       WHERE name = 'send-email'
         AND state = 'active'
-        AND started_on < NOW() - INTERVAL '5 minutes'
+        AND startedon < NOW() - INTERVAL '5 minutes'
     `);
 
     res.json({
+      columns: columnsResult.rows,
       summary: countResult.rows,
       blocked: blockedResult.rows[0].count,
       recentJobs: jobsResult.rows
