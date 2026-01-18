@@ -29,34 +29,64 @@ if (!isDevelopment && isResendConfigured) {
 
 // Initialiser les fonctions d'envoi dans queue.service pour éviter les dépendances circulaires
 setEmailSenders({ sendViaResend });
+logger.info('✓ [EMAIL] setEmailSenders appelé avec sendViaResend');
 
 /**
  * Fonction interne pour envoyer via Resend
  * Exportée pour être utilisée par queue.service.js
  */
 export async function sendViaResend(mailContent) {
+  logger.info({
+    to: mailContent.to,
+    subject: mailContent.subject,
+    isDevelopment,
+    isResendConfigured,
+    hasResendInstance: !!resend
+  }, '📧 [RESEND] Tentative d\'envoi via Resend');
+
   if (!resend) {
-    throw new Error('Resend API non configuré');
+    const errorMsg = isDevelopment
+      ? 'Mode développement: Resend non initialisé (normal en dev)'
+      : 'Resend API non configuré - vérifiez RESEND_API_KEY';
+
+    logger.error({
+      isDevelopment,
+      isResendConfigured,
+      resendApiKey: config.email.resendApiKey ? '***défini***' : 'NON DÉFINI',
+      env: config.server.env
+    }, `❌ [RESEND] ${errorMsg}`);
+
+    throw new Error(errorMsg);
   }
 
+  logger.info('✓ [RESEND] Instance Resend disponible, envoi en cours...');
+
   try {
-    const { data, error } = await resend.emails.send({
+    const emailPayload = {
       from: mailContent.from || config.email.from,
       to: mailContent.to,
       subject: mailContent.subject,
       text: mailContent.text,
       html: mailContent.html
-    });
+    };
+
+    logger.info({ emailPayload }, '📨 [RESEND] Payload de l\'email');
+
+    const { data, error } = await resend.emails.send(emailPayload);
 
     if (error) {
-      logger.error({ error }, '✗ Erreur Resend');
+      logger.error({ error }, '❌ [RESEND] Erreur retournée par l\'API Resend');
       throw new Error(`Erreur Resend: ${error.message || JSON.stringify(error)}`);
     }
 
-    logger.info({ to: mailContent.to, id: data?.id }, '✓ Email envoyé via Resend');
+    logger.info({ to: mailContent.to, id: data?.id }, '✅ [RESEND] Email envoyé avec succès via Resend');
     return data;
   } catch (error) {
-    logger.error({ error: error.message }, '✗ Erreur lors de l\'envoi via Resend');
+    logger.error({
+      error: error.message,
+      stack: error.stack,
+      to: mailContent.to
+    }, '❌ [RESEND] Erreur lors de l\'envoi via Resend');
     throw error;
   }
 }
