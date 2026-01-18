@@ -56,10 +56,11 @@ export async function startQueue() {
         }
 
         // Envoyer l'email via le service approprié
-        if (service === 'sendgrid') {
-          await emailSenders.sendViaSendGrid({ to, from, subject, text, html });
-        } else if (service === 'smtp') {
-          await emailSenders.sendViaSmtp({ to, from, subject, text, html });
+        if (service === 'resend') {
+          await emailSenders.sendViaResend({ to, from, subject, text, html });
+        } else if (service === 'sendgrid' || service === 'smtp') {
+          // Services obsolètes - migration vers Resend
+          throw new Error(`Service d'email obsolète: ${service}. Utilisez 'resend' à la place.`);
         } else {
           throw new Error(`Service d'email inconnu: ${service}`);
         }

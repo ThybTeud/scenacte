@@ -21,7 +21,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^5.1.1",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -32,11 +31,11 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
-    "nodemailer": "^7.0.10",
     "pagedjs": "^0.4.3",
     "pg": "^8.11.3",
     "pg-boss": "^12.5.2",
-    "pino": "^10.1.0"
+    "pino": "^10.1.0",
+    "resend": "^6.7.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
