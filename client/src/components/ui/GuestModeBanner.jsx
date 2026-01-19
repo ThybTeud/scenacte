@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, CircleQuestionMark } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,7 @@ export function GuestModeBanner() {
 
   return (
     <Alert variant="warning" className="mb-4 pr-12">
+      <CircleQuestionMark className="w-4 h-4" />
       <AlertTitle>Mode invité</AlertTitle>
       <AlertDescription>
         <span className="inline">
