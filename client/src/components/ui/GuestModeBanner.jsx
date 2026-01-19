@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from './Button';
+import { Button } from "@/components/ui/button";
 
 export function GuestModeBanner() {
   const [isVisible, setIsVisible] = useState(true);

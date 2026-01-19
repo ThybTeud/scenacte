@@ -1,5 +1,5 @@
 import { Modal } from './Modal';
-import { Button } from './Button';
+import { Button } from "@/components/ui/button";
 
 export function GuestDataMigrationModal({ isOpen, onClose, onMigrate, playsCount }) {
   return (
