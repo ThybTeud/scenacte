@@ -72,6 +72,16 @@ export async function startQueue() {
           throw new Error('Fonctions d\'envoi d\'email non initialisées');
         }
 
+        logger.info('✓ [WORKER] emailSenders est bien défini');
+
+        // Vérifier que sendViaResend existe
+        if (!emailSenders.sendViaResend) {
+          logger.error('❌ [WORKER] emailSenders.sendViaResend est undefined');
+          throw new Error('Fonction sendViaResend non disponible');
+        }
+
+        logger.info('✓ [WORKER] sendViaResend est disponible');
+
         // Envoyer l'email via le service approprié
         if (service === 'resend') {
           await emailSenders.sendViaResend({ to, from, subject, text, html, resetUrl });

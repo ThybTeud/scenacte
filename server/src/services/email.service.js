@@ -72,13 +72,17 @@ export async function sendViaResend(mailContent) {
 
   // En production, vérifier que Resend est configuré
   if (!resend) {
-    const errorMsg = 'Resend API non configuré - vérifiez RESEND_API_KEY';
+    const errorMsg = isDevelopment
+      ? 'Mode développement: Resend non initialisé (normal en dev)'
+      : 'Resend API non configuré - vérifiez RESEND_API_KEY';
+
     logger.error({
       isDevelopment,
       isResendConfigured,
       resendApiKey: config.email.resendApiKey ? '***défini***' : 'NON DÉFINI',
       env: config.server.env
     }, `❌ [RESEND] ${errorMsg}`);
+
     throw new Error(errorMsg);
   }
 
