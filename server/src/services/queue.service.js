@@ -71,7 +71,19 @@ export async function startQueue() {
 
     // Enregistrer le worker pour traiter les emails
     const workerId = await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
-      const { to, from, subject, text, html, service } = job.data;
+      // IMPORTANT : Dans pg-boss v12+, les données sont directement dans job, pas dans job.data
+      logger.info({
+        jobStructure: {
+          hasData: !!job.data,
+          jobKeys: Object.keys(job),
+          jobType: typeof job,
+          job: job
+        }
+      }, '🔍 [WORKER] Structure du job reçu');
+
+      // Extraire les données (pg-boss v12+ passe les données directement dans job)
+      const jobData = job.data || job;
+      const { to, from, subject, text, html, service, resetUrl } = jobData;
 
       try {
         logger.info({
@@ -101,7 +113,7 @@ export async function startQueue() {
         // Envoyer l'email via le service approprié
         if (service === 'resend') {
           logger.info('📨 [WORKER] Appel de sendViaResend...');
-          await emailSenders.sendViaResend({ to, from, subject, text, html });
+          await emailSenders.sendViaResend({ to, from, subject, text, html, resetUrl });
           logger.info({ to, jobId: job.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
         } else if (service === 'sendgrid' || service === 'smtp') {
           // Services obsolètes - migration vers Resend
