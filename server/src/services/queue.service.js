@@ -35,30 +35,40 @@ export async function startQueue() {
       retryDelay: 60, // Délai entre les tentatives (secondes)
       expireInHours: 24, // Les jobs expirent après 24h
       archiveCompletedAfterSeconds: 86400, // Archive les jobs terminés après 24h
+      // Options de polling - forcer le polling actif
+      newJobCheckInterval: 2000, // Vérifier les nouveaux jobs toutes les 2 secondes
+      newJobCheckIntervalSeconds: 2, // Équivalent en secondes
     });
 
     // Démarrer PgBoss
     await boss.start();
+    logger.info('✓ [QUEUE] PgBoss démarré');
 
     // Créer la queue explicitement avant d'enregistrer le worker
     await boss.createQueue('send-email');
 
+    // Événement de monitoring pour les erreurs
+    boss.on('error', error => {
+      logger.error({ error: error.message, stack: error.stack }, '❌ [QUEUE] Erreur PgBoss');
+    });
+
     // Enregistrer le worker pour traiter les emails
-    await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
-      const { to, from, subject, text, html, service } = job.data;
+    const workerId = await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
+      // IMPORTANT : pg-boss v12+ passe un tableau de jobs au lieu d'un seul job
+      const actualJob = Array.isArray(job) ? job[0] : job;
+
+      if (!actualJob) {
+        logger.error('❌ [WORKER] Aucun job reçu (tableau vide ou job null)');
+        throw new Error('Aucun job à traiter');
+      }
+
+      // Les données sont dans actualJob.data
+      const { to, from, subject, text, html, service, resetUrl } = actualJob.data;
 
       try {
-        logger.info({
-          to,
-          service,
-          jobId: job.id,
-          from,
-          subject
-        }, '🔄 [WORKER] Début traitement email depuis la queue');
-
         // Vérifier que les fonctions d'envoi sont définies
-        if (!emailSenders) {
-          logger.error('❌ [WORKER] emailSenders est null ou undefined');
+        if (!emailSenders || !emailSenders.sendViaResend) {
+          logger.error('❌ [WORKER] Fonctions d\'envoi d\'email non initialisées');
           throw new Error('Fonctions d\'envoi d\'email non initialisées');
         }
 
@@ -74,9 +84,8 @@ export async function startQueue() {
 
         // Envoyer l'email via le service approprié
         if (service === 'resend') {
-          logger.info('📨 [WORKER] Appel de sendViaResend...');
-          await emailSenders.sendViaResend({ to, from, subject, text, html });
-          logger.info({ to, jobId: job.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
+          await emailSenders.sendViaResend({ to, from, subject, text, html, resetUrl });
+          logger.info({ to, jobId: actualJob.id }, '✅ Email envoyé avec succès depuis la queue');
         } else if (service === 'sendgrid' || service === 'smtp') {
           // Services obsolètes - migration vers Resend
           logger.error({ service }, '❌ [WORKER] Service obsolète détecté');
@@ -88,7 +97,7 @@ export async function startQueue() {
       } catch (error) {
         logger.error({
           to,
-          jobId: job.id,
+          jobId: actualJob.id,
           error: error.message,
           stack: error.stack
         }, '❌ [WORKER] Erreur lors de l\'envoi d\'email depuis la queue');
@@ -96,7 +105,8 @@ export async function startQueue() {
       }
     });
 
-    logger.info('✓ PgBoss initialisé et worker configuré');
+    logger.info({ workerId }, '✓ [QUEUE] Worker enregistré pour "send-email"');
+    logger.info('✓ [QUEUE] PgBoss initialisé et worker configuré - prêt à traiter les jobs');
   } catch (error) {
     logger.error({ error: error.message }, 'Erreur lors du démarrage de la queue');
     throw error;

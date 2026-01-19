@@ -44,6 +44,33 @@ export async function sendViaResend(mailContent) {
     hasResendInstance: !!resend
   }, '📧 [RESEND] Tentative d\'envoi via Resend');
 
+  // En mode développement, afficher l'email dans la console au lieu de l'envoyer
+  if (isDevelopment && !resend) {
+    logger.info('✓ [RESEND] Mode développement détecté - affichage de l\'email dans la console');
+
+    console.log('\n' + '='.repeat(80));
+    console.log('📧 EMAIL CAPTURÉ PAR LE WORKER (DEV MODE)');
+    console.log('='.repeat(80));
+    console.log(`De      : ${mailContent.from || config.email.from}`);
+    console.log(`À       : ${mailContent.to}`);
+    console.log(`Sujet   : ${mailContent.subject}`);
+    console.log('-'.repeat(80));
+    console.log(mailContent.text || '(pas de contenu texte)');
+
+    // Si c'est un email de réinitialisation, afficher le lien
+    if (mailContent.resetUrl) {
+      console.log('-'.repeat(80));
+      console.log('🔗 LIEN DE RÉINITIALISATION (copier-coller dans le navigateur):');
+      console.log(mailContent.resetUrl);
+    }
+
+    console.log('='.repeat(80) + '\n');
+
+    logger.info({ to: mailContent.to }, '✅ [RESEND] Email affiché en mode développement');
+    return { id: `dev-${Date.now()}`, message: 'Email displayed in development mode' };
+  }
+
+  // En production, vérifier que Resend est configuré
   if (!resend) {
     const errorMsg = isDevelopment
       ? 'Mode développement: Resend non initialisé (normal en dev)'
@@ -112,22 +139,9 @@ Si vous avez des questions, n'hésitez pas à nous contacter.
 L'équipe Scenacte`
   };
 
-  if (isDevelopment) {
-    // Mode développement : juste logger
-    console.log('\n' + '='.repeat(60));
-    console.log('📧 EMAIL DE BIENVENUE (DEV MODE)');
-    console.log('='.repeat(60));
-    console.log(`À: ${email}`);
-    console.log(`Sujet: ${mailContent.subject}`);
-    console.log('-'.repeat(60));
-    console.log(mailContent.text);
-    console.log('='.repeat(60) + '\n');
-    return;
-  }
-
-  // Mode production : ajouter à la queue pour envoi asynchrone avec retry
+  // Ajouter à la queue pour envoi asynchrone avec retry (même en dev)
   try {
-    if (isResendConfigured) {
+    if (isResendConfigured || isDevelopment) {
       await queueEmail({
         ...mailContent,
         service: 'resend'
@@ -166,28 +180,14 @@ Ce lien est valable pendant 1 heure.
 
 Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
 
-L'équipe Scenacte`
+L'équipe Scenacte`,
+    // Ajouter le resetUrl comme metadata pour le mode développement
+    resetUrl
   };
 
-  if (isDevelopment) {
-    // Mode développement : juste logger
-    console.log('\n' + '='.repeat(60));
-    console.log('🔑 EMAIL DE RÉINITIALISATION (DEV MODE)');
-    console.log('='.repeat(60));
-    console.log(`À: ${email}`);
-    console.log(`Sujet: ${mailContent.subject}`);
-    console.log('-'.repeat(60));
-    console.log(mailContent.text);
-    console.log('-'.repeat(60));
-    console.log('🔗 LIEN DE RÉINITIALISATION (copier-coller dans le navigateur):');
-    console.log(resetUrl);
-    console.log('='.repeat(60) + '\n');
-    return;
-  }
-
-  // Mode production : ajouter à la queue pour envoi asynchrone avec retry
+  // Ajouter à la queue pour envoi asynchrone avec retry (même en dev)
   try {
-    if (isResendConfigured) {
+    if (isResendConfigured || isDevelopment) {
       await queueEmail({
         ...mailContent,
         service: 'resend'
