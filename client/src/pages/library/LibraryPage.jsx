@@ -27,6 +27,7 @@ import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
 import { CreatePlayModal, DeletePlayModal, RenamePlayModal } from "@/components/modals";
+import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 
 export default function LibraryPage() {
     const navigate = useNavigate();
@@ -50,6 +51,7 @@ export default function LibraryPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
+    const [showVersionsModal, setShowVersionsModal] = useState(false);
     const [selectedPlay, setSelectedPlay] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const menuRef = useRef(null);
@@ -148,6 +150,11 @@ export default function LibraryPage() {
     const openRenameModal = (play) => {
         setSelectedPlay(play);
         setShowRenameModal(true);
+    };
+
+    const openVersionsModal = (play) => {
+        setSelectedPlay(play);
+        setShowVersionsModal(true);
     };
 
     const handleRenamePlay = async ({ title, subtitle }) => {
@@ -309,6 +316,7 @@ export default function LibraryPage() {
                                         onClick={() => navigate(`/editor/${play.id}`)}
                                         onRename={openRenameModal}
                                         onDelete={openDeleteModal}
+                                        onVersions={openVersionsModal}
                                     />
                                 ))}
                                 <CreatePlayCard
@@ -356,6 +364,16 @@ export default function LibraryPage() {
                 onSubmit={handleRenamePlay}
                 isLoading={isSubmitting}
                 play={selectedPlay}
+            />
+
+            <VersionHistoryModal
+                isOpen={showVersionsModal}
+                onClose={() => {
+                    setShowVersionsModal(false);
+                    setSelectedPlay(null);
+                }}
+                play={selectedPlay}
+                onRestore={fetchPlays}
             />
         </SidebarProvider>
     );
