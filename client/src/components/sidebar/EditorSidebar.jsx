@@ -12,7 +12,7 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
-  ArrowLeft,
+  LibraryBig,
   PieChart,
   Download,
   Settings2,
@@ -60,7 +60,7 @@ export function EditorSidebar({
                 className="cursor-pointer"
               >
                 <Link to="/library">
-                  <ArrowLeft className="h-4 w-4" />
+                  <LibraryBig className="h-4 w-4" />
                   <span>Bibliotheque</span>
                 </Link>
               </SidebarMenuButton>
@@ -200,12 +200,12 @@ export function EditorSidebar({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Versions"
+                tooltip="Historique"
                 className="cursor-pointer"
                 onClick={onVersionsClick}
               >
                 <History className="h-4 w-4" />
-                <span>Versions</span>
+                <span>Historique</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
