@@ -87,7 +87,7 @@ export default function EditorPage() {
         createVersion,
         hasUnsavedChanges: hasUnsavedVersionChanges,
         charsSinceLastVersion,
-    } = useVersioning(id, !isGuest());
+    } = useVersioning(id, !isGuest);
 
     // Hook parsing (utilise le contenu debouncé pour optimiser les performances)
     // PROPOSITION ARRIVEE DANS LE REFACTO : A CONSIDERER PAR RAPPORT A LA LIGNE SUIVANTE
@@ -257,7 +257,7 @@ export default function EditorPage() {
      */
     useEffect(() => {
         const handleBeforeUnload = (e) => {
-            if (hasUnsavedVersionChanges && !isGuest()) {
+            if (hasUnsavedVersionChanges && !isGuest) {
                 // Utiliser sendBeacon pour envoyer la requête de manière asynchrone
                 // Note: sendBeacon est plus fiable que fetch avec keepalive pour beforeunload
                 const data = JSON.stringify({
@@ -476,7 +476,7 @@ export default function EditorPage() {
                     onSave={handleManualSave}
                     onCreateVersion={handleCreateManualVersion}
                     hasUnsavedChanges={hasUnsavedVersionChanges}
-                    isOnline={!isGuest()}
+                    isOnline={!isGuest}
                     onUndo={handleUndo}
                     onRedo={handleRedo}
                     canUndo={canUndo}
