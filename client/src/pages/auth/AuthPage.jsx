@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/auth.service";
+import { storageService } from "@/services/storage.service";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -41,12 +42,21 @@ export default function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
 
+  // Compteur de pièces invité pour l'inscription
+  const [guestPlaysCount, setGuestPlaysCount] = useState(0);
+
   // Déterminer l'onglet initial selon l'URL
   const getInitialTab = () => {
     if (location.pathname === "/register") return "register";
     return "login";
   };
   const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  // Charger le compteur de pièces invité au mount
+  useEffect(() => {
+    const count = storageService.getGuestPlaysCount();
+    setGuestPlaysCount(count);
+  }, []);
 
   // Mettre à jour le tab si l'URL change
   useEffect(() => {
@@ -322,6 +332,12 @@ export default function AuthPage() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Inscription..." : "S'inscrire"}
                 </Button>
+
+                {guestPlaysCount > 0 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Vos {guestPlaysCount} pièce{guestPlaysCount > 1 ? 's' : ''} locale{guestPlaysCount > 1 ? 's' : ''} seront importées à l'inscription.
+                  </p>
+                )}
               </form>
             </TabsContent>
           </Tabs>

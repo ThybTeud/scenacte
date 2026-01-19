@@ -237,6 +237,12 @@ export const storageService = {
     return data.plays.length > 0;
   },
 
+  // Retourne le nombre de pièces invité
+  getGuestPlaysCount() {
+    const data = getGuestData();
+    return data.plays.length;
+  },
+
   // Supprime les données invité (après migration)
   clearGuestData() {
     localStorage.removeItem(GUEST_DATA_KEY);
