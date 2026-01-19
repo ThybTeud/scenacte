@@ -161,8 +161,8 @@ export async function forgotPassword(req, res, next) {
       });
     }
 
-    // Génération du token de reset (expire en 1h)
-    const resetToken = generateResetToken(user.id);
+    // Génération du token de reset (expire en 1h) avec le timestamp du dernier changement de mot de passe
+    const resetToken = generateResetToken(user.id, user.passwordUpdatedAt || user.createdAt);
 
     // Envoi de l'email (bloquant car critique)
     await sendPasswordResetEmail(user.email, user.email, resetToken);
@@ -170,6 +170,50 @@ export async function forgotPassword(req, res, next) {
     res.json({
       message: 'Si cet email existe, un lien de réinitialisation a été envoyé'
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/auth/validate-reset-token
+ * Valide un token de réinitialisation sans le consommer
+ */
+export async function validateResetToken(req, res, next) {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      throw new BadRequestError('Token requis');
+    }
+
+    // Vérification du token JWT
+    const decoded = verifyResetToken(token);
+
+    if (!decoded) {
+      throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
+    }
+
+    // Vérification que l'utilisateur existe toujours
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user) {
+      throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
+    }
+
+    // Vérification que le token n'a pas été invalidé par un changement de mot de passe
+    if (decoded.passwordUpdatedAt) {
+      const tokenPasswordDate = new Date(decoded.passwordUpdatedAt);
+      const currentPasswordDate = user.passwordUpdatedAt || user.createdAt;
+
+      if (tokenPasswordDate.getTime() !== currentPasswordDate.getTime()) {
+        throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
+      }
+    }
+
+    res.json({ valid: true });
   } catch (error) {
     next(error);
   }
@@ -197,7 +241,7 @@ export async function resetPassword(req, res, next) {
     const decoded = verifyResetToken(token);
 
     if (!decoded) {
-      throw new UnauthorizedError('Token invalide ou expiré');
+      throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
     }
 
     // Vérification que l'utilisateur existe toujours
@@ -206,16 +250,29 @@ export async function resetPassword(req, res, next) {
     });
 
     if (!user) {
-      throw new UnauthorizedError('Utilisateur non trouvé');
+      throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
+    }
+
+    // Vérification que le token n'a pas été invalidé par un changement de mot de passe
+    if (decoded.passwordUpdatedAt) {
+      const tokenPasswordDate = new Date(decoded.passwordUpdatedAt);
+      const currentPasswordDate = user.passwordUpdatedAt || user.createdAt;
+
+      if (tokenPasswordDate.getTime() !== currentPasswordDate.getTime()) {
+        throw new UnauthorizedError('Ce lien a expiré ou a déjà été utilisé');
+      }
     }
 
     // Hash du nouveau mot de passe
     const passwordHash = await hashPassword(newPassword);
 
-    // Mise à jour du mot de passe
+    // Mise à jour du mot de passe ET du timestamp
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash }
+      data: {
+        passwordHash,
+        passwordUpdatedAt: new Date()
+      }
     });
 
     res.json({

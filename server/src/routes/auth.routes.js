@@ -4,6 +4,7 @@ import {
   login,
   forgotPassword,
   resetPassword,
+  validateResetToken,
   getCurrentUser
 } from '../controllers/auth.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
@@ -34,6 +35,14 @@ router.post('/login', authLimiter, login);
  * Rate limit: 5 requêtes / 15 minutes
  */
 router.post('/forgot-password', authLimiter, forgotPassword);
+
+/**
+ * GET /api/auth/validate-reset-token
+ * Valide un token de réinitialisation sans le consommer
+ * Query: { token }
+ * Rate limit: 5 requêtes / 15 minutes
+ */
+router.get('/validate-reset-token', authLimiter, validateResetToken);
 
 /**
  * POST /api/auth/reset-password
