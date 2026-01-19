@@ -11,6 +11,7 @@ const alertVariants = cva(
         default: "bg-card text-card-foreground",
         destructive:
           "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+//         Ajout par dessus shadcn : warning + success
         warning:
           "bg-yellow-50 border-2 border-yellow-500 text-black [&>svg]:text-yellow-600",
         success:
