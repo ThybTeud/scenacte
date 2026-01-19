@@ -401,7 +401,7 @@ export default function EditorPage() {
                     onTogglePreview={() => setShowPreview((prev) => !prev)}
                 />
 
-                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0">
+                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh">
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
