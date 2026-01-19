@@ -285,10 +285,10 @@ export async function getPlay(req, res, next) {
  */
 export async function savePlay(req, res, next) {
   const client = await pool.connect();
-  
+
   try {
     const { id } = req.params;
-    const { title, subtitle, rawContent, htmlContent, statistics, versionType = 'auto', manualLabel } = req.body;
+    const { title, subtitle, rawContent, htmlContent } = req.body;
     const userId = req.user.id;
 
     // Validation UUID
@@ -338,12 +338,6 @@ export async function savePlay(req, res, next) {
     const ast = parser.parse(rawContent);
     const astContent = JSON.stringify(ast.toJSON());
 
-    const fileSizeBytes = Buffer.byteLength(rawContent, 'utf8') + Buffer.byteLength(htmlContent, 'utf8');
-
-    // Récupérer le prochain numéro de version (protégé par FOR UPDATE sur la table plays)
-    const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_history WHERE play_id = $1`;
-    const maxVersionResult = await client.query(maxVersionQuery, [id]);
-    const nextVersionNumber = maxVersionResult.rows[0].max_version + 1;
     const newContentVersion = existingPlay.content_version + 1;
 
     // Construire l'objet statistics JSONB
@@ -376,46 +370,18 @@ export async function savePlay(req, res, next) {
       id
     ]);
 
-    // 2. Créer nouvelle entrée dans play_history (sans html_content, avec statistics JSONB)
-    const insertHistoryQuery = `
-      INSERT INTO play_history (play_id, version_number, title, raw_content, version_type, manual_label, file_size_bytes, preserved_reason, statistics)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING id
-    `;
-    await client.query(insertHistoryQuery, [
-      id,
-      nextVersionNumber,
-      title.trim(),
-      rawContent,
-      versionType,
-      versionType === 'manual' ? (manualLabel || null) : null,
-      fileSizeBytes,
-      versionType === 'manual' ? 'manual' : null,
-      JSON.stringify(statisticsJson)
-    ]);
-
     await client.query('COMMIT');
 
     const play = playResult.rows[0];
 
     res.json({
+      success: true,
       play: {
         id: play.id,
-        userId: play.user_id,
         title: play.title,
-        subtitle: play.subtitle,
-        rawContent: play.raw_content,
-        htmlContent: play.html_content,
-        astContent: play.ast_content,
-        contentVersion: play.content_version,
-        status: play.status,
-        createdAt: play.created_at,
         updatedAt: play.updated_at,
-        lastEditedAt: play.last_edited_at,
-        statistics: play.statistics
-      },
-      versionNumber: nextVersionNumber,
-      message: 'Pièce sauvegardée avec succès'
+        contentVersion: play.content_version
+      }
     });
   } catch (error) {
     await client.query('ROLLBACK');
