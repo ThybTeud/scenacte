@@ -46,7 +46,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
                 ${
                   currentPage === page
                     ? 'bg-orange text-white shadow-brutal'
-                    : 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:-translate-x-[1px] hover:-translate-y-[1px]'
+                    : 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:-translate-x-px hover:-translate-y-px'
                 }
               `}
             >
