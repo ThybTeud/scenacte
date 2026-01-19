@@ -19,38 +19,9 @@ router.get('/queue-status', async (req, res) => {
       ORDER BY ordinal_position
     `);
 
-    // 1. Compter les jobs par état
-    const countResult = await pool.query(`
-      SELECT state, COUNT(*) as count
-      FROM pgboss.job
-      WHERE name = 'send-email'
-      GROUP BY state
-      ORDER BY count DESC
-    `);
-
-    // 2. Récupérer les derniers jobs (en utilisant * pour avoir toutes les colonnes)
-    const jobsResult = await pool.query(`
-      SELECT *
-      FROM pgboss.job
-      WHERE name = 'send-email'
-      ORDER BY createdon DESC
-      LIMIT 20
-    `);
-
-    // 3. Compter les jobs bloqués
-    const blockedResult = await pool.query(`
-      SELECT COUNT(*) as count
-      FROM pgboss.job
-      WHERE name = 'send-email'
-        AND state = 'active'
-        AND startedon < NOW() - INTERVAL '5 minutes'
-    `);
-
     res.json({
-      columns: columnsResult.rows,
-      summary: countResult.rows,
-      blocked: blockedResult.rows[0].count,
-      recentJobs: jobsResult.rows
+      message: "Structure de la table pgboss.job",
+      columns: columnsResult.rows
     });
 
   } catch (error) {
