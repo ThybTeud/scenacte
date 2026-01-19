@@ -71,25 +71,29 @@ export async function startQueue() {
 
     // Enregistrer le worker pour traiter les emails
     const workerId = await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
-      // IMPORTANT : Dans pg-boss v12+, les données sont directement dans job, pas dans job.data
+      // IMPORTANT : pg-boss v12+ passe un tableau de jobs au lieu d'un seul job
       logger.info({
-        jobStructure: {
-          hasData: !!job.data,
-          jobKeys: Object.keys(job),
-          jobType: typeof job,
-          job: job
-        }
-      }, '🔍 [WORKER] Structure du job reçu');
+        isArray: Array.isArray(job),
+        length: Array.isArray(job) ? job.length : 'N/A',
+        jobType: typeof job
+      }, '🔍 [WORKER] Type du paramètre job');
 
-      // Extraire les données (pg-boss v12+ passe les données directement dans job)
-      const jobData = job.data || job;
-      const { to, from, subject, text, html, service, resetUrl } = jobData;
+      // Extraire le vrai job (pg-boss v12+ passe un tableau)
+      const actualJob = Array.isArray(job) ? job[0] : job;
+
+      if (!actualJob) {
+        logger.error('❌ [WORKER] Aucun job reçu (tableau vide ou job null)');
+        throw new Error('Aucun job à traiter');
+      }
+
+      // Les données sont dans actualJob.data
+      const { to, from, subject, text, html, service, resetUrl } = actualJob.data;
 
       try {
         logger.info({
           to,
           service,
-          jobId: job.id,
+          jobId: actualJob.id,
           from,
           subject
         }, '🔄 [WORKER] Début traitement email depuis la queue');
@@ -114,7 +118,7 @@ export async function startQueue() {
         if (service === 'resend') {
           logger.info('📨 [WORKER] Appel de sendViaResend...');
           await emailSenders.sendViaResend({ to, from, subject, text, html, resetUrl });
-          logger.info({ to, jobId: job.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
+          logger.info({ to, jobId: actualJob.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
         } else if (service === 'sendgrid' || service === 'smtp') {
           // Services obsolètes - migration vers Resend
           logger.error({ service }, '❌ [WORKER] Service obsolète détecté');
@@ -126,7 +130,7 @@ export async function startQueue() {
       } catch (error) {
         logger.error({
           to,
-          jobId: job.id,
+          jobId: actualJob.id,
           error: error.message,
           stack: error.stack
         }, '❌ [WORKER] Erreur lors de l\'envoi d\'email depuis la queue');
