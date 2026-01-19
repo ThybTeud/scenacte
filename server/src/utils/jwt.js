@@ -28,10 +28,15 @@ export function verifyToken(token) {
 /**
  * Génère un token de réinitialisation de mot de passe (expire en 1h)
  * @param {string} userId - ID de l'utilisateur
+ * @param {Date} passwordUpdatedAt - Date de dernière mise à jour du mot de passe
  * @returns {string} Token de reset
  */
-export function generateResetToken(userId) {
-  return jwt.sign({ userId, type: 'reset' }, config.jwt.resetSecret, {
+export function generateResetToken(userId, passwordUpdatedAt = null) {
+  const payload = { userId, type: 'reset' };
+  if (passwordUpdatedAt) {
+    payload.passwordUpdatedAt = passwordUpdatedAt.toISOString();
+  }
+  return jwt.sign(payload, config.jwt.resetSecret, {
     expiresIn: '1h'
   });
 }

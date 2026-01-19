@@ -144,8 +144,9 @@ const prisma = {
       let i = 1;
       for (const [k, v] of Object.entries(data)) {
         const col = k.replace(/([A-Z])/g, (m) => '_' + m.toLowerCase()).replace('password_hash', 'password_hash');
-        // special mapping for passwordHash -> password_hash
-        const columnName = k === 'passwordHash' ? 'password_hash' : col;
+        // special mapping for passwordHash -> password_hash and passwordUpdatedAt -> password_updated_at
+        const columnName = k === 'passwordHash' ? 'password_hash' :
+                          k === 'passwordUpdatedAt' ? 'password_updated_at' : col;
         sets.push(`${columnName} = $${i++}`);
         values.push(v);
       }

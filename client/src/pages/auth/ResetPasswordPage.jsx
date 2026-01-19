@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     Card,
@@ -19,11 +19,35 @@ export default function ResetPasswordPage() {
     const resetToken = searchParams.get("token");
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isValidating, setIsValidating] = useState(true);
     const [error, setError] = useState("");
+    const [tokenError, setTokenError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [resetSuccess, setResetSuccess] = useState(false);
+
+    // Valider le token au chargement de la page
+    useEffect(() => {
+        const validateToken = async () => {
+            if (!resetToken) {
+                setIsValidating(false);
+                return;
+            }
+
+            try {
+                await authService.validateResetToken(resetToken);
+                setIsValidating(false);
+            } catch (err) {
+                setTokenError(
+                    err.message || "Ce lien a expiré ou a déjà été utilisé"
+                );
+                setIsValidating(false);
+            }
+        };
+
+        validateToken();
+    }, [resetToken]);
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
@@ -57,7 +81,7 @@ export default function ResetPasswordPage() {
     };
 
     // Pas de token = erreur
-    if (!resetToken) {
+    if (!resetToken || tokenError) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <Card className="w-full max-w-md">
@@ -69,7 +93,8 @@ export default function ResetPasswordPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-destructive">
-                            Le token de réinitialisation est manquant ou invalide.
+                            {tokenError ||
+                                "Le token de réinitialisation est manquant ou invalide."}
                         </p>
                         <Button
                             className="w-full"
@@ -85,6 +110,22 @@ export default function ResetPasswordPage() {
                             Retour à la connexion
                         </Button>
                     </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // En cours de validation
+    if (isValidating) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Vérification du lien...</CardTitle>
+                        <CardDescription>
+                            Veuillez patienter
+                        </CardDescription>
+                    </CardHeader>
                 </Card>
             </div>
         );

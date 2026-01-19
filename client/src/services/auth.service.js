@@ -21,6 +21,10 @@ export const authService = {
     return api.post('/auth/forgot-password', { email });
   },
 
+  async validateResetToken(token) {
+    return api.get(`/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+  },
+
   async resetPassword(token, newPassword) {
     return api.post('/auth/reset-password', { token, newPassword });
   },
