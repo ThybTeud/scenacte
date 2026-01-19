@@ -103,7 +103,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0">
+        <DialogContent className="max-w-2xl flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Historique des versions</DialogTitle>
             <DialogDescription>
@@ -111,7 +111,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 px-6">
+          <ScrollArea className="h-[500px] px-6">
             {isLoading ? (
               <div className="py-4 space-y-3">
                 {[...Array(5)].map((_, i) => (
