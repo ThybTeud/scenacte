@@ -17,7 +17,7 @@ export function GuestModeBanner() {
       <AlertDescription>
         <span className="inline">
           Vos pièces sont stockées localement dans votre navigateur.{" "}
-          <Button variant="link" className="px-0" onClick={() => navigate("/register")}>
+          <Button variant="link" className="px-0 h-0" onClick={() => navigate("/register")}>
             Créer un compte
           </Button>{" "}
           pour synchroniser vos pièces et y accéder depuis tous vos appareils.

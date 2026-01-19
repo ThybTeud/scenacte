@@ -11,10 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Info, Dot } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/auth.service";
 import { storageService } from "@/services/storage.service";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -267,6 +268,19 @@ export default function AuthPage() {
                   Mot de passe oublié ?
                 </button>
               </form>
+              {/* Guest Mode */}
+              <div className="mt-6 pt-6 border-t">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGuestMode}
+                >
+                  Continuer sans compte
+                </Button>
+                <p className="mt-2 text-xs text-center text-muted-foreground">
+                  Vos pièces seront sauvegardées localement
+                </p>
+              </div>
             </TabsContent>
 
             {/* Register Tab */}
@@ -295,7 +309,7 @@ export default function AuthPage() {
                       required
                       minLength={12}
                     />
-                    <button
+                    <button tabIndex={-1}
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowPassword(!showPassword)}
@@ -309,22 +323,13 @@ export default function AuthPage() {
                   <Label htmlFor="register-confirm">
                     Confirmer le mot de passe
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="register-confirm"
-                      type={showPassword ? "text" : "password"}
-                      value={registerConfirm}
-                      onChange={(e) => setRegisterConfirm(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
+                  <Input
+                    id="register-confirm"
+                    type={showPassword ? "text" : "password"}
+                    value={registerConfirm}
+                    onChange={(e) => setRegisterConfirm(e.target.value)}
+                    required
+                  />
                 </div>
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
@@ -334,43 +339,36 @@ export default function AuthPage() {
                 </Button>
 
                 {guestPlaysCount > 0 && (
-                  <p className="text-sm text-muted-foreground text-center">
-                    Vos {guestPlaysCount} pièce{guestPlaysCount > 1 ? 's' : ''} locale{guestPlaysCount > 1 ? 's' : ''} seront importées à l'inscription.
-                  </p>
+                  <Alert variant="warning">
+                    <Info className="w-4 h-4" />
+                    <AlertDescription>
+                      {guestPlaysCount > 1
+                        ? `Vos ${guestPlaysCount} pièces locales seront importées.`
+                        : "Votre pièce locale sera importée."}
+                    </AlertDescription>
+                  </Alert>
                 )}
               </form>
             </TabsContent>
           </Tabs>
 
-          {/* Guest Mode */}
-          <div className="mt-6 pt-6 border-t">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleGuestMode}
-            >
-              Continuer sans compte
-            </Button>
-            <p className="mt-2 text-xs text-center text-muted-foreground">
-              Vos pièces seront sauvegardées localement
-            </p>
-          </div>
-
           {/* Legal links */}
           <div className="mt-6 pt-4 border-t">
-            <nav className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
-              <Link
-                to="/legal/terms"
-                className="hover:text-foreground hover:underline"
-              >
-                CGU
-              </Link>
+            <nav className="flex flex-wrap justify-center items-center gap-2 text-xs text-muted-foreground">
               <Link
                 to="/legal/legal"
                 className="hover:text-foreground hover:underline"
               >
                 Mentions légales
               </Link>
+              <Dot />
+              <Link
+                to="/legal/terms"
+                className="hover:text-foreground hover:underline"
+              >
+                CGU
+              </Link>
+              <Dot />
               <Link
                 to="/legal/privacy"
                 className="hover:text-foreground hover:underline"
