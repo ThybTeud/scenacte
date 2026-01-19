@@ -18,6 +18,7 @@ import {
   Settings2,
   List,
   Users,
+  History,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
@@ -33,6 +34,7 @@ export function EditorSidebar({
   onOpenExport,
   onOpenEditorSettings,
   onOpenPageSettings,
+  onVersionsClick,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -192,6 +194,22 @@ export function EditorSidebar({
             </SidebarMenuItem>
           </SidebarMenuSub>
         </CollapsibleSection>
+
+        {/* Versions */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Versions"
+                className="cursor-pointer"
+                onClick={onVersionsClick}
+              >
+                <History className="h-4 w-4" />
+                <span>Versions</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
         {/* Export */}
         <SidebarGroup>
