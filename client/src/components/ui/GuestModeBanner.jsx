@@ -10,8 +10,8 @@ export function GuestModeBanner() {
   if (!isVisible) return null;
 
   return (
-    <Alert variant="warning" className="mb-4 flex items-center justify-between gap-4">
-      <AlertDescription className="flex-1 font-ui">
+    <Alert variant="warning" className="mb-4 pr-12">
+      <AlertDescription className="font-ui">
         <strong>Mode invité</strong> — vos pièces sont stockées localement dans
         votre navigateur.{' '}
         <button
@@ -24,7 +24,7 @@ export function GuestModeBanner() {
       </AlertDescription>
       <button
         onClick={() => setIsVisible(false)}
-        className="text-black/60 hover:text-black transition-colors"
+        className="absolute right-3 top-3 text-black/60 hover:text-black transition-colors"
         aria-label="Fermer"
       >
         <X className="w-5 h-5" />
