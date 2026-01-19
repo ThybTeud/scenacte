@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Pagination } from '@/components/ui/Pagination';
+import { PlaysPagination } from '@/components/ui/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
@@ -160,7 +160,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
 
           {!isLoading && versions.length > 0 && pagination.totalPages > 1 && (
             <SheetFooter className="px-6 py-4 border-t">
-              <Pagination
+              <PlaysPagination
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
                 onPageChange={(page) =>

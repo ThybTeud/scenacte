@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { GuestModeBanner } from "@/components/ui/GuestModeBanner";
-import { Pagination } from "@/components/ui/Pagination";
+import { PlaysPagination } from "@/components/ui/Pagination";
 import { Search, Plus } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
@@ -285,7 +285,7 @@ export default function LibraryPage() {
                             </div>
 
                             {/* Pagination */}
-                            <Pagination
+                            <PlaysPagination
                                 currentPage={pagination.page}
                                 totalPages={pagination.totalPages}
                                 onPageChange={(page) =>
