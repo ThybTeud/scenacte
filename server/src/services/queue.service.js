@@ -46,39 +46,15 @@ export async function startQueue() {
 
     // Créer la queue explicitement avant d'enregistrer le worker
     await boss.createQueue('send-email');
-    logger.info('✓ [QUEUE] Queue "send-email" créée');
 
-    // Vérifier si emailSenders est déjà défini
-    if (emailSenders) {
-      logger.info('✓ [QUEUE] emailSenders est déjà défini au démarrage');
-    } else {
-      logger.warn('⚠️ [QUEUE] emailSenders n\'est pas encore défini au démarrage');
-    }
-
-    // Événement de monitoring pour les jobs
+    // Événement de monitoring pour les erreurs
     boss.on('error', error => {
       logger.error({ error: error.message, stack: error.stack }, '❌ [QUEUE] Erreur PgBoss');
-    });
-
-    boss.on('monitor-states', (states) => {
-      logger.info({ states }, '📊 [QUEUE] État de la queue');
-    });
-
-    // Événement déclenché quand un worker commence à traiter un job
-    boss.on('wip', data => {
-      logger.info({ data }, '⚙️ [QUEUE] Worker en train de traiter un job (WIP)');
     });
 
     // Enregistrer le worker pour traiter les emails
     const workerId = await boss.work('send-email', { teamSize: 5, teamConcurrency: 1 }, async (job) => {
       // IMPORTANT : pg-boss v12+ passe un tableau de jobs au lieu d'un seul job
-      logger.info({
-        isArray: Array.isArray(job),
-        length: Array.isArray(job) ? job.length : 'N/A',
-        jobType: typeof job
-      }, '🔍 [WORKER] Type du paramètre job');
-
-      // Extraire le vrai job (pg-boss v12+ passe un tableau)
       const actualJob = Array.isArray(job) ? job[0] : job;
 
       if (!actualJob) {
@@ -90,35 +66,16 @@ export async function startQueue() {
       const { to, from, subject, text, html, service, resetUrl } = actualJob.data;
 
       try {
-        logger.info({
-          to,
-          service,
-          jobId: actualJob.id,
-          from,
-          subject
-        }, '🔄 [WORKER] Début traitement email depuis la queue');
-
         // Vérifier que les fonctions d'envoi sont définies
-        if (!emailSenders) {
-          logger.error('❌ [WORKER] emailSenders est null ou undefined');
+        if (!emailSenders || !emailSenders.sendViaResend) {
+          logger.error('❌ [WORKER] Fonctions d\'envoi d\'email non initialisées');
           throw new Error('Fonctions d\'envoi d\'email non initialisées');
         }
 
-        logger.info('✓ [WORKER] emailSenders est bien défini');
-
-        // Vérifier que sendViaResend existe
-        if (!emailSenders.sendViaResend) {
-          logger.error('❌ [WORKER] emailSenders.sendViaResend est undefined');
-          throw new Error('Fonction sendViaResend non disponible');
-        }
-
-        logger.info('✓ [WORKER] sendViaResend est disponible');
-
         // Envoyer l'email via le service approprié
         if (service === 'resend') {
-          logger.info('📨 [WORKER] Appel de sendViaResend...');
           await emailSenders.sendViaResend({ to, from, subject, text, html, resetUrl });
-          logger.info({ to, jobId: actualJob.id }, '✅ [WORKER] Email envoyé avec succès depuis la queue');
+          logger.info({ to, jobId: actualJob.id }, '✅ Email envoyé avec succès depuis la queue');
         } else if (service === 'sendgrid' || service === 'smtp') {
           // Services obsolètes - migration vers Resend
           logger.error({ service }, '❌ [WORKER] Service obsolète détecté');
@@ -169,15 +126,6 @@ export async function queueEmail(emailData) {
     });
 
     logger.info({ to: emailData.to, jobId }, 'Email ajouté à la queue');
-
-    // Vérifier l'état de la queue après l'ajout
-    try {
-      const queueSize = await boss.getQueueSize('send-email');
-      logger.info({ queueSize }, '📊 [QUEUE] Taille de la queue après ajout');
-    } catch (err) {
-      logger.warn({ error: err.message }, '⚠️ [QUEUE] Impossible de récupérer la taille de la queue');
-    }
-
     return jobId;
   } catch (error) {
     logger.error({ to: emailData.to, error: error.message }, 'Erreur lors de l\'ajout de l\'email à la queue');
