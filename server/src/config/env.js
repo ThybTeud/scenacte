@@ -65,9 +65,22 @@ const env = cleanEnv(process.env, {
     desc: 'Resend API key (optional)',
     default: ''
   }),
-  EMAIL_FROM: email({
-    desc: 'Sender email address',
-    default: 'noreply@scenacte.fr'
+  EMAIL_FROM: str({
+    desc: 'Sender email address (supports RFC 5322 format with display name)',
+    default: 'noreply@scenacte.fr',
+    // Accepte soit "email@domain.com" soit "Display Name <email@domain.com>"
+    example: 'Scenacte <noreply@scenacte.fr>',
+    validator: (value) => {
+      // Format simple : email@domain.com
+      const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // Format RFC 5322 : Display Name <email@domain.com>
+      const rfc5322Regex = /^.+\s+<[^\s@]+@[^\s@]+\.[^\s@]+>$/;
+
+      if (simpleEmailRegex.test(value) || rfc5322Regex.test(value)) {
+        return value;
+      }
+      throw new Error('EMAIL_FROM must be a valid email address or RFC 5322 format (e.g., "Name <email@domain.com>")');
+    }
   }),
 
   // Server
