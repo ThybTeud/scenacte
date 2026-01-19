@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function GuestModeBanner() {
   const [isVisible, setIsVisible] = useState(true);
@@ -11,16 +12,15 @@ export function GuestModeBanner() {
 
   return (
     <Alert variant="warning" className="mb-4 pr-12">
-      <AlertDescription className="font-ui">
-        <strong>Mode invité</strong> — vos pièces sont stockées localement dans
-        votre navigateur.{' '}
-        <button
-          onClick={() => navigate('/register')}
-          className="text-orange hover:underline font-medium"
-        >
-          Créer un compte
-        </button>{' '}
-        pour synchroniser vos pièces et y accéder depuis tous vos appareils.
+      <AlertTitle>Mode invité</AlertTitle>
+      <AlertDescription>
+        <span className="inline">
+          Vos pièces sont stockées localement dans votre navigateur.{" "}
+          <Button variant="link" className="px-0" onClick={() => navigate("/register")}>
+            Créer un compte
+          </Button>{" "}
+          pour synchroniser vos pièces et y accéder depuis tous vos appareils.
+        </span>
       </AlertDescription>
       <button
         onClick={() => setIsVisible(false)}
