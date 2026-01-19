@@ -42,6 +42,9 @@ export default function EditorPage() {
     // Référence pour tracker le contenu précédent (versioning)
     const previousContentRef = useRef(content);
 
+    // Référence pour le beforeunload (évite les réattachements constants du listener)
+    const hasUnsavedVersionChangesRef = useRef(false);
+
     // Debounce pour optimiser le parsing (300ms)
     const debouncedContent = useDebouncedValue(content, 300);
 
@@ -253,11 +256,20 @@ export default function EditorPage() {
     }, []);
 
     /**
+     * Synchroniser la ref avec le state pour le beforeunload
+     * (évite les réattachements constants du listener)
+     */
+    useEffect(() => {
+        hasUnsavedVersionChangesRef.current = hasUnsavedVersionChanges;
+    }, [hasUnsavedVersionChanges]);
+
+    /**
      * Gestion du beforeunload : créer version session_close si changements non versionnés
      */
     useEffect(() => {
         const handleBeforeUnload = (e) => {
-            if (hasUnsavedVersionChanges && !isGuest) {
+            // Utilise la ref au lieu du state (évite les dépendances)
+            if (hasUnsavedVersionChangesRef.current && !isGuest) {
                 // Utiliser sendBeacon pour envoyer la requête de manière asynchrone
                 // Note: sendBeacon est plus fiable que fetch avec keepalive pour beforeunload
                 const data = JSON.stringify({
@@ -296,7 +308,7 @@ export default function EditorPage() {
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [hasUnsavedVersionChanges, id, isGuest]);
+    }, [id, isGuest]); // hasUnsavedVersionChanges retiré → utilise la ref
 
     /**
      * Sauvegarde automatique après 2 secondes d'inactivité

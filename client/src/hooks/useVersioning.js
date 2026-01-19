@@ -22,6 +22,7 @@ export function useVersioning(playId, enabled = true) {
 
   // Refs
   const inactivityTimerRef = useRef(null);
+  const charsSinceLastVersionRef = useRef(0); // Ref pour accès synchrone sans re-render
 
   /**
    * Créer une version
@@ -35,7 +36,7 @@ export function useVersioning(playId, enabled = true) {
       }
 
       // Ne pas créer de version si aucun changement
-      if (charsSinceLastVersion === 0 && versionType !== 'manual') {
+      if (charsSinceLastVersionRef.current === 0 && versionType !== 'manual') {
         return;
       }
 
@@ -47,12 +48,14 @@ export function useVersioning(playId, enabled = true) {
         // Gérer le cas où la version est skippée (contenu identique)
         if (response.skipped) {
           console.log('[Versioning] Version skipped - no changes detected');
+          charsSinceLastVersionRef.current = 0;
           setCharsSinceLastVersion(0);
           setLastVersionTime(Date.now());
           return;
         }
 
         // Version créée avec succès
+        charsSinceLastVersionRef.current = 0;
         setCharsSinceLastVersion(0);
         setLastVersionTime(Date.now());
 
@@ -88,12 +91,12 @@ export function useVersioning(playId, enabled = true) {
     }
 
     // Créer un nouveau timer seulement s'il y a des changements non versionnés
-    if (charsSinceLastVersion > 0) {
+    if (charsSinceLastVersionRef.current > 0) {
       inactivityTimerRef.current = setTimeout(() => {
         createVersion('inactivity');
       }, INACTIVITY_DELAY);
     }
-  }, [enabled, charsSinceLastVersion, createVersion]);
+  }, [enabled, createVersion]);
 
   /**
    * Track les changements de contenu
@@ -113,8 +116,9 @@ export function useVersioning(playId, enabled = true) {
         return;
       }
 
-      // Incrémenter le compteur
-      const newTotal = charsSinceLastVersion + delta;
+      // Incrémenter le compteur (ref pour performance, state pour UI)
+      const newTotal = charsSinceLastVersionRef.current + delta;
+      charsSinceLastVersionRef.current = newTotal;
       setCharsSinceLastVersion(newTotal);
 
       // Reset le timer d'inactivité
@@ -125,7 +129,7 @@ export function useVersioning(playId, enabled = true) {
         createVersion('threshold');
       }
     },
-    [enabled, charsSinceLastVersion, resetInactivityTimer, createVersion]
+    [enabled, resetInactivityTimer, createVersion]
   );
 
   /**
@@ -138,13 +142,6 @@ export function useVersioning(playId, enabled = true) {
       }
     };
   }, []);
-
-  /**
-   * Réinitialiser le timer quand charsSinceLastVersion change
-   */
-  useEffect(() => {
-    resetInactivityTimer();
-  }, [charsSinceLastVersion, resetInactivityTimer]);
 
   return {
     trackChanges,
