@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authService } from '../services/auth.service';
+import { storageService } from '../services/storage.service';
 
 export const AuthContext = createContext(null);
 
@@ -65,10 +66,27 @@ export function AuthProvider({ children }) {
   }, [disableGuestMode]);
 
   const register = useCallback(async (email, password) => {
+    // Compter les pièces invité avant l'inscription
+    const guestPlaysCount = storageService.getGuestPlaysCount();
+
+    // Inscription
     const response = await authService.register(email, password);
     setToken(response.token);
     setUser(response.user);
     disableGuestMode();
+
+    // Migration automatique des pièces invité
+    if (guestPlaysCount > 0) {
+      try {
+        await storageService.migrateGuestData();
+        // Stocker le succès pour affichage dans LibraryPage
+        sessionStorage.setItem('scenacte_import_success', guestPlaysCount.toString());
+      } catch (error) {
+        console.error('[AuthContext] Erreur migration:', error);
+        // On continue même si la migration échoue
+      }
+    }
+
     return response;
   }, [disableGuestMode]);
 

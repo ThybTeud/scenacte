@@ -1,69 +1,67 @@
-import { Button } from './Button';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 
-export function Pagination({ currentPage, totalPages, onPageChange }) {
+export function PlaysPagination({ currentPage, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
 
   const pages = [];
   for (let i = 1; i <= totalPages; i++) {
-    if (
-      i === 1 ||
-      i === totalPages ||
-      (i >= currentPage - 1 && i <= currentPage + 1)
-    ) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       pages.push(i);
     } else if (pages[pages.length - 1] !== '...') {
       pages.push('...');
     }
   }
 
+  const handleClick = (e, page) => {
+    e.preventDefault();
+    onPageChange(page);
+  };
+
   return (
-    <div className="flex items-center justify-center space-x-2 mt-6">
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        Précédent
-      </Button>
+    <Pagination className="mt-6">
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => handleClick(e, currentPage - 1)}
+            aria-disabled={currentPage === 1}
+            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
 
-      <div className="flex space-x-1">
-        {pages.map((page, index) => {
-          if (page === '...') {
-            return (
-              <span key={`ellipsis-${index}`} className="px-3 py-2 font-ui text-black">
-                ...
-              </span>
-            );
-          }
+        {pages.map((page, index) => (
+          <PaginationItem key={index}>
+            {page === '...' ? (
+              <PaginationEllipsis />
+            ) : (
+              <PaginationLink
+                href="#"
+                isActive={currentPage === page}
+                onClick={(e) => handleClick(e, page)}
+              >
+                {page}
+              </PaginationLink>
+            )}
+          </PaginationItem>
+        ))}
 
-          return (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={`
-                px-3 py-2 rounded text-sm font-medium font-ui transition-all border-2 border-black cursor-pointer
-                ${
-                  currentPage === page
-                    ? 'bg-orange text-white shadow-brutal'
-                    : 'bg-white text-black hover:bg-gray-50 shadow-brutal hover:-translate-x-[1px] hover:-translate-y-[1px]'
-                }
-              `}
-            >
-              {page}
-            </button>
-          );
-        })}
-      </div>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        Suivant
-      </Button>
-    </div>
-  );
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => handleClick(e, currentPage + 1)}
+            aria-disabled={currentPage === totalPages}
+            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
 }

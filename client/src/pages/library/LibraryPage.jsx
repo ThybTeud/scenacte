@@ -20,12 +20,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { GuestModeBanner } from "@/components/ui/GuestModeBanner";
-import { Pagination } from "@/components/ui/Pagination";
-import { Search, Plus } from "lucide-react";
+import { PlaysPagination } from "@/components/ui/Pagination";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Plus, CheckCircle2, X } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
 import { CreatePlayModal, DeletePlayModal, RenamePlayModal } from "@/components/modals";
+import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 
 export default function LibraryPage() {
     const navigate = useNavigate();
@@ -49,9 +51,22 @@ export default function LibraryPage() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
+    const [showVersionsModal, setShowVersionsModal] = useState(false);
     const [selectedPlay, setSelectedPlay] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const menuRef = useRef(null);
+
+    // Message d'import des pièces invité
+    const [importSuccessCount, setImportSuccessCount] = useState(null);
+
+    // Vérifier si des pièces ont été importées (depuis inscription)
+    useEffect(() => {
+        const count = sessionStorage.getItem('scenacte_import_success');
+        if (count) {
+            setImportSuccessCount(parseInt(count, 10));
+            sessionStorage.removeItem('scenacte_import_success');
+        }
+    }, []);
 
     // Debounce search term
     useEffect(() => {
@@ -137,6 +152,11 @@ export default function LibraryPage() {
         setShowRenameModal(true);
     };
 
+    const openVersionsModal = (play) => {
+        setSelectedPlay(play);
+        setShowVersionsModal(true);
+    };
+
     const handleRenamePlay = async ({ title, subtitle }) => {
         if (!selectedPlay) return;
         setIsSubmitting(true);
@@ -167,6 +187,25 @@ export default function LibraryPage() {
                     <h1 className="text-2xl font-semibold mb-6 hidden sm:block">
                         Bibliothèque
                     </h1>
+
+                    {/* Import Success Alert */}
+                    {importSuccessCount && (
+                        <Alert variant="success" className="mb-4">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <AlertDescription className="flex items-center justify-between">
+                                <span>
+                                    Vos {importSuccessCount} pièce{importSuccessCount > 1 ? 's ont' : ' a'} été importée{importSuccessCount > 1 ? 's' : ''}.
+                                </span>
+                                <button
+                                    onClick={() => setImportSuccessCount(null)}
+                                    className="text-black/60 hover:text-black transition-colors ml-4"
+                                    aria-label="Fermer"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </AlertDescription>
+                        </Alert>
+                    )}
 
                     {/* Guest Mode Banner */}
                     {isGuest && <GuestModeBanner />}
@@ -277,6 +316,7 @@ export default function LibraryPage() {
                                         onClick={() => navigate(`/editor/${play.id}`)}
                                         onRename={openRenameModal}
                                         onDelete={openDeleteModal}
+                                        onVersions={openVersionsModal}
                                     />
                                 ))}
                                 <CreatePlayCard
@@ -285,7 +325,7 @@ export default function LibraryPage() {
                             </div>
 
                             {/* Pagination */}
-                            <Pagination
+                            <PlaysPagination
                                 currentPage={pagination.page}
                                 totalPages={pagination.totalPages}
                                 onPageChange={(page) =>
@@ -324,6 +364,16 @@ export default function LibraryPage() {
                 onSubmit={handleRenamePlay}
                 isLoading={isSubmitting}
                 play={selectedPlay}
+            />
+
+            <VersionHistoryModal
+                isOpen={showVersionsModal}
+                onClose={() => {
+                    setShowVersionsModal(false);
+                    setSelectedPlay(null);
+                }}
+                play={selectedPlay}
+                onRestore={fetchPlays}
             />
         </SidebarProvider>
     );

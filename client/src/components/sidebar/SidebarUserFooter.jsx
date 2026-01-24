@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronUp, User, LogOut, UserRound } from "lucide-react"
+import { User, LogOut, UserRound, EllipsisVertical } from "lucide-react"
 
 /**
  * Génère les initiales depuis un email
@@ -77,7 +77,7 @@ export function SidebarUserFooter({
                   {user.email}
                 </span>
                 {isExpanded && (
-                  <ChevronUp className="ml-auto h-4 w-4 shrink-0" />
+                  <EllipsisVertical className="ml-auto h-4 w-4 shrink-0" />
                 )}
               </SidebarMenuButton>
             </DropdownMenuTrigger>

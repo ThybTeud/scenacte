@@ -12,12 +12,13 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
-  ArrowLeft,
+  LibraryBig,
   PieChart,
   Download,
   Settings2,
   List,
   Users,
+  History,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
@@ -33,6 +34,7 @@ export function EditorSidebar({
   onOpenExport,
   onOpenEditorSettings,
   onOpenPageSettings,
+  onVersionsClick,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -58,7 +60,7 @@ export function EditorSidebar({
                 className="cursor-pointer"
               >
                 <Link to="/library">
-                  <ArrowLeft className="h-4 w-4" />
+                  <LibraryBig className="h-4 w-4" />
                   <span>Bibliotheque</span>
                 </Link>
               </SidebarMenuButton>
@@ -192,6 +194,22 @@ export function EditorSidebar({
             </SidebarMenuItem>
           </SidebarMenuSub>
         </CollapsibleSection>
+
+        {/* Versions */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Historique"
+                className="cursor-pointer"
+                onClick={onVersionsClick}
+              >
+                <History className="h-4 w-4" />
+                <span>Historique</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
         {/* Export */}
         <SidebarGroup>

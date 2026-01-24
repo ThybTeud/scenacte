@@ -13,7 +13,7 @@ const formatDate = (date) => {
   return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(dateObj)
 }
 
-export function PlayCard({ play, onClick, onRename, onDelete }) {
+export function PlayCard({ play, onClick, onRename, onDelete, onVersions }) {
   const { title, subtitle, updatedAt, charactersCount, scenesCount, repliquesCount } = play
 
   return (
@@ -40,7 +40,7 @@ export function PlayCard({ play, onClick, onRename, onDelete }) {
                 <Pencil className="h-4 w-4" />
                 Renommer
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log("Versions", play.id)}>
+              <DropdownMenuItem onClick={() => onVersions?.(play)}>
                 <History className="h-4 w-4" />
                 Versions
               </DropdownMenuItem>

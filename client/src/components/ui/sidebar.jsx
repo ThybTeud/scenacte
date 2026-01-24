@@ -144,7 +144,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
+          "bg-sidebar text-sidebar-foreground flex h-dvh w-(--sidebar-width) flex-col",
           className
         )}
         {...props}>
@@ -171,7 +171,7 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-dvh w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
     );

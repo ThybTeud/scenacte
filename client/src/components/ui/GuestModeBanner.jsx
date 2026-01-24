@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from './Button';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X, CircleQuestionMark } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function GuestModeBanner() {
   const [isVisible, setIsVisible] = useState(true);
@@ -9,39 +11,25 @@ export function GuestModeBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="bg-yellow-50 border-2 border-yellow-500 rounded px-4 py-3 mb-4 flex items-center justify-between gap-4">
-      <div className="flex-1">
-        <p className="text-sm font-ui text-black">
-          <strong>Mode invité</strong> — vos pièces sont stockées localement dans
-          votre navigateur.{' '}
-          <button
-            onClick={() => navigate('/register')}
-            className="text-orange hover:underline font-medium"
-          >
+    <Alert variant="warning" className="mb-4 pr-12">
+      <CircleQuestionMark className="w-4 h-4" />
+      <AlertTitle>Mode invité</AlertTitle>
+      <AlertDescription>
+        <span className="inline">
+          Vos pièces sont stockées localement dans votre navigateur.{" "}
+          <Button variant="link" className="px-0 h-0" onClick={() => navigate("/register")}>
             Créer un compte
-          </button>{' '}
+          </Button>{" "}
           pour synchroniser vos pièces et y accéder depuis tous vos appareils.
-        </p>
-      </div>
+        </span>
+      </AlertDescription>
       <button
         onClick={() => setIsVisible(false)}
-        className="text-black/60 hover:text-black transition-colors"
+        className="absolute right-3 top-3 text-black/60 hover:text-black transition-colors"
         aria-label="Fermer"
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <X className="w-5 h-5" />
       </button>
-    </div>
+    </Alert>
   );
 }

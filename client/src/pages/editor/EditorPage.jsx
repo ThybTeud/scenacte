@@ -14,6 +14,7 @@ import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
 import SettingsModal from "@/components/modals/SettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
+import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import { getPreviewCSS } from "@/utils/pdfExport";
 
 export default function EditorPage() {
@@ -54,6 +55,7 @@ export default function EditorPage() {
     // States modals
     const [showPdfExportModal, setShowPdfExportModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showVersionsModal, setShowVersionsModal] = useState(false);
     const [settingsModalTab, setSettingsModalTab] = useState("editor");
 
     // Settings de mise en page
@@ -349,6 +351,13 @@ export default function EditorPage() {
     }, []);
 
     /**
+     * Ouvre le modal d'historique des versions
+     */
+    const handleOpenVersions = useCallback(() => {
+        setShowVersionsModal(true);
+    }, []);
+
+    /**
      * Gere les changements de settings de mise en page
      */
     const handleSettingsChange = useCallback(
@@ -385,6 +394,7 @@ export default function EditorPage() {
                 onOpenExport={handleOpenExport}
                 onOpenEditorSettings={handleOpenEditorSettings}
                 onOpenPageSettings={handleOpenLayoutModal}
+                onVersionsClick={handleOpenVersions}
             />
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden">
@@ -401,7 +411,7 @@ export default function EditorPage() {
                     onTogglePreview={() => setShowPreview((prev) => !prev)}
                 />
 
-                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0">
+                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh">
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
@@ -464,6 +474,14 @@ export default function EditorPage() {
                 pageFormat={paperSize}
                 template={template}
                 onOpenLayoutModal={handleOpenLayoutModal}
+            />
+
+            {/* Modal Historique des versions */}
+            <VersionHistoryModal
+                isOpen={showVersionsModal}
+                onClose={() => setShowVersionsModal(false)}
+                play={play}
+                onRestore={fetchPlay}
             />
         </SidebarProvider>
     );

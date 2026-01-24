@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { versionsService } from '@/services/versions.service';
 import { toast } from 'sonner';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlaysPagination } from '@/components/ui/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
+export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }) {
   const [versions, setVersions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
@@ -34,15 +33,15 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
   const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
-    if (isOpen && playId) {
+    if (isOpen && play?.id) {
       fetchVersions();
     }
-  }, [isOpen, playId, pagination.page]);
+  }, [isOpen, play?.id, pagination.page]);
 
   const fetchVersions = async () => {
     setIsLoading(true);
     try {
-      const response = await versionsService.listVersions(playId, {
+      const response = await versionsService.listVersions(play.id, {
         page: pagination.page,
         limit: 20,
       });
@@ -60,11 +59,11 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
 
     setIsRestoring(true);
     try {
-      await versionsService.restoreVersion(playId, selectedVersion.id);
+      await versionsService.restoreVersion(play.id, selectedVersion.id);
       toast.success('Version restaurée avec succès !');
       setShowRestoreDialog(false);
       setSelectedVersion(null);
-      onRestore();
+      onRestore?.();
       onClose();
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la restauration');
@@ -75,13 +74,12 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const day = date.getDate();
+    const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day} ${month} ${year}, ${hours}h${minutes}`;
   };
 
   const openRestoreDialog = (version) => {
@@ -89,18 +87,31 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
     setShowRestoreDialog(true);
   };
 
+  const isCurrentVersion = (version) => {
+    return version.versionNumber === Math.max(...versions.map(v => v.versionNumber));
+  };
+
+  const formatStats = (statistics) => {
+    if (!statistics) return null;
+    const stats = [];
+    if (statistics.acts) stats.push(`${statistics.acts} acte${statistics.acts > 1 ? 's' : ''}`);
+    if (statistics.scenes) stats.push(`${statistics.scenes} scène${statistics.scenes > 1 ? 's' : ''}`);
+    if (statistics.words) stats.push(`${statistics.words} mots`);
+    return stats.length > 0 ? stats.join(' • ') : null;
+  };
+
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="right" className="w-96 flex flex-col p-0">
-          <SheetHeader className="px-6 py-4 border-b">
-            <SheetTitle>Versions</SheetTitle>
-            <SheetDescription>
-              Historique des versions de votre pièce
-            </SheetDescription>
-          </SheetHeader>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle>Historique des versions</DialogTitle>
+            <DialogDescription>
+              {play?.title || 'Pièce sans titre'}
+            </DialogDescription>
+          </DialogHeader>
 
-          <ScrollArea className="flex-1 px-6">
+          <ScrollArea className="h-[500px] px-6">
             {isLoading ? (
               <div className="py-4 space-y-3">
                 {[...Array(5)].map((_, i) => (
@@ -123,19 +134,26 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
                     className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-medium">
-                          Version #{version.versionNumber}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium">
+                            Version #{version.versionNumber}
+                          </p>
+                          {isCurrentVersion(version) && (
+                            <Badge variant="outline" className="text-xs">
+                              Actuelle
+                            </Badge>
+                          )}
+                          <Badge
+                            variant={version.versionType === 'manual' ? 'default' : 'secondary'}
+                          >
+                            {version.versionType === 'manual' ? 'Manuel' : 'Auto'}
+                          </Badge>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(version.createdAt)}
                         </p>
                       </div>
-                      <Badge
-                        variant={version.versionType === 'manual' ? 'default' : 'secondary'}
-                      >
-                        {version.versionType === 'manual' ? 'Manuel' : 'Auto'}
-                      </Badge>
                     </div>
 
                     {version.manualLabel && (
@@ -144,14 +162,22 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
                       </p>
                     )}
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => openRestoreDialog(version)}
-                    >
-                      Restaurer
-                    </Button>
+                    {formatStats(version.statistics) && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {formatStats(version.statistics)}
+                      </p>
+                    )}
+
+                    {!isCurrentVersion(version) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => openRestoreDialog(version)}
+                      >
+                        Restaurer
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -159,7 +185,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
           </ScrollArea>
 
           {!isLoading && versions.length > 0 && pagination.totalPages > 1 && (
-            <SheetFooter className="px-6 py-4 border-t">
+            <div className="px-6 py-4 border-t">
               <PlaysPagination
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
@@ -167,10 +193,10 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
                   setPagination((prev) => ({ ...prev, page }))
                 }
               />
-            </SheetFooter>
+            </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
         <AlertDialogContent>

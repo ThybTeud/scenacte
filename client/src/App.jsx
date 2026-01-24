@@ -80,10 +80,6 @@ function App() {
               }
             />
 
-            {/* Redirects pour rétrocompatibilité */}
-            <Route path="/plays" element={<Navigate to="/library" replace />} />
-            <Route path="/plays/:id" element={<PlayIdRedirect />} />
-
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
