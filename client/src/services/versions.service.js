@@ -23,4 +23,8 @@ export const versionsService = {
   async createManualVersion(playId, manualLabel) {
     return api.post(`/plays/${playId}/versions/manual`, { manualLabel });
   },
+
+  async createVersion(playId, versionType, manualLabel) {
+    return api.post(`/plays/${playId}/versions`, { versionType, manualLabel });
+  },
 };

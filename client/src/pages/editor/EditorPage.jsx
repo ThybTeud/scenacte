@@ -4,6 +4,7 @@ import { storageService } from "@/services/storage.service";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
+import { useVersioning } from "@/hooks/useVersioning";
 import { toast } from "sonner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { EditorSidebar } from "@/components/sidebar";
@@ -37,6 +38,12 @@ export default function EditorPage() {
 
     // Timeout de sauvegarde automatique
     const saveTimeoutRef = useRef(null);
+
+    // Référence pour tracker le contenu précédent (versioning)
+    const previousContentRef = useRef(content);
+
+    // Référence pour le beforeunload (évite les réattachements constants du listener)
+    const hasUnsavedVersionChangesRef = useRef(false);
 
     // Debounce pour optimiser le parsing (300ms)
     const debouncedContent = useDebouncedValue(content, 300);
@@ -76,6 +83,14 @@ export default function EditorPage() {
         handleEditorScroll,
         handlePreviewScroll,
     } = useSyncScroll();
+
+    // Hook versioning (désactivé en mode guest)
+    const {
+        trackChanges,
+        createVersion,
+        hasUnsavedChanges: hasUnsavedVersionChanges,
+        charsSinceLastVersion,
+    } = useVersioning(id, !isGuest);
 
     // Hook parsing (utilise le contenu debouncé pour optimiser les performances)
     // PROPOSITION ARRIVEE DANS LE REFACTO : A CONSIDERER PAR RAPPORT A LA LIGNE SUIVANTE
@@ -169,13 +184,19 @@ export default function EditorPage() {
      */
     const handleContentChange = useCallback(
         (newContent) => {
+            // Track changes pour le versioning
+            if (previousContentRef.current && newContent !== previousContentRef.current) {
+                trackChanges(previousContentRef.current, newContent);
+            }
+            previousContentRef.current = newContent;
+
             setContent(newContent);
             setHasUnsavedChanges(true);
 
             // Mettre à jour l'état undo/redo après chaque modification
             updateUndoRedoState();
         },
-        [updateUndoRedoState]
+        [updateUndoRedoState, trackChanges]
     );
 
     /**
@@ -217,6 +238,13 @@ export default function EditorPage() {
     }, [savePlay]);
 
     /**
+     * Créer un point de restauration manuel
+     */
+    const handleCreateManualVersion = useCallback(() => {
+        createVersion('manual');
+    }, [createVersion]);
+
+    /**
      * Cleanup du timeout lors du démontage
      */
     useEffect(() => {
@@ -226,6 +254,61 @@ export default function EditorPage() {
             }
         };
     }, []);
+
+    /**
+     * Synchroniser la ref avec le state pour le beforeunload
+     * (évite les réattachements constants du listener)
+     */
+    useEffect(() => {
+        hasUnsavedVersionChangesRef.current = hasUnsavedVersionChanges;
+    }, [hasUnsavedVersionChanges]);
+
+    /**
+     * Gestion du beforeunload : créer version session_close si changements non versionnés
+     */
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            // Utilise la ref au lieu du state (évite les dépendances)
+            if (hasUnsavedVersionChangesRef.current && !isGuest) {
+                // Utiliser sendBeacon pour envoyer la requête de manière asynchrone
+                // Note: sendBeacon est plus fiable que fetch avec keepalive pour beforeunload
+                const data = JSON.stringify({
+                    versionType: 'session_close',
+                });
+
+                const token = localStorage.getItem('token');
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+                const url = `${apiUrl}/plays/${id}/versions`;
+
+                // Tenter d'envoyer avec sendBeacon (méthode POST automatique)
+                // Note: sendBeacon ne supporte pas les headers custom facilement
+                // On utilise donc fetch avec keepalive en fallback
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([data], { type: 'application/json' });
+                    navigator.sendBeacon(url, blob);
+                } else {
+                    // Fallback: fetch avec keepalive
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        body: data,
+                        keepalive: true,
+                    }).catch((error) => {
+                        console.error('[Versioning] Error creating session_close version:', error);
+                    });
+                }
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [id, isGuest]); // hasUnsavedVersionChanges retiré → utilise la ref
 
     /**
      * Sauvegarde automatique après 2 secondes d'inactivité
@@ -403,6 +486,9 @@ export default function EditorPage() {
                     onTitleChange={handleTitleChange}
                     isSaving={isSaving}
                     onSave={handleManualSave}
+                    onCreateVersion={handleCreateManualVersion}
+                    hasUnsavedChanges={hasUnsavedVersionChanges}
+                    isOnline={!isGuest}
                     onUndo={handleUndo}
                     onRedo={handleRedo}
                     canUndo={canUndo}

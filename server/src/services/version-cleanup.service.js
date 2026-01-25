@@ -32,8 +32,8 @@ export async function cleanupOldVersions() {
     const recentUpdateQuery = `
       UPDATE play_history
       SET preserved_reason = 'recent'
-      WHERE version_type = 'auto' 
-        AND created_at >= $1 
+      WHERE version_type IN ('auto', 'inactivity', 'threshold', 'session_close')
+        AND created_at >= $1
         AND preserved_reason IS NULL
     `;
     const recentResult = await client.query(recentUpdateQuery, [sevenDaysAgo]);
@@ -44,7 +44,7 @@ export async function cleanupOldVersions() {
     const playsQuery = `
       SELECT DISTINCT play_id
       FROM play_history
-      WHERE version_type = 'auto'
+      WHERE version_type IN ('auto', 'inactivity', 'threshold', 'session_close')
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
     `;
@@ -62,7 +62,7 @@ export async function cleanupOldVersions() {
         SELECT id, created_at
         FROM play_history
         WHERE play_id = $1
-          AND version_type = 'auto'
+          AND version_type IN ('auto', 'inactivity', 'threshold', 'session_close')
           AND created_at < $2
           AND created_at < NOW() - INTERVAL '5 minutes'
         ORDER BY created_at DESC
@@ -99,7 +99,7 @@ export async function cleanupOldVersions() {
     // 4. Supprimer toutes les versions auto anciennes sans preserved_reason
     const deleteQuery = `
       DELETE FROM play_history
-      WHERE version_type = 'auto'
+      WHERE version_type IN ('auto', 'inactivity', 'threshold', 'session_close')
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
         AND preserved_reason IS NULL
@@ -177,7 +177,7 @@ export async function getRetentionStats() {
     const eligibleQuery = `
       SELECT COUNT(*) as count
       FROM play_history
-      WHERE version_type = 'auto'
+      WHERE version_type IN ('auto', 'inactivity', 'threshold', 'session_close')
         AND created_at < $1
         AND created_at < NOW() - INTERVAL '5 minutes'
         AND preserved_reason IS NULL
