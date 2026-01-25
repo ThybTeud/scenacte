@@ -3,6 +3,7 @@ import {
   listVersions,
   getVersion,
   restoreVersion,
+  createVersion,
   createManualVersion
 } from '../controllers/versions.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
@@ -46,5 +47,15 @@ router.post('/restore', restoreVersion);
  * Requiert: Authorization header avec Bearer token
  */
 router.post('/manual', createManualVersion);
+
+/**
+ * POST /api/plays/:id/versions
+ * Créer une nouvelle version (snapshot) sans modifier le contenu
+ * Body: { versionType: 'manual' | 'inactivity' | 'threshold' | 'session_close', manualLabel? }
+ * versionType est requis
+ * manualLabel est optionnel (seulement pour versionType='manual')
+ * Requiert: Authorization header avec Bearer token
+ */
+router.post('/', createVersion);
 
 export default router;

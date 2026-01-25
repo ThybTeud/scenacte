@@ -2,13 +2,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Save, Undo2, Redo2, BookOpen, CheckCircle, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Save, Undo2, Redo2, BookOpen, Loader2, WifiOff } from "lucide-react"
 
 export function EditorHeader({
   title,
   onTitleChange,
   isSaving,
   onSave,
+  onCreateVersion,
+  hasUnsavedChanges,
+  isOnline,
   onUndo,
   onRedo,
   canUndo,
@@ -31,14 +35,25 @@ export function EditorHeader({
         />
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
-        ) : (
-          <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+        ) : hasUnsavedChanges ? (
+          <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0" title="Modifications non versionnées" />
+        ) : null}
+        {!isOnline && (
+          <Badge variant="outline" className="text-xs shrink-0">
+            <WifiOff className="h-3 w-3 mr-1" />
+            Hors ligne
+          </Badge>
         )}
       </div>
 
       {/* Right section - Actions */}
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" onClick={onSave} title="Sauvegarder">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCreateVersion}
+          title="Créer un point de restauration"
+        >
           <Save className="h-4 w-4" />
         </Button>
 

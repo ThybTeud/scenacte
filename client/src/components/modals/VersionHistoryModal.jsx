@@ -24,6 +24,15 @@ import { Badge } from '@/components/ui/badge';
 import { PlaysPagination } from '@/components/ui/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+/**
+ * Modal d'historique des versions d'une pièce.
+ * Permet de consulter et restaurer les versions précédentes.
+ *
+ * @param {boolean} isOpen - Contrôle l'affichage du modal
+ * @param {Function} onClose - Callback de fermeture
+ * @param {Object} play - Pièce dont on affiche l'historique
+ * @param {Function} onRestore - Callback après restauration réussie
+ */
 export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }) {
   const [versions, setVersions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,12 +41,14 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
+  // Recharge les versions à l'ouverture ou au changement de page
   useEffect(() => {
     if (isOpen && play?.id) {
       fetchVersions();
     }
   }, [isOpen, play?.id, pagination.page]);
 
+  /** Récupère les versions paginées depuis l'API */
   const fetchVersions = async () => {
     setIsLoading(true);
     try {
@@ -54,6 +65,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
     }
   };
 
+  /** Restaure la version sélectionnée et ferme le modal */
   const handleRestore = async () => {
     if (!selectedVersion) return;
 
@@ -72,6 +84,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
     }
   };
 
+  /** Formate une date ISO en format français lisible (ex: "5 jan 2024, 14h30") */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate();
@@ -87,10 +100,12 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
     setShowRestoreDialog(true);
   };
 
+  /** Vérifie si c'est la version la plus récente (non restaurable) */
   const isCurrentVersion = (version) => {
     return version.versionNumber === Math.max(...versions.map(v => v.versionNumber));
   };
 
+  /** Formate les statistiques en chaîne lisible (ex: "3 actes • 12 scènes • 5000 mots") */
   const formatStats = (statistics) => {
     if (!statistics) return null;
     const stats = [];
@@ -102,6 +117,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
 
   return (
     <>
+      {/* Modal principal - Liste des versions */}
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b">
@@ -140,12 +156,12 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
                             Version #{version.versionNumber}
                           </p>
                           {isCurrentVersion(version) && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="default" className="text-xs">
                               Actuelle
                             </Badge>
                           )}
                           <Badge
-                            variant={version.versionType === 'manual' ? 'default' : 'secondary'}
+                            variant="outline"
                           >
                             {version.versionType === 'manual' ? 'Manuel' : 'Auto'}
                           </Badge>
@@ -198,6 +214,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
         </DialogContent>
       </Dialog>
 
+      {/* Dialog de confirmation avant restauration */}
       <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

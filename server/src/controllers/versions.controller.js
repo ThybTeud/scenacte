@@ -320,6 +320,127 @@ export async function restoreVersion(req, res, next) {
 }
 
 /**
+ * POST /api/plays/:id/versions
+ * Créer une nouvelle version (snapshot) sans modifier le contenu
+ * versionType peut être : 'manual', 'inactivity', 'threshold', 'session_close'
+ */
+export async function createVersion(req, res, next) {
+  const client = await pool.connect();
+
+  try {
+    const { id } = req.params;
+    const { versionType, manualLabel } = req.body;
+    const userId = req.user.id;
+
+    // Validation UUID
+    const idValidation = validateUUID(id);
+    if (!idValidation.valid) {
+      throw new ValidationError(idValidation.message);
+    }
+
+    // Validation du versionType (requis)
+    if (!versionType) {
+      throw new BadRequestError('versionType est requis');
+    }
+
+    const validVersionTypes = ['manual', 'inactivity', 'threshold', 'session_close'];
+    if (!validVersionTypes.includes(versionType)) {
+      throw new ValidationError(`versionType doit être l'un de: ${validVersionTypes.join(', ')}`);
+    }
+
+    // Validation du manualLabel (optionnel, seulement pour manual)
+    if (versionType === 'manual' && manualLabel && typeof manualLabel !== 'string') {
+      throw new ValidationError('manualLabel doit être une chaîne de caractères');
+    }
+
+    await client.query('BEGIN');
+
+    // Vérifier que la pièce existe et appartient à l'utilisateur
+    const playQuery = `SELECT * FROM plays WHERE id = $1`;
+    const playResult = await client.query(playQuery, [id]);
+
+    if (playResult.rows.length === 0) {
+      throw new NotFoundError('Pièce non trouvée');
+    }
+
+    const play = playResult.rows[0];
+
+    if (play.user_id !== userId) {
+      throw new ForbiddenError('Accès non autorisé à cette pièce');
+    }
+
+    // Garde-fou optionnel : vérifier si le contenu est identique à la dernière version
+    const lastVersionQuery = `
+      SELECT raw_content
+      FROM play_history
+      WHERE play_id = $1
+      ORDER BY version_number DESC
+      LIMIT 1
+    `;
+    const lastVersionResult = await client.query(lastVersionQuery, [id]);
+
+    if (lastVersionResult.rows.length > 0) {
+      const lastVersion = lastVersionResult.rows[0];
+      if (lastVersion.raw_content === play.raw_content) {
+        // Contenu identique, pas besoin de créer une nouvelle version
+        await client.query('ROLLBACK');
+        return res.json({
+          success: true,
+          skipped: true,
+          message: 'Aucune modification détectée, version non créée'
+        });
+      }
+    }
+
+    // Récupérer le prochain numéro de version
+    const maxVersionQuery = `SELECT COALESCE(MAX(version_number), 0) as max_version FROM play_history WHERE play_id = $1`;
+    const maxVersionResult = await client.query(maxVersionQuery, [id]);
+    const nextVersionNumber = maxVersionResult.rows[0].max_version + 1;
+
+    const fileSizeBytes = Buffer.byteLength(play.raw_content, 'utf8');
+
+    // Déterminer preserved_reason
+    const preservedReason = versionType === 'manual' ? 'manual' : null;
+
+    // Créer la version dans play_history
+    const insertHistoryQuery = `
+      INSERT INTO play_history (play_id, version_number, title, raw_content, version_type, manual_label, file_size_bytes, preserved_reason, statistics)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+    const historyResult = await client.query(insertHistoryQuery, [
+      id,
+      nextVersionNumber,
+      play.title,
+      play.raw_content,
+      versionType,
+      versionType === 'manual' ? (manualLabel?.trim() || null) : null,
+      fileSizeBytes,
+      preservedReason,
+      JSON.stringify(play.statistics || {})
+    ]);
+    const newVersion = historyResult.rows[0];
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      success: true,
+      version: {
+        id: newVersion.id,
+        versionNumber: newVersion.version_number,
+        versionType: newVersion.version_type,
+        createdAt: newVersion.created_at
+      }
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    next(error);
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * POST /api/plays/:id/versions/manual
  * Créer une version manuelle (snapshot) sans modifier le contenu
  */
