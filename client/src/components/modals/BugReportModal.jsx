@@ -120,6 +120,7 @@ export default function BugReportModal({ isOpen, onClose }) {
         screenshot,
         url: window.location.href,
         userAgent: navigator.userAgent,
+        // TODO : mettre la version dynamique de l'application
         appVersion: import.meta.env.VITE_APP_VERSION || "1.0.0",
       });
 
