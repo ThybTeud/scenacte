@@ -1,0 +1,58 @@
+name: Auto Tag Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest_tag
+        run: |
+          latest=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$latest" >> $GITHUB_OUTPUT
+
+      - name: Determine version bump
+        id: bump
+        run: |
+          latest="${{ steps.latest_tag.outputs.tag }}"
+          version=${latest#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          
+          pr_title="${{ github.event.pull_request.title }}"
+          
+          # Détection du type de bump
+          if [[ "$pr_title" =~ ^feat!: ]] || [[ "$pr_title" =~ BREAKING ]]; then
+            new_version="v$((major + 1)).0.0"
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif [[ "$pr_title" =~ ^feat: ]]; then
+            new_version="v${major}.$((minor + 1)).0"
+            echo "type=minor" >> $GITHUB_OUTPUT
+          else
+            new_version="v${major}.${minor}.$((patch + 1))"
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "new_tag=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag ${{ steps.bump.outputs.new_tag }}
+          git push origin ${{ steps.bump.outputs.new_tag }}
+
+      - name: Summary
+        run: |
+          echo "### 🏷️ New tag created" >> $GITHUB_STEP_SUMMARY
+          echo "**${{ steps.bump.outputs.new_tag }}** (${{ steps.bump.outputs.type }})" >> $GITHUB_STEP_SUMMARY
