@@ -67,7 +67,7 @@ export default function BugReportModal({ isOpen, onClose }) {
 
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { mediaSource: "screen" },
+        preferCurrentTab: true,
       });
       const track = stream.getVideoTracks()[0];
       const imageCapture = new ImageCapture(track);
