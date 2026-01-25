@@ -203,6 +203,51 @@ L'équipe Scenacte`,
 }
 
 /**
+ * Envoie un email de confirmation de signalement de bug
+ * @param {string} email - Email du destinataire
+ * @param {string} title - Titre généré du signalement
+ * @param {string[]} categories - Catégories sélectionnées
+ */
+export async function sendBugReportConfirmation(email, title, categories) {
+  const categoriesText = categories.join(', ');
+
+  const mailContent = {
+    from: config.email.from,
+    to: email,
+    subject: 'Votre signalement a bien été reçu — Scenacte',
+    text: `Bonjour,
+
+Nous avons bien reçu votre signalement de bug.
+
+Résumé :
+- Titre : ${title}
+- Catégories : ${categoriesText}
+
+Votre rapport est important pour nous. Nous ne répondons pas systématiquement à chaque signalement, mais soyez assuré(e) que chaque rapport est lu et analysé par notre équipe.
+
+Merci de contribuer à l'amélioration de Scenacte !
+
+L'équipe Scenacte`
+  };
+
+  // Ajouter à la queue pour envoi asynchrone avec retry (même en dev)
+  try {
+    if (isResendConfigured || isDevelopment) {
+      await queueEmail({
+        ...mailContent,
+        service: 'resend'
+      });
+      logger.info({ email }, 'Email de confirmation de bug report ajouté à la queue (Resend)');
+    } else {
+      logger.warn({ email }, '⚠️  Resend non configuré : email de confirmation de bug report non envoyé');
+    }
+  } catch (error) {
+    logger.error({ error: error.message }, 'Erreur lors de l\'ajout de l\'email de confirmation de bug report à la queue');
+    // Ne pas throw l'erreur pour ne pas bloquer le signalement
+  }
+}
+
+/**
  * Vérifie la configuration email au démarrage
  */
 export async function verifyEmailConnection() {
