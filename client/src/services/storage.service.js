@@ -4,6 +4,31 @@ import { templatesService } from './templates.service';
 const GUEST_DATA_KEY = 'scenacte_guest_data';
 const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
 
+const DEFAULT_PLAY_CONTENT = `# Bienvenue sur Scenacte
+
+## Comment écrire
+
+(Ceci est une didascalie liminaire. Elle décrit le décor, l'ambiance, ce que le spectateur voit à l'ouverture du rideau.)
+
+@ALICE
+(entrant, hésitante)
+Bonjour ! Je suis un personnage. Mon nom commence par @, en majuscules.
+
+@BOB
+Et moi je lui réponds. Chaque réplique est du texte libre, tout simplement.
+
+(Ils se regardent un instant.)
+
+@ALICE
+Les didascalies entre parenthèses (comme celle-ci) peuvent aussi s'insérer dans mes répliques.
+
+@BOB
+Pour créer un nouvel acte, tape # suivi du titre.
+Pour une nouvelle scène, utilise ##.
+C'est tout ce qu'il faut savoir pour commencer !
+
+(Noir.)`;
+
 // Génère un UUID simple pour les IDs des pièces invitées
 const generateGuestId = () => {
   return 'guest_' + crypto.randomUUID();
@@ -108,7 +133,7 @@ const createLocalPlay = (playData) => {
     id: generateGuestId(),
     title: playData.title || 'Sans titre',
     subtitle: playData.subtitle || '',
-    rawContent: playData.rawContent || '',
+    rawContent: playData.rawContent ?? DEFAULT_PLAY_CONTENT,
     htmlContent: playData.htmlContent || '',
     status: playData.status || 'draft',
     createdAt: new Date().toISOString(),
