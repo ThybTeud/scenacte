@@ -4,25 +4,23 @@ import { templatesService } from './templates.service';
 const GUEST_DATA_KEY = 'scenacte_guest_data';
 const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
 
-const DEFAULT_PLAY_CONTENT = `# Bienvenue sur Scenacte
+const DEFAULT_PLAY_CONTENT = `#Acte I : Bienvenue sur Scenacte
 
-## Comment écrire
+##Scène 1 : Comment écrire
 
-(Ceci est une didascalie liminaire. Elle décrit le décor, l'ambiance, ce que le spectateur voit à l'ouverture du rideau.)
-
-@ALICE
+@Alice
 (entrant, hésitante)
-Bonjour ! Je suis un personnage. Mon nom commence par @, en majuscules.
+Bonjour ! Je suis un personnage. Mon nom commence par @.
 
-@BOB
+@Bob
 Et moi je lui réponds. Chaque réplique est du texte libre, tout simplement.
 
 (Ils se regardent un instant.)
 
-@ALICE
+@Alice
 Les didascalies entre parenthèses (comme celle-ci) peuvent aussi s'insérer dans mes répliques.
 
-@BOB
+@Bob
 Pour créer un nouvel acte, tape # suivi du titre.
 Pour une nouvelle scène, utilise ##.
 C'est tout ce qu'il faut savoir pour commencer !
