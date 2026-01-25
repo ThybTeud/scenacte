@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+import ServerWakeUp from './components/ServerWakeUp';
 
 // Pages
 import AuthPage from './pages/auth/AuthPage';
@@ -31,61 +33,69 @@ function PlayIdRedirect() {
 }
 
 function App() {
+  const [serverReady, setServerReady] = useState(false);
+
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ErrorBoundary>
-          <Toaster />
+    <>
+      {/* Écran de chargement au démarrage */}
+      <ServerWakeUp onReady={() => setServerReady(true)} />
 
-          <Routes>
-            <Route path="/" element={<RootRedirect />} />
+      {/* Application principale - s'affiche en arrière-plan */}
+      <BrowserRouter>
+        <AuthProvider>
+          <ErrorBoundary>
+            <Toaster />
 
-            {/* Auth routes */}
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/register" element={<AuthPage />} />
-            <Route path="/forgot-password" element={<AuthPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
 
-            {/* DEV only */}
-            {import.meta.env.DEV && (
-              <Route path="/dev" element={<DevPlayground />} />
-            )}
+              {/* Auth routes */}
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/register" element={<AuthPage />} />
+              <Route path="/forgot-password" element={<AuthPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Legal routes */}
-            <Route path="/legal/:docType" element={<LegalPage />} />
+              {/* DEV only */}
+              {import.meta.env.DEV && (
+                <Route path="/dev" element={<DevPlayground />} />
+              )}
 
-            {/* Protected routes */}
-            <Route
-              path="/library"
-              element={
-                <PrivateRoute>
-                  <LibraryPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/editor/:id"
-              element={
-                <PrivateRoute>
-                  <EditorPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute requireAuth>
-                  <ProfilePage />
-                </PrivateRoute>
-              }
-            />
+              {/* Legal routes */}
+              <Route path="/legal/:docType" element={<LegalPage />} />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ErrorBoundary>
-      </AuthProvider>
-    </BrowserRouter>
+              {/* Protected routes */}
+              <Route
+                path="/library"
+                element={
+                  <PrivateRoute>
+                    <LibraryPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/editor/:id"
+                element={
+                  <PrivateRoute>
+                    <EditorPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute requireAuth>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </AuthProvider>
+      </BrowserRouter>
+    </>
   );
 }
 

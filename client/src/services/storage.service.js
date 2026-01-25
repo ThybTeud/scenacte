@@ -4,6 +4,29 @@ import { templatesService } from './templates.service';
 const GUEST_DATA_KEY = 'scenacte_guest_data';
 const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
 
+const DEFAULT_PLAY_CONTENT = `#Acte I : Bienvenue sur Scenacte
+
+##Scène 1 : Comment écrire
+
+@Alice
+(entrant, hésitante)
+Bonjour ! Je suis un personnage. Mon nom commence par @.
+
+@Bob
+Et moi je lui réponds. Chaque réplique est du texte libre, tout simplement.
+
+(Ils se regardent un instant.)
+
+@Alice
+Les didascalies entre parenthèses (comme celle-ci) peuvent aussi s'insérer dans mes répliques.
+
+@Bob
+Pour créer un nouvel acte, tape # suivi du titre.
+Pour une nouvelle scène, utilise ##.
+C'est tout ce qu'il faut savoir pour commencer !
+
+(Noir.)`;
+
 // Génère un UUID simple pour les IDs des pièces invitées
 const generateGuestId = () => {
   return 'guest_' + crypto.randomUUID();
@@ -108,7 +131,7 @@ const createLocalPlay = (playData) => {
     id: generateGuestId(),
     title: playData.title || 'Sans titre',
     subtitle: playData.subtitle || '',
-    rawContent: playData.rawContent || '',
+    rawContent: playData.rawContent ?? DEFAULT_PLAY_CONTENT,
     htmlContent: playData.htmlContent || '',
     status: playData.status || 'draft',
     createdAt: new Date().toISOString(),
@@ -191,7 +214,10 @@ export const storageService = {
     if (isGuest()) {
       return createLocalPlay(data);
     }
-    return playsService.createPlay(data);
+    return playsService.createPlay({
+      ...data,
+      rawContent: data.rawContent ?? DEFAULT_PLAY_CONTENT,
+    });
   },
 
   // Sauvegarde une pièce existante (crée une version)
