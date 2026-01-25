@@ -5,6 +5,7 @@ import playsRoutes from './plays.routes.js';
 import versionsRoutes from './versions.routes.js';
 import templatesRoutes from './templates.routes.js';
 import exportRoutes from './export.routes.js';
+import bugReportsRoutes from './bugReports.routes.js';
 import { testConnection } from '../config/database.js';
 
 const router = express.Router();
@@ -45,5 +46,8 @@ router.use('/plays/:id/export', exportRoutes);
 
 // Templates
 router.use('/templates', templatesRoutes);
+
+// Bug reports
+router.use('/bug-reports', bugReportsRoutes);
 
 export default router;

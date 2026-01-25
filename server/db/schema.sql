@@ -67,3 +67,21 @@ CREATE INDEX IF NOT EXISTS idx_plays_statistics_gin ON plays USING gin(statistic
 CREATE INDEX IF NOT EXISTS idx_play_history_statistics_gin ON play_history USING gin(statistics);
 CREATE INDEX IF NOT EXISTS idx_export_templates_user_id ON export_templates(user_id);
 CREATE INDEX IF NOT EXISTS idx_export_templates_system ON export_templates(user_id) WHERE user_id IS NULL;
+
+-- Table bug_reports
+CREATE TABLE IF NOT EXISTS bug_reports (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(60) NOT NULL,
+  description TEXT NOT NULL,
+  categories VARCHAR(50)[] NOT NULL,
+  screenshot TEXT,
+  url VARCHAR(500),
+  user_agent VARCHAR(500),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  email VARCHAR(255),
+  app_version VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bug_reports_created_at ON bug_reports(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bug_reports_user_id ON bug_reports(user_id);
