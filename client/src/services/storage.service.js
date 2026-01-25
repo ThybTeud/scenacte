@@ -214,7 +214,10 @@ export const storageService = {
     if (isGuest()) {
       return createLocalPlay(data);
     }
-    return playsService.createPlay(data);
+    return playsService.createPlay({
+      ...data,
+      rawContent: data.rawContent ?? DEFAULT_PLAY_CONTENT,
+    });
   },
 
   // Sauvegarde une pièce existante (crée une version)
