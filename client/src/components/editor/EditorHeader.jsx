@@ -30,7 +30,7 @@ export function EditorHeader({
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className="max-w-sm h-9 bg-white border border-gray-900 rounded-md"
+          className="max-w-sm h-9 bg-white border-2 border-gray-900 rounded-sm"
           placeholder="Titre de la pièce"
         />
         {isSaving ? (
@@ -49,7 +49,7 @@ export function EditorHeader({
       {/* Right section - Actions */}
       <div className="flex items-center gap-1">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
           onClick={onCreateVersion}
           title="Créer un point de restauration"
