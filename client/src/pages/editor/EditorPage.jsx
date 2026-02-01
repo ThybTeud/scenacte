@@ -497,7 +497,7 @@ export default function EditorPage() {
                     onTogglePreview={() => setShowPreview((prev) => !prev)}
                 />
 
-                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh">
+                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
@@ -524,7 +524,7 @@ export default function EditorPage() {
 
                         {/* Preview - masquee sous md */}
                         {showPreview && (
-                            <div className="hidden md:flex flex-1 min-w-0 h-full">
+                            <div className="hidden md:flex flex-1 min-w-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
                                 <style>{previewCSS}</style>
                                 <div
                                     className="preview-content h-full w-full bg-white rounded-lg border overflow-auto p-4"
