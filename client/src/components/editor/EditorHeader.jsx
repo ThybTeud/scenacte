@@ -36,7 +36,7 @@ export function EditorHeader({
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
         ) : hasUnsavedChanges ? (
-          <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0" title="Modifications non versionnées" />
+          <div className="h-2 w-2 rounded-full bg-rose-600 shrink-0" title="Modifications non versionnées" />
         ) : null}
         {!isOnline && (
           <Badge variant="outline" className="text-xs shrink-0">
