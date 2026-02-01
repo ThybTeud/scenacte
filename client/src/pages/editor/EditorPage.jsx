@@ -501,7 +501,7 @@ export default function EditorPage() {
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
-                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0">
+                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal bg-red-800">
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}

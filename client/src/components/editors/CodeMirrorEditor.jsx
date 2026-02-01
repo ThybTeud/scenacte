@@ -125,11 +125,11 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
       '.cm-completionMatchedText': { textDecoration: 'none' },
       // Classes de surlignage adoucies pour les types de balises
       '.cm-act': {
-        color: 'oklch(64.6% 0.222 41.116)',
+        color: 'oklch(58.6% 0.253 17.585)',
         fontWeight: '600',
       },
       '.cm-scene': {
-        color: 'oklch(64.6% 0.222 41.116)',
+        color: 'oklch(58.6% 0.253 17.585)',
         fontWeight: '600',
       },
       '.cm-character': {
@@ -438,7 +438,7 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
   }), []);
 
   return (
-    <div className="h-full w-full overflow-hidden border border-gray-200 rounded bg-white">
+    <div className="h-full w-full overflow-hidden">
       <div ref={editorRef} className="h-full w-full" />
     </div>
   );
