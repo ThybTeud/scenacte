@@ -174,17 +174,18 @@ export default function LibraryPage() {
     };
 
     return (
-        <SidebarProvider>
+        <SidebarProvider className="bg-gray-200">
             <LibrarySidebar />
-            <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6 sm:hidden">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
+            <SidebarInset className="bg-gray-200">
+                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-2 border-gray-900 rounded-lg bg-sidebar overflow-hidden">
+                    <SidebarTrigger />
+                    {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
                     <h1 className="text-lg font-semibold">Bibliothèque</h1>
                 </header>
 
                 <main className="flex-1 p-6">
-                    <h1 className="text-2xl font-semibold mb-6 hidden sm:block">
+                    {/* Suppression de sm:block pour tester le même affichage dans toutes les tailles d'écran */}
+                    <h1 className="text-2xl font-semibold mb-6 hidden">
                         Bibliothèque
                     </h1>
 
@@ -217,14 +218,16 @@ export default function LibraryPage() {
                             <div className="relative w-full sm:w-80 sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
+                                    type="search"
                                     placeholder="Rechercher une pièce..."
                                     className="pl-9 w-full"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
-                            <div className="flex gap-2">
-                                <Select
+                            <div className="flex gap-4">
+                                {/* Filtre BROUILLON désactivé pour le moment. */}
+                                {/* <Select
                                     value={filters.status || "all"}
                                     onValueChange={(value) =>
                                         setFilters((prev) => ({ ...prev, status: value === "all" ? "" : value }))
@@ -239,7 +242,7 @@ export default function LibraryPage() {
                                         <SelectItem value="completed">Terminé</SelectItem>
                                         <SelectItem value="archived">Archivé</SelectItem>
                                     </SelectContent>
-                                </Select>
+                                </Select> */}
 
                                 <Select
                                     value={filters.sortBy}
@@ -247,7 +250,7 @@ export default function LibraryPage() {
                                         setFilters((prev) => ({ ...prev, sortBy: value }))
                                     }
                                 >
-                                    <SelectTrigger className="w-[180px]">
+                                    <SelectTrigger className="w-48">
                                         <SelectValue placeholder="Trier par" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -263,7 +266,7 @@ export default function LibraryPage() {
                                         setFilters((prev) => ({ ...prev, sortOrder: value }))
                                     }
                                 >
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger className="w-32">
                                         <SelectValue placeholder="Ordre" />
                                     </SelectTrigger>
                                     <SelectContent>

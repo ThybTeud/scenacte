@@ -466,7 +466,7 @@ export default function EditorPage() {
     );
 
     return (
-        <SidebarProvider className="h-dvh">
+        <SidebarProvider className="h-dvh bg-gray-400">
             <EditorSidebar
                 stats={statistics}
                 structure={structure}
@@ -480,7 +480,7 @@ export default function EditorPage() {
                 onVersionsClick={handleOpenVersions}
             />
 
-            <SidebarInset className="flex flex-col h-dvh overflow-hidden">
+            <SidebarInset className="flex flex-col h-dvh overflow-hidden bg-gray-400">
                 <EditorHeader
                     title={play?.title || ""}
                     onTitleChange={handleTitleChange}
@@ -497,11 +497,11 @@ export default function EditorPage() {
                     onTogglePreview={() => setShowPreview((prev) => !prev)}
                 />
 
-                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh">
+                <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
-                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0">
+                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal bg-red-800">
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}
@@ -524,7 +524,7 @@ export default function EditorPage() {
 
                         {/* Preview - masquee sous md */}
                         {showPreview && (
-                            <div className="hidden md:flex flex-1 min-w-0 h-full">
+                            <div className="hidden md:flex flex-1 min-w-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
                                 <style>{previewCSS}</style>
                                 <div
                                     className="preview-content h-full w-full bg-white rounded-lg border overflow-auto p-4"

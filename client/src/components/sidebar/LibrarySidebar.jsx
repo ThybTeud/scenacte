@@ -65,7 +65,7 @@ export function LibrarySidebar() {
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" className="border-2 border-gray-900 rounded-lg overflow-hidden">
         <SidebarLogo />
 
         <SidebarContent>

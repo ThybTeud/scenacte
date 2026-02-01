@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -12,7 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 /**
  * Section de sidebar collapsible avec support du mode icône.
@@ -24,7 +25,7 @@ import { ChevronDown } from "lucide-react";
  * @param {boolean} props.defaultOpen - Section ouverte par défaut
  * @param {string} props.tooltip - Tooltip en mode collapsed (défaut: title)
  * @param {React.ReactNode} props.children - Contenu de la section
- * @param {Function} props.onCollapsedClick - Action au clic en mode collapsed
+ * @param {Function} props.onCollapsedClick - Action au clic en mode collapsed (remplace le comportement par défaut)
  */
 export function CollapsibleSection({
   title,
@@ -34,8 +35,9 @@ export function CollapsibleSection({
   children,
   onCollapsedClick,
 }) {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   // Mode collapsed : afficher uniquement l'icône avec tooltip
   if (isCollapsed) {
@@ -46,7 +48,14 @@ export function CollapsibleSection({
             <SidebarMenuButton
               tooltip={tooltip || title}
               className="cursor-pointer"
-              onClick={onCollapsedClick}
+              onClick={() => {
+                if (onCollapsedClick) {
+                  onCollapsedClick();
+                } else {
+                  setIsOpen(true);
+                  setOpen(true);
+                }
+              }}
             >
               <Icon className="h-4 w-4" />
               <span>{title}</span>
@@ -59,21 +68,25 @@ export function CollapsibleSection({
 
   // Mode expanded : section collapsible complète
   return (
-    <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
-      <SidebarGroup>
-        <SidebarGroupLabel asChild>
-          <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
-            <Icon className="h-4 w-4 mr-2" />
-            <span>{title}</span>
-            <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
-        <CollapsibleContent>
-          <SidebarGroupContent>
-            {children}
-          </SidebarGroupContent>
-        </CollapsibleContent>
-      </SidebarGroup>
-    </Collapsible>
+    <SidebarGroup>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="group/collapsible">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip={tooltip || title} className="cursor-pointer">
+              <CollapsibleTrigger>
+                <Icon className="h-4 w-4" />
+                <span>{title}</span>
+                <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+              </CollapsibleTrigger>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              {children}
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarMenu>
+      </Collapsible>
+    </SidebarGroup>
   );
 }

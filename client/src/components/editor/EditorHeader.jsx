@@ -21,22 +21,22 @@ export function EditorHeader({
   onTogglePreview
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+    <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-2 border-gray-900 rounded-lg bg-sidebar overflow-hidden">
       {/* Left section */}
       <SidebarTrigger />
-      <Separator orientation="vertical" className="h-4" />
+      {/* <Separator orientation="vertical" className="h-4" /> */}
 
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className="max-w-sm h-9"
+          className="max-w-sm h-9 bg-white border-2 border-gray-900 rounded-sm"
           placeholder="Titre de la pièce"
         />
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
         ) : hasUnsavedChanges ? (
-          <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0" title="Modifications non versionnées" />
+          <div className="h-2 w-2 rounded-full bg-rose-600 shrink-0" title="Modifications non versionnées" />
         ) : null}
         {!isOnline && (
           <Badge variant="outline" className="text-xs shrink-0">
@@ -49,7 +49,7 @@ export function EditorHeader({
       {/* Right section - Actions */}
       <div className="flex items-center gap-1">
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
           onClick={onCreateVersion}
           title="Créer un point de restauration"
