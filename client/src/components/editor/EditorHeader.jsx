@@ -21,16 +21,16 @@ export function EditorHeader({
   onTogglePreview
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+    <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-2 border-gray-900 rounded-lg bg-sidebar overflow-hidden">
       {/* Left section */}
       <SidebarTrigger />
-      <Separator orientation="vertical" className="h-4" />
+      {/* <Separator orientation="vertical" className="h-4" /> */}
 
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className="max-w-sm h-9"
+          className="max-w-sm h-9 bg-white border border-gray-900 rounded-md"
           placeholder="Titre de la pièce"
         />
         {isSaving ? (

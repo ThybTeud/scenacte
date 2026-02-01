@@ -466,7 +466,7 @@ export default function EditorPage() {
     );
 
     return (
-        <SidebarProvider className="h-dvh">
+        <SidebarProvider className="h-dvh bg-gray-400">
             <EditorSidebar
                 stats={statistics}
                 structure={structure}
@@ -480,7 +480,7 @@ export default function EditorPage() {
                 onVersionsClick={handleOpenVersions}
             />
 
-            <SidebarInset className="flex flex-col h-dvh overflow-hidden">
+            <SidebarInset className="flex flex-col h-dvh overflow-hidden bg-gray-400">
                 <EditorHeader
                     title={play?.title || ""}
                     onTitleChange={handleTitleChange}

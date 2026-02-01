@@ -12,7 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 /**
  * Section de sidebar collapsible avec support du mode icône.
@@ -60,20 +60,20 @@ export function CollapsibleSection({
   // Mode expanded : section collapsible complète
   return (
     <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
-      <SidebarGroup>
-        <SidebarGroupLabel asChild>
+      <SidebarMenu>
+        <SidebarMenuItem>
           <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
             <Icon className="h-4 w-4 mr-2" />
             <span>{title}</span>
-            <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+            <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
           </CollapsibleTrigger>
-        </SidebarGroupLabel>
+        </SidebarMenuItem>
         <CollapsibleContent>
           <SidebarGroupContent>
             {children}
           </SidebarGroupContent>
         </CollapsibleContent>
-      </SidebarGroup>
+      </SidebarMenu>
     </Collapsible>
   );
 }
