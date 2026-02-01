@@ -50,7 +50,7 @@ export function SidebarUserFooter({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" onClick={() => setShowBugReport(true)}>
+            <SidebarMenuButton tooltip="Signaler un bug" onClick={() => setShowBugReport(true)}>
               <Bug />
               <span>Signaler un bug</span>
             </SidebarMenuButton>
@@ -61,7 +61,7 @@ export function SidebarUserFooter({
               tooltip="Se connecter"
               onClick={onNavigateSignup}
             >
-              <Avatar className="h-8 w-8 border-2">
+              <Avatar className="h-8 w-8 border-2 border-gray-900">
                 <AvatarFallback className="rounded-lg">
                   <UserRound className="h-4 w-4" />
                 </AvatarFallback>
@@ -88,17 +88,17 @@ export function SidebarUserFooter({
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="sm" onClick={() => setShowBugReport(true)}>
-            <Bug className="h-4 w-4" />
-            <span className="flex-1 text-sm font-medium">Signaler un bug</span>
+          <SidebarMenuButton tooltip="Signaler un bug" onClick={() => setShowBugReport(true)}>
+            <Bug />
+            <span>Signaler un bug</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton size="lg" tooltip={user.email}>
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{initials}</AvatarFallback>
+                <Avatar className="h-8 w-8 border-2 border-gray-900">
+                  <AvatarFallback className="bg-white">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="flex-1 truncate text-sm font-medium">
                   {user.email}

@@ -147,9 +147,9 @@ export default function SettingsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Parametres</DialogTitle>
+                    <DialogTitle>Paramètres</DialogTitle>
                     <DialogDescription>
-                        Personnalisez l'editeur et la mise en page
+                        Personnalisez l'éditeur et la mise en page
                     </DialogDescription>
                 </DialogHeader>
 

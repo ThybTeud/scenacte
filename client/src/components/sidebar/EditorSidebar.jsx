@@ -46,7 +46,7 @@ export function EditorSidebar({
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-2 border-gray-900 rounded-lg overflow-hidden">
       <SidebarLogo />
 
       <SidebarContent>
@@ -165,17 +165,17 @@ export function EditorSidebar({
 
         {/* Parametres */}
         <CollapsibleSection
-          title="Parametres"
+          title="Paramètres"
           icon={Settings2}
-          defaultOpen={true}
-          tooltip="Parametres editeur & mise en page"
+          defaultOpen={false}
+          tooltip="Paramètres éditeur & mise en page"
           onCollapsedClick={onOpenEditorSettings}
         >
           <SidebarMenuSub>
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="sm"
-                tooltip="Parametres editeur"
+                tooltip="Paramètres éditeur"
                 className="cursor-pointer"
                 onClick={onOpenEditorSettings}
               >
@@ -185,7 +185,7 @@ export function EditorSidebar({
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="sm"
-                tooltip="Parametres mise en page"
+                tooltip="Paramètres mise en page"
                 className="cursor-pointer"
                 onClick={onOpenPageSettings}
               >
