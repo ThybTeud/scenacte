@@ -167,7 +167,7 @@ export function EditorSidebar({
         <CollapsibleSection
           title="Parametres"
           icon={Settings2}
-          defaultOpen={true}
+          defaultOpen={false}
           tooltip="Parametres editeur & mise en page"
           onCollapsedClick={onOpenEditorSettings}
         >

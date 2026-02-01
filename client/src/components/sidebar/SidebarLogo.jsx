@@ -5,7 +5,7 @@ export function SidebarLogo() {
   const isCollapsed = state === "collapsed"
 
   return (
-    <SidebarHeader className="p-4 flex items-start">
+    <SidebarHeader className="px-4 pt-6 flex items-start">
       <img
         src={isCollapsed ? "/logo_short.png" : "/logo_long.png"}
         alt="Scenacte"

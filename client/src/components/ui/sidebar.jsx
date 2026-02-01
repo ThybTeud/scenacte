@@ -323,7 +323,7 @@ function SidebarFooter({
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2 group-data-[collapsible=icon]:items-center", className)}
+      className={cn("flex flex-col gap-2 py-4 px-4 group-data-[collapsible=icon]:items-center", className)}
       {...props} />
   );
 }
@@ -365,7 +365,8 @@ function SidebarGroup({
     <div
       data-slot="sidebar-group"
       data-sidebar="group"
-      className={cn("relative flex w-full min-w-0 flex-col p-2", className)}
+      // MODIFICATION de p-2 en py-2 px-4 pour mieux coller au design
+      className={cn("relative flex w-full min-w-0 flex-col py-2 px-4", className)}
       {...props} />
   );
 }

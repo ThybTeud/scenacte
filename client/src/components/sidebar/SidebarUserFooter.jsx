@@ -50,7 +50,7 @@ export function SidebarUserFooter({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="sm" onClick={() => setShowBugReport(true)}>
+            <SidebarMenuButton tooltip="Signaler un bug" onClick={() => setShowBugReport(true)}>
               <Bug />
               <span>Signaler un bug</span>
             </SidebarMenuButton>
@@ -88,9 +88,9 @@ export function SidebarUserFooter({
     <SidebarFooter>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="sm" onClick={() => setShowBugReport(true)}>
-            <Bug className="h-4 w-4" />
-            <span className="flex-1 text-sm font-medium">Signaler un bug</span>
+          <SidebarMenuButton tooltip="Signaler un bug" onClick={() => setShowBugReport(true)}>
+            <Bug />
+            <span>Signaler un bug</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
