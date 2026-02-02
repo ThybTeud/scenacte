@@ -511,7 +511,8 @@ export default function EditorPage() {
                                 />
                             </div>
 
-                            <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
+                            {/* MASQUE EN ATTENDANT D'ACTIVER LES BOUTONS */}
+                            {/* <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
                                 <SyntaxBar
                                     onInsert={toggleFormat}
                                     onUndo={handleUndo}
@@ -519,7 +520,7 @@ export default function EditorPage() {
                                     canUndo={canUndo}
                                     canRedo={canRedo}
                                 />
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Preview - masquee sous md */}

@@ -55,7 +55,7 @@ export function EditorSidebar({
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Bibliotheque"
+                tooltip="Bibliothèque"
                 asChild
                 className="cursor-pointer"
               >
