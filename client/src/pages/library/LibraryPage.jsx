@@ -177,7 +177,7 @@ export default function LibraryPage() {
         <SidebarProvider className="bg-gray-200">
             <LibrarySidebar />
             <SidebarInset className="bg-gray-200">
-                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-2 border-gray-900 rounded-lg bg-sidebar overflow-hidden">
+                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-gray-900 bg-sidebar overflow-hidden">
                     <SidebarTrigger />
                     {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
                     <h1 className="text-lg font-semibold">Bibliothèque</h1>
