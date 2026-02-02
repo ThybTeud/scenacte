@@ -26,7 +26,7 @@ import { Search, Plus, CheckCircle2, X } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
-import { CreatePlayModal, DeletePlayModal, RenamePlayModal } from "@/components/modals";
+import { CreatePlayModal, DeletePlayModal, RenamePlayModal, ExportModal } from "@/components/modals";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 
 export default function LibraryPage() {
@@ -52,7 +52,10 @@ export default function LibraryPage() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showVersionsModal, setShowVersionsModal] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
     const [selectedPlay, setSelectedPlay] = useState(null);
+    const [playToExport, setPlayToExport] = useState(null);
+    const [exportHtmlContent, setExportHtmlContent] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const menuRef = useRef(null);
 
@@ -157,6 +160,17 @@ export default function LibraryPage() {
         setShowVersionsModal(true);
     };
 
+    const handleExportPlay = async (play) => {
+        try {
+            const fullPlay = await storageService.getPlay(play.id);
+            setPlayToExport(fullPlay);
+            setExportHtmlContent(fullPlay.htmlContent || "");
+            setShowExportModal(true);
+        } catch (error) {
+            toast.error("Erreur lors du chargement de la pièce pour l'export");
+        }
+    };
+
     const handleRenamePlay = async ({ title, subtitle }) => {
         if (!selectedPlay) return;
         setIsSubmitting(true);
@@ -172,6 +186,12 @@ export default function LibraryPage() {
             setIsSubmitting(false);
         }
     };
+
+    // Affichage conditionnel de la carte "Créer une pièce"
+    const isSearching = debouncedSearchTerm.length > 0
+    const isLastPage = pagination.page === pagination.totalPages
+    const isGridIncomplete = filteredPlays.length < 20 // ou ta limite par page
+    const showCreateCard = !isSearching && (isLastPage && isGridIncomplete)
 
     return (
         <SidebarProvider className="bg-gray-200">
@@ -311,20 +331,21 @@ export default function LibraryPage() {
                     ) : (
                         /* Grid */
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-4">
                                 {filteredPlays.map((play) => (
                                     <PlayCard
-                                        key={play.id}
-                                        play={play}
-                                        onClick={() => navigate(`/editor/${play.id}`)}
-                                        onRename={openRenameModal}
-                                        onDelete={openDeleteModal}
-                                        onVersions={openVersionsModal}
+                                    key={play.id}
+                                    play={play}
+                                    onOpen={(p) => navigate(`/editor/${p.id}`)}
+                                    onExport={(p) => handleExportPlay(p)}
+                                    onRename={openRenameModal}
+                                    onDelete={openDeleteModal}
+                                    onVersions={openVersionsModal}
                                     />
                                 ))}
-                                <CreatePlayCard
-                                    onClick={() => setShowCreateModal(true)}
-                                />
+                                {showCreateCard && (
+                                    <CreatePlayCard onClick={() => setShowCreateModal(true)} />
+                                )}
                             </div>
 
                             {/* Pagination */}
@@ -377,6 +398,20 @@ export default function LibraryPage() {
                 }}
                 play={selectedPlay}
                 onRestore={fetchPlays}
+            />
+
+            <ExportModal
+                open={showExportModal}
+                onOpenChange={(open) => {
+                    setShowExportModal(open);
+                    if (!open) {
+                        setPlayToExport(null);
+                        setExportHtmlContent("");
+                    }
+                }}
+                htmlContent={exportHtmlContent}
+                playTitle={playToExport?.title}
+                playSubtitle={playToExport?.subtitle}
             />
         </SidebarProvider>
     );
