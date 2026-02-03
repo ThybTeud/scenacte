@@ -509,7 +509,7 @@ export default function EditorPage() {
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
                             <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
-                                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">Éditeur</div>
+                                <div className="hidden sm:flex px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">Éditeur</div>
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}
