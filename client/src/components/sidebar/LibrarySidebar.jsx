@@ -5,8 +5,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -28,6 +26,7 @@ import {
   ChevronDown,
   Scale,
   LibraryBig,
+  ChevronRight,
 } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
@@ -96,62 +95,62 @@ export function LibrarySidebar() {
             onCollapsedClick={() => setSettingsOpen(true)}
           >
             <SidebarMenuSub>
-              <SidebarMenuItem>
-                <SidebarMenuButton
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
                   size="sm"
-                  tooltip="Paramètres éditeur"
                   className="cursor-pointer"
                   onClick={openEditorSettings}
                 >
                   Editeur
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
                   size="sm"
-                  tooltip="Paramètres mise en page"
                   className="cursor-pointer"
                   onClick={openPageSettings}
                 >
                   Mise en page
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
             </SidebarMenuSub>
           </CollapsibleSection>
           {navigationGroups.map((group) => (
-            <Collapsible
-              key={group.label}
-              defaultOpen={group.openByDefault}
-              className="group/collapsible"
-            >
-              <SidebarGroup>
-                <SidebarGroupLabel asChild>
-                  <CollapsibleTrigger className="flex w-full items-center cursor-pointer">
-                    <group.icon className="h-4 w-4 mr-2" />
-                    <span>{group.label}</span>
-                    <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenuSub>
-                      {group.items.map((item, index) => (
-                        <SidebarMenuSubItem key={index}>
-                          <SidebarMenuSubButton
-                            size="sm"
-                            className="cursor-pointer"
-                            onClick={() => item.path && navigate(item.path)}
-                            disabled={!item.path}
-                          >
-                            {item.label}
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
+            <SidebarGroup key={group.label}>
+              <SidebarMenu>
+                <Collapsible
+                  defaultOpen={group.openByDefault}
+                  className="group/collapsible"
+                  asChild
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton className="cursor-pointer">
+                        <group.icon className="h-4 w-4" />
+                        <span>{group.label}</span>
+                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {group.items.map((item, index) => (
+                          <SidebarMenuSubItem key={index}>
+                            <SidebarMenuSubButton
+                              size="sm"
+                              className="cursor-pointer"
+                              onClick={() => item.path && navigate(item.path)}
+                              disabled={!item.path}
+                            >
+                              {item.label}
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              </SidebarMenu>
+            </SidebarGroup>
           ))}
         </SidebarContent>
 

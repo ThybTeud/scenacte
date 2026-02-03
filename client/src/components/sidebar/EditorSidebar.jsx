@@ -75,18 +75,18 @@ export function EditorSidebar({
           defaultOpen={false}
           tooltip="Sommaire"
         >
-          <SidebarMenu>
+          <SidebarMenuSub>
             {structure.items?.map((act, a) => (
-              <SidebarMenuItem key={a}>
-                <SidebarMenuButton
+              <SidebarMenuSubItem key={a}>
+                <SidebarMenuSubButton
                   size="sm"
                   onClick={() => onSectionClick(act.position)}
-                  className={`cursor-pointer ${
+                  className={`cursor-pointer line-clamp-1 ${
                     activeSection === a ? "bg-muted font-medium" : ""
                   }`}
                 >
-                  <span>{act.value}</span>
-                </SidebarMenuButton>
+                  {act.value}
+                </SidebarMenuSubButton>
                 {act.scenes?.length > 0 && (
                   <SidebarMenuSub>
                     {act.scenes.map((scene, s) => (
@@ -94,7 +94,7 @@ export function EditorSidebar({
                         <SidebarMenuSubButton
                           size="sm"
                           onClick={() => onSectionClick(scene.position)}
-                          className={`cursor-pointer ${
+                          className={`cursor-pointer line-clamp-1 ${
                             activeSection === s ? "bg-muted font-medium" : ""
                           }`}
                         >
@@ -104,9 +104,9 @@ export function EditorSidebar({
                     ))}
                   </SidebarMenuSub>
                 )}
-              </SidebarMenuItem>
+              </SidebarMenuSubItem>
             ))}
-          </SidebarMenu>
+          </SidebarMenuSub>
         </CollapsibleSection>
 
         {/* Personnages */}
@@ -172,26 +172,24 @@ export function EditorSidebar({
           onCollapsedClick={onOpenEditorSettings}
         >
           <SidebarMenuSub>
-            <SidebarMenuItem>
-              <SidebarMenuButton
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
                 size="sm"
-                tooltip="Paramètres éditeur"
                 className="cursor-pointer"
                 onClick={onOpenEditorSettings}
               >
                 Editeur
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton
                 size="sm"
-                tooltip="Paramètres mise en page"
                 className="cursor-pointer"
                 onClick={onOpenPageSettings}
               >
                 Mise en page
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
           </SidebarMenuSub>
         </CollapsibleSection>
 
