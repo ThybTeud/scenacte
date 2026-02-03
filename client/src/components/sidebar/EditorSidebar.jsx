@@ -25,7 +25,6 @@ import { SidebarUserFooter } from "./SidebarUserFooter";
 import { CollapsibleSection } from "./CollapsibleSection";
 
 export function EditorSidebar({
-  stats,
   structure = { items: [], orphanScenes: [], personnages: [] },
   characters = [],
   activeSection,
@@ -35,15 +34,10 @@ export function EditorSidebar({
   onOpenEditorSettings,
   onOpenPageSettings,
   onVersionsClick,
+  onOpenStats,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  const safeStats = stats || {
-    totalScenes: 0,
-    totalRepliques: 0,
-    totalCharacters: 0,
-  };
 
   return (
     <Sidebar collapsible="icon" className="border-r-2 border-gray-900 overflow-hidden">
@@ -132,36 +126,20 @@ export function EditorSidebar({
         </CollapsibleSection>
 
         {/* Statistiques */}
-        <CollapsibleSection
-          title="Statistiques"
-          icon={PieChart}
-          defaultOpen={false}
-          tooltip="Statistiques"
-        >
-          <SidebarMenuSub>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton size="sm" asChild>
-                <span className="text-muted-foreground cursor-default">
-                  {safeStats.totalScenes} scenes
-                </span>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton size="sm" asChild>
-                <span className="text-muted-foreground cursor-default">
-                  {safeStats.totalRepliques} repliques
-                </span>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-            <SidebarMenuSubItem>
-              <SidebarMenuSubButton size="sm" asChild>
-                <span className="text-muted-foreground cursor-default">
-                  {safeStats.totalCharacters} personnages
-                </span>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          </SidebarMenuSub>
-        </CollapsibleSection>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Statistiques"
+                className="cursor-pointer"
+                onClick={onOpenStats}
+              >
+                <PieChart className="h-4 w-4" />
+                <span>Statistiques</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
         {/* Parametres */}
         <CollapsibleSection

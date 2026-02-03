@@ -16,6 +16,7 @@ import { PlayParser } from "@/utils/playParser";
 import SettingsModal from "@/components/modals/SettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
+import StatsModal from "@/components/modals/StatsModal";
 import { getPreviewCSS } from "@/utils/pdfExport";
 import { PanelRightClose } from "lucide-react";
 
@@ -64,6 +65,7 @@ export default function EditorPage() {
     const [showPdfExportModal, setShowPdfExportModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [showVersionsModal, setShowVersionsModal] = useState(false);
+    const [showStatsModal, setShowStatsModal] = useState(false);
     const [settingsModalTab, setSettingsModalTab] = useState("editor");
 
     // Settings de mise en page
@@ -441,6 +443,10 @@ export default function EditorPage() {
         setShowVersionsModal(true);
     }, []);
 
+    const handleOpenStats = useCallback(() => {
+        setShowStatsModal(true);
+    }, []);
+
     /**
      * Gere les changements de settings de mise en page
      */
@@ -469,7 +475,6 @@ export default function EditorPage() {
     return (
         <SidebarProvider className="h-dvh bg-gray-400">
             <EditorSidebar
-                stats={statistics}
                 structure={structure}
                 characters={structure?.personnages || []}
                 activeSection={activeSection}
@@ -479,6 +484,7 @@ export default function EditorPage() {
                 onOpenEditorSettings={handleOpenEditorSettings}
                 onOpenPageSettings={handleOpenLayoutModal}
                 onVersionsClick={handleOpenVersions}
+                onOpenStats={handleOpenStats}
             />
 
             <SidebarInset className="flex flex-col h-dvh overflow-hidden bg-gray-400">
@@ -567,6 +573,14 @@ export default function EditorPage() {
                 pageFormat={paperSize}
                 template={template}
                 onOpenLayoutModal={handleOpenLayoutModal}
+            />
+
+            {/* Modal Statistiques */}
+            <StatsModal
+                isOpen={showStatsModal}
+                onClose={() => setShowStatsModal(false)}
+                statistics={statistics}
+                playTitle={play?.title}
             />
 
             {/* Modal Historique des versions */}
