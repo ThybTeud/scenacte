@@ -17,6 +17,7 @@ import SettingsModal from "@/components/modals/SettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import { getPreviewCSS } from "@/utils/pdfExport";
+import { PanelRightClose } from "lucide-react";
 
 export default function EditorPage() {
     const { id } = useParams();
@@ -501,7 +502,8 @@ export default function EditorPage() {
                     <div className="flex w-full max-w-5xl gap-4 h-full">
                         {/* Colonne éditeur */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
-                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal bg-red-800">
+                            <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
+                                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">Éditeur</div>
                                 <CodeMirrorEditor
                                     ref={editorRef}
                                     value={content}
@@ -523,12 +525,16 @@ export default function EditorPage() {
                             </div> */}
                         </div>
 
-                        {/* Preview - masquee sous md */}
+                        {/* Preview - masquée sous md */}
                         {showPreview && (
-                            <div className="hidden md:flex flex-1 min-w-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                            <div className="hidden md:flex md:flex-col flex-1 min-w-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                                    <div className="font-bold uppercase">Aperçu</div>
+                                    <PanelRightClose />
+                                </div>
                                 <style>{previewCSS}</style>
                                 <div
-                                    className="preview-content h-full w-full bg-white rounded-lg border overflow-auto p-4"
+                                    className="preview-content h-full w-full bg-white overflow-auto p-4"
                                     dangerouslySetInnerHTML={{
                                         __html: htmlContent,
                                     }}
