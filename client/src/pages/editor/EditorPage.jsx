@@ -558,7 +558,7 @@ export default function EditorPage() {
 
         <main className="flex-1 overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
           {/* VERIFIER SI h-dvh ICI PERMET DE RESPECTER LE CLAVIER */}
-          <div className="flex justify-center relative w-full h-full bg-rose-200">
+          <div className="flex justify-center relative w-full h-full">
             {/* Bouton flottant pour ouvrir l'aide éditeur */}
             {!showEditorHelp && (
               <Button
@@ -583,11 +583,11 @@ export default function EditorPage() {
               </Button>
             )}
 
-            <div className="flex gap-4 h-full w-full max-w-7xl bg-green-200">
+            <div className="flex justify-center gap-4 h-full w-full max-w-6xl">
               {/* Panneau Aide Editeur - masqué sous md */}
               {showEditorHelp && (
                 <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
-                  <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                  <div className="px-6 h-16 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
                     <div className="font-bold uppercase">Structure</div>
                     <Button
                       variant="ghost"
@@ -603,13 +603,13 @@ export default function EditorPage() {
                       <div className="font-semibold uppercase text-sm mb-2">
                         Sommaire
                       </div>
-                      <div className="space-y-2 font-editor font-semibold text-sm">
+                      <div className="space-y-2 text-xs">
                         {structure?.items?.map((acte, acteIndex) => (
                           <div key={acteIndex} className="space-y-1">
                             <button
-                              className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-pink-100 clamp-1 ${
+                              className={`w-full text-left px-2 py-1 rounded hover:bg-pink-100 clamp-1 ${
                                 activeActeIndex === acteIndex
-                                  ? "bg-rose-200"
+                                  ? "bg-rose-200 font-semibold"
                                   : ""
                               }`}
                               onClick={() => handleSectionClick(acte.position)}
@@ -620,10 +620,10 @@ export default function EditorPage() {
                               {acte.scenes?.map((scene, sceneIndex) => (
                                 <button
                                   key={sceneIndex}
-                                  className={`w-full text-left pl-2 pr-2 py-1 text-sm rounded hover:bg-pink-100 ${
+                                  className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-pink-100 hover:text-gray-900 ${
                                     activeActeIndex === acteIndex &&
                                     activeSceneIndex === sceneIndex
-                                      ? "bg-rose-400 text-white"
+                                      ? "bg-rose-400 text-white font-semibold"
                                       : ""
                                   }`}
                                   onClick={() =>
@@ -661,9 +661,9 @@ export default function EditorPage() {
               )}
 
               {/* Colonne éditeur */}
-              <div className="flex-1 flex flex-col min-w-0 h-full">
-                <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
-                  <div className="hidden sm:flex px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
+              <div className="flex-1 flex flex-col min-w-0 max-w-3xl h-full">
+                <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
+                  <div className="hidden sm:flex px-6 items-center h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
                     Éditeur
                   </div>
                   <CodeMirrorEditor
@@ -690,7 +690,7 @@ export default function EditorPage() {
               {/* Preview - masquée sous md */}
               {showPreview && (
                 <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
-                  <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                  <div className="px-6 h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
                     <div className="font-bold uppercase">Aperçu</div>
                     <Button
                       variant="ghost"
