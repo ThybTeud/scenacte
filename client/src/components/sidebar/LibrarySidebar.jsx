@@ -5,6 +5,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -17,20 +19,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { CollapsibleSection } from "./CollapsibleSection";
-import {
-  PieChart,
-  History,
-  Settings2,
-  Download,
-  ChevronDown,
-  Scale,
-  LibraryBig,
-  ChevronRight,
-} from "lucide-react";
+import { Scale, LibraryBig, ChevronRight } from "lucide-react";
 import { SidebarLogo } from "./SidebarLogo";
 import { SidebarUserFooter } from "./SidebarUserFooter";
-import { SettingsModal } from "@/components/modals";
+import { EditorSettingsModal } from "@/components/modals";
 
 const navigationGroups = [
   {
@@ -49,109 +41,53 @@ export function LibrarySidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [settingsTab, setSettingsTab] = useState("editor");
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const openEditorSettings = () => {
-    setSettingsTab("editor");
-    setSettingsOpen(true);
-  };
-
-  const openPageSettings = () => {
-    setSettingsTab("page");
-    setSettingsOpen(true);
-  };
 
   return (
     <>
-      <Sidebar collapsible="icon" className="border-r-2 border-gray-900 overflow-hidden">
+      <Sidebar
+        collapsible="icon"
+        className="border-r-2 border-gray-900 overflow-hidden"
+      >
         <SidebarLogo />
 
         <SidebarContent>
-          {/* Retour bibliothèque */}
           <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Bibliothèque"
-                  asChild
-                  className="cursor-pointer"
-                >
-                  <Link to="/library">
-                    <LibraryBig className="h-4 w-4" />
-                    <span>Bibliothèque</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-
-          {/* Paramètres */}
-          <CollapsibleSection
-            title="Paramètres"
-            icon={Settings2}
-            defaultOpen={true}
-            tooltip="Paramètres éditeur & mise en page"
-            onCollapsedClick={() => setSettingsOpen(true)}
-          >
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={openEditorSettings}
-                >
-                  Editeur
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={openPageSettings}
-                >
-                  Mise en page
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            </SidebarMenuSub>
-          </CollapsibleSection>
-          {navigationGroups.map((group) => (
-            <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className="uppercase">
+              Navigation
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
               <SidebarMenu>
-                <Collapsible
-                  defaultOpen={group.openByDefault}
-                  className="group/collapsible"
-                  asChild
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="cursor-pointer">
-                        <group.icon className="h-4 w-4" />
-                        <span>{group.label}</span>
-                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {group.items.map((item, index) => (
-                          <SidebarMenuSubItem key={index}>
-                            <SidebarMenuSubButton
-                              size="sm"
-                              className="cursor-pointer"
-                              onClick={() => item.path && navigate(item.path)}
-                              disabled={!item.path}
-                            >
-                              {item.label}
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
+                {/* Bibliothèque */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Bibliothèque"
+                    asChild
+                    className="cursor-pointer"
+                  >
+                    <Link to="/library">
+                      <LibraryBig className="h-4 w-4" />
+                      <span>Bibliothèque</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                {/* Légal */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Légal"
+                    asChild
+                    className="cursor-pointer"
+                  >
+                    <Link to="/legal/legal">
+                      <Scale className="h-4 w-4" />
+                      <span>Légal</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
-            </SidebarGroup>
-          ))}
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarContent>
 
         <SidebarUserFooter
@@ -161,11 +97,7 @@ export function LibrarySidebar() {
           onNavigateSignup={() => navigate("/register")}
         />
       </Sidebar>
-      <SettingsModal
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        defaultTab={settingsTab}
-      />
+      <EditorSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

@@ -13,7 +13,8 @@ import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
-import SettingsModal from "@/components/modals/SettingsModal";
+import EditorSettingsModal from "@/components/modals/EditorSettingsModal";
+import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
@@ -63,10 +64,10 @@ export default function EditorPage() {
 
     // States modals
     const [showPdfExportModal, setShowPdfExportModal] = useState(false);
-    const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [showEditorSettingsModal, setShowEditorSettingsModal] = useState(false);
+    const [showPageSettingsModal, setShowPageSettingsModal] = useState(false);
     const [showVersionsModal, setShowVersionsModal] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
-    const [settingsModalTab, setSettingsModalTab] = useState("editor");
 
     // Settings de mise en page
     const [paperSize, setPaperSize] = useState("A5");
@@ -417,16 +418,14 @@ export default function EditorPage() {
      * Ouvre le modal de mise en page
      */
     const handleOpenLayoutModal = useCallback(() => {
-        setSettingsModalTab("page");
-        setShowSettingsModal(true);
+        setShowPageSettingsModal(true);
     }, []);
 
     /**
      * Ouvre le modal des parametres editeur
      */
     const handleOpenEditorSettings = useCallback(() => {
-        setSettingsModalTab("editor");
-        setShowSettingsModal(true);
+        setShowEditorSettingsModal(true);
     }, []);
 
     /**
@@ -551,11 +550,16 @@ export default function EditorPage() {
                 </main>
             </SidebarInset>
 
-            {/* Modal Settings */}
-            <SettingsModal
-                open={showSettingsModal}
-                onOpenChange={setShowSettingsModal}
-                defaultTab={settingsModalTab}
+            {/* Modal Editeur */}
+            <EditorSettingsModal
+                open={showEditorSettingsModal}
+                onOpenChange={setShowEditorSettingsModal}
+            />
+
+            {/* Modal Mise en page */}
+            <PageSettingsModal
+                open={showPageSettingsModal}
+                onOpenChange={setShowPageSettingsModal}
                 playId={id}
                 currentPaperSize={paperSize}
                 currentTemplateId={templateId}
