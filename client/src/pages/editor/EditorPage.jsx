@@ -20,7 +20,8 @@ import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
 import { getPreviewCSS } from "@/utils/pdfExport";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { PanelRightClose, PanelRightOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Separator } from "@radix-ui/react-dropdown-menu";
 
 export default function EditorPage() {
   const { id } = useParams();
@@ -31,7 +32,6 @@ export default function EditorPage() {
   const [lastSavedContent, setLastSavedContent] = useState("");
 
   // État du document
-  const [activeSection, setActiveSection] = useState("scene-1-2");
   const [content, setContent] = useState("");
 
   // Référence à l'éditeur CodeMirror pour l'insertion de texte
@@ -60,6 +60,7 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [showEditorHelp, setShowEditorHelp] = useState(true);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -186,6 +187,46 @@ export default function EditorPage() {
     () => structure?.personnages || [],
     [structure?.personnages],
   );
+
+  // Calculer l'acte et la scène actifs basés sur la position du curseur
+  const { activeActeIndex, activeSceneIndex } = useMemo(() => {
+    if (!structure?.items || currentLine === 0) {
+      return { activeActeIndex: -1, activeSceneIndex: -1 };
+    }
+
+    let foundActeIndex = -1;
+    let foundSceneIndex = -1;
+
+    // Parcourir les actes pour trouver celui qui contient la ligne actuelle
+    for (let i = 0; i < structure.items.length; i++) {
+      const acte = structure.items[i];
+      const acteStart = acte.position?.start ?? 0;
+      const nextActe = structure.items[i + 1];
+      const acteEnd = nextActe ? nextActe.position?.start : Infinity;
+
+      if (currentLine >= acteStart && currentLine < acteEnd) {
+        foundActeIndex = i;
+
+        // Chercher la scène active dans cet acte
+        if (acte.scenes) {
+          for (let j = 0; j < acte.scenes.length; j++) {
+            const scene = acte.scenes[j];
+            const sceneStart = scene.position?.start ?? 0;
+            const nextScene = acte.scenes[j + 1];
+            const sceneEnd = nextScene ? nextScene.position?.start : acteEnd;
+
+            if (currentLine >= sceneStart && currentLine < sceneEnd) {
+              foundSceneIndex = j;
+              break;
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    return { activeActeIndex: foundActeIndex, activeSceneIndex: foundSceneIndex };
+  }, [structure?.items, currentLine]);
 
   /**
    * Gère le changement de contenu dans l'éditeur
@@ -414,12 +455,12 @@ export default function EditorPage() {
     (position) => {
       if (!editorRef.current || !position) return;
 
-      // Utiliser la fonction de scroll de l'éditeur
-      if (editorScrollRef.current && editorScrollRef.current.scrollToLine) {
-        editorScrollRef.current.scrollToLine(position.start + 1);
+      // Utiliser la fonction scrollToLine de l'éditeur pour déplacer le curseur
+      if (editorRef.current.scrollToLine) {
+        editorRef.current.scrollToLine(position.start + 1);
       }
     },
-    [editorScrollRef],
+    [],
   );
 
   /**
@@ -484,7 +525,6 @@ export default function EditorPage() {
       <EditorSidebar
         structure={structure}
         characters={structure?.personnages || []}
-        activeSection={activeSection}
         onSectionClick={handleSectionClick}
         onCharacterClick={handleCharacterClick}
         onOpenExport={handleOpenExport}
@@ -512,7 +552,93 @@ export default function EditorPage() {
         />
 
         <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
-          <div className="flex w-full max-w-5xl gap-4 h-full">
+            {/* VERIFIER SI h-dvh ICI PERMET DE RESPECTER LE CLAVIER */}
+          <div className="relative flex w-full  gap-4 h-full bg-red-300">
+            {/* Bouton flottant pour ouvrir l'aide éditeur */}
+            {!showEditorHelp && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
+                onClick={() => setShowEditorHelp(true)}
+              >
+                <PanelLeftOpen className="fill-white" />
+              </Button>
+            )}
+
+            {/* Bouton flottant pour ouvrir l'aperçu */}
+            {!showPreview && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
+                onClick={() => setShowPreview(true)}
+              >
+                <PanelRightOpen className="fill-white" />
+              </Button>
+            )}
+
+            {/* Panneau Aide Editeur - masqué sous md */}
+            {showEditorHelp && (
+              <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                  <div className="font-bold uppercase">Structure</div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowEditorHelp(false)}>
+                    <PanelLeftClose className="fill-white" />
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-auto p-4 bg-white">
+                  {/* Section Sommaire */}
+                  <div className="mb-4">
+                    <div className="font-semibold uppercase text-sm mb-2">Sommaire</div>
+                    <div className="space-y-2 font-editor font-semibold text-sm">
+                      {structure?.items?.map((acte, acteIndex) => (
+                        <div key={acteIndex} className="space-y-1">
+                          <button
+                            className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-pink-100 clamp-1 ${
+                              activeActeIndex === acteIndex ? "bg-rose-200" : ""
+                            }`}
+                            onClick={() => handleSectionClick(acte.position)}
+                          >
+                            {acte.value || `Acte ${acteIndex + 1}`}
+                          </button>
+                          <div className="ml-2 space-y-1">
+                            {acte.scenes?.map((scene, sceneIndex) => (
+                              <button
+                                key={sceneIndex}
+                                className={`w-full text-left pl-2 pr-2 py-1 text-sm rounded hover:bg-pink-100 ${
+                                  activeActeIndex === acteIndex && activeSceneIndex === sceneIndex ? "bg-rose-400 text-white" : ""
+                                }`}
+                                onClick={() => handleSectionClick(scene.position)}
+                              >
+                                {scene.value || `Scène ${sceneIndex + 1}`}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section Personnages */}
+                  <div>
+                    <div className="font-semibold uppercase text-sm mb-2">Personnages</div>
+                    <div className="space-y-1">
+                      {characters.map((character, index) => (
+                        <button
+                          key={character || index}
+                          className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-blue-600 hover:bg-blue-50 rounded"
+                          onClick={() => handleCharacterClick(character)}
+                        >
+                          @{character}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Colonne éditeur */}
             <div className="flex-1 flex flex-col min-w-0 h-full">
               <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
@@ -542,7 +668,7 @@ export default function EditorPage() {
 
             {/* Preview - masquée sous md */}
             {showPreview && (
-              <div className="hidden md:flex md:flex-col flex-1 min-w-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+              <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
                 <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
                   <div className="font-bold uppercase">Aperçu</div>
                   <Button variant="ghost" size="icon" onClick={() => setShowPreview(false)}>
@@ -561,18 +687,7 @@ export default function EditorPage() {
           </div>
         </main>
 
-        {/* Bouton flottant pour ouvrir l'aperçu - hors du flux */}
-        {!showPreview && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="hidden md:flex fixed right-4 top-1/2 -translate-y-1/2 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300"
-            onClick={() => setShowPreview(true)}
-          >
-            <PanelRightOpen className="fill-white" />
-          </Button>
-        )}
-      </SidebarInset>
+        </SidebarInset>
 
       {/* Modal Editeur */}
       <EditorSettingsModal

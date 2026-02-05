@@ -32,7 +32,7 @@
     /* Typographie */
     --font-ui: "Inter", "Space Grotesk", system-ui, sans-serif;
     --font-theater: "Crimson Text", Georgia, serif;
-    --font-editor: "Source Code Pro", "Fira Code", ui-monospace, monospace;
+    --font-editor: ui-monospace, "Source Code Pro", "Fira Code",  monospace;
 
     /* Ombres brutales */
     --shadow-brutal: 4px 4px 0 oklch(21% 0.034 264.665);
