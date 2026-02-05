@@ -6,7 +6,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
 import { useVersioning } from "@/hooks/useVersioning";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { EditorSidebar } from "@/components/sidebar";
 import { EditorHeader } from "@/components/editor/EditorHeader";
@@ -20,7 +20,12 @@ import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
 import { getPreviewCSS } from "@/utils/pdfExport";
-import { PanelRightClose, PanelRightOpen, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  PanelRightClose,
+  PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 
 export default function EditorPage() {
@@ -225,7 +230,10 @@ export default function EditorPage() {
       }
     }
 
-    return { activeActeIndex: foundActeIndex, activeSceneIndex: foundSceneIndex };
+    return {
+      activeActeIndex: foundActeIndex,
+      activeSceneIndex: foundSceneIndex,
+    };
   }, [structure?.items, currentLine]);
 
   /**
@@ -451,17 +459,14 @@ export default function EditorPage() {
   /**
    * Naviguer vers une section dans l'éditeur
    */
-  const handleSectionClick = useCallback(
-    (position) => {
-      if (!editorRef.current || !position) return;
+  const handleSectionClick = useCallback((position) => {
+    if (!editorRef.current || !position) return;
 
-      // Utiliser la fonction scrollToLine de l'éditeur pour déplacer le curseur
-      if (editorRef.current.scrollToLine) {
-        editorRef.current.scrollToLine(position.start + 1);
-      }
-    },
-    [],
-  );
+    // Utiliser la fonction scrollToLine de l'éditeur pour déplacer le curseur
+    if (editorRef.current.scrollToLine) {
+      editorRef.current.scrollToLine(position.start + 1);
+    }
+  }, []);
 
   /**
    * Ouvre le modal de mise en page
@@ -551,15 +556,15 @@ export default function EditorPage() {
           onTogglePreview={() => setShowPreview((prev) => !prev)}
         />
 
-        <main className="flex-1 flex justify-center overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
-            {/* VERIFIER SI h-dvh ICI PERMET DE RESPECTER LE CLAVIER */}
-          <div className="relative flex w-full  gap-4 h-full bg-red-300">
+        <main className="flex-1 overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
+          {/* VERIFIER SI h-dvh ICI PERMET DE RESPECTER LE CLAVIER */}
+          <div className="flex justify-center relative w-full h-full bg-rose-200">
             {/* Bouton flottant pour ouvrir l'aide éditeur */}
             {!showEditorHelp && (
               <Button
                 variant="secondary"
                 size="icon"
-                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
+                className="hidden md:flex absolute left-0 top-4 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
                 onClick={() => setShowEditorHelp(true)}
               >
                 <PanelLeftOpen className="fill-white" />
@@ -571,91 +576,107 @@ export default function EditorPage() {
               <Button
                 variant="secondary"
                 size="icon"
-                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
+                className="hidden md:flex absolute right-0 top-4 bg-gray-200 border-2 border-gray-900 rounded-md shadow-brutal-sm hover:bg-gray-300 z-10"
                 onClick={() => setShowPreview(true)}
               >
                 <PanelRightOpen className="fill-white" />
               </Button>
             )}
 
-            {/* Panneau Aide Editeur - masqué sous md */}
-            {showEditorHelp && (
-              <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
-                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
-                  <div className="font-bold uppercase">Structure</div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowEditorHelp(false)}>
-                    <PanelLeftClose className="fill-white" />
-                  </Button>
-                </div>
-                <div className="flex-1 overflow-auto p-4 bg-white">
-                  {/* Section Sommaire */}
-                  <div className="mb-4">
-                    <div className="font-semibold uppercase text-sm mb-2">Sommaire</div>
-                    <div className="space-y-2 font-editor font-semibold text-sm">
-                      {structure?.items?.map((acte, acteIndex) => (
-                        <div key={acteIndex} className="space-y-1">
-                          <button
-                            className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-pink-100 clamp-1 ${
-                              activeActeIndex === acteIndex ? "bg-rose-200" : ""
-                            }`}
-                            onClick={() => handleSectionClick(acte.position)}
-                          >
-                            {acte.value || `Acte ${acteIndex + 1}`}
-                          </button>
-                          <div className="ml-2 space-y-1">
-                            {acte.scenes?.map((scene, sceneIndex) => (
-                              <button
-                                key={sceneIndex}
-                                className={`w-full text-left pl-2 pr-2 py-1 text-sm rounded hover:bg-pink-100 ${
-                                  activeActeIndex === acteIndex && activeSceneIndex === sceneIndex ? "bg-rose-400 text-white" : ""
-                                }`}
-                                onClick={() => handleSectionClick(scene.position)}
-                              >
-                                {scene.value || `Scène ${sceneIndex + 1}`}
-                              </button>
-                            ))}
+            <div className="flex gap-4 h-full w-full max-w-7xl bg-green-200">
+              {/* Panneau Aide Editeur - masqué sous md */}
+              {showEditorHelp && (
+                <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                  <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                    <div className="font-bold uppercase">Structure</div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowEditorHelp(false)}
+                    >
+                      <PanelLeftClose className="fill-white" />
+                    </Button>
+                  </div>
+                  <div className="flex-1 overflow-auto p-4 bg-white">
+                    {/* Section Sommaire */}
+                    <div className="mb-4">
+                      <div className="font-semibold uppercase text-sm mb-2">
+                        Sommaire
+                      </div>
+                      <div className="space-y-2 font-editor font-semibold text-sm">
+                        {structure?.items?.map((acte, acteIndex) => (
+                          <div key={acteIndex} className="space-y-1">
+                            <button
+                              className={`w-full text-left px-2 py-1 text-sm rounded hover:bg-pink-100 clamp-1 ${
+                                activeActeIndex === acteIndex
+                                  ? "bg-rose-200"
+                                  : ""
+                              }`}
+                              onClick={() => handleSectionClick(acte.position)}
+                            >
+                              {acte.value || `Acte ${acteIndex + 1}`}
+                            </button>
+                            <div className="ml-2 space-y-1">
+                              {acte.scenes?.map((scene, sceneIndex) => (
+                                <button
+                                  key={sceneIndex}
+                                  className={`w-full text-left pl-2 pr-2 py-1 text-sm rounded hover:bg-pink-100 ${
+                                    activeActeIndex === acteIndex &&
+                                    activeSceneIndex === sceneIndex
+                                      ? "bg-rose-400 text-white"
+                                      : ""
+                                  }`}
+                                  onClick={() =>
+                                    handleSectionClick(scene.position)
+                                  }
+                                >
+                                  {scene.value || `Scène ${sceneIndex + 1}`}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Section Personnages */}
-                  <div>
-                    <div className="font-semibold uppercase text-sm mb-2">Personnages</div>
-                    <div className="space-y-1">
-                      {characters.map((character, index) => (
-                        <button
-                          key={character || index}
-                          className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-blue-600 hover:bg-blue-50 rounded"
-                          onClick={() => handleCharacterClick(character)}
-                        >
-                          @{character}
-                        </button>
-                      ))}
+                    {/* Section Personnages */}
+                    <div>
+                      <div className="font-semibold uppercase text-sm mb-2">
+                        Personnages
+                      </div>
+                      <div className="space-y-1">
+                        {characters.map((character, index) => (
+                          <button
+                            key={character || index}
+                            className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-blue-600 hover:bg-blue-50 rounded"
+                            onClick={() => handleCharacterClick(character)}
+                          >
+                            @{character}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Colonne éditeur */}
-            <div className="flex-1 flex flex-col min-w-0 h-full">
-              <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
-                <div className="hidden sm:flex px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
-                  Éditeur
+              {/* Colonne éditeur */}
+              <div className="flex-1 flex flex-col min-w-0 h-full">
+                <div className="flex-1 w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
+                  <div className="hidden sm:flex px-6 py-3 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
+                    Éditeur
+                  </div>
+                  <CodeMirrorEditor
+                    ref={editorRef}
+                    value={content}
+                    onChange={handleContentChange}
+                    onCursorChange={handleCursorChange}
+                    characters={characters}
+                  />
                 </div>
-                <CodeMirrorEditor
-                  ref={editorRef}
-                  value={content}
-                  onChange={handleContentChange}
-                  onCursorChange={handleCursorChange}
-                  characters={characters}
-                />
-              </div>
 
-              {/* MASQUE EN ATTENDANT D'ACTIVER LES BOUTONS */}
-              {/* <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
+                {/* MASQUE EN ATTENDANT D'ACTIVER LES BOUTONS */}
+                {/* <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
                                 <SyntaxBar
                                     onInsert={toggleFormat}
                                     onUndo={handleUndo}
@@ -664,30 +685,34 @@ export default function EditorPage() {
                                     canRedo={canRedo}
                                 />
                             </div> */}
-            </div>
-
-            {/* Preview - masquée sous md */}
-            {showPreview && (
-              <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
-                <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
-                  <div className="font-bold uppercase">Aperçu</div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowPreview(false)}>
-                    <PanelRightClose className="fill-white" />
-                  </Button>
-                </div>
-                <style>{previewCSS}</style>
-                <div
-                  className="preview-content h-full w-full bg-white overflow-auto p-4"
-                  dangerouslySetInnerHTML={{
-                    __html: htmlContent,
-                  }}
-                />
               </div>
-            )}
+
+              {/* Preview - masquée sous md */}
+              {showPreview && (
+                <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                  <div className="px-6 py-3 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
+                    <div className="font-bold uppercase">Aperçu</div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPreview(false)}
+                    >
+                      <PanelRightClose className="fill-white" />
+                    </Button>
+                  </div>
+                  <style>{previewCSS}</style>
+                  <div
+                    className="preview-content h-full w-full bg-white overflow-auto p-4"
+                    dangerouslySetInnerHTML={{
+                      __html: htmlContent,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </main>
-
-        </SidebarInset>
+      </SidebarInset>
 
       {/* Modal Editeur */}
       <EditorSettingsModal
