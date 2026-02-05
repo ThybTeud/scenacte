@@ -1,9 +1,9 @@
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Save, Undo2, Redo2, BookOpen, Loader2, WifiOff } from "lucide-react"
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Save, Undo2, Redo2, BookOpen, Loader2, WifiOff } from "lucide-react";
 
 export function EditorHeader({
   title,
@@ -18,7 +18,7 @@ export function EditorHeader({
   canUndo,
   canRedo,
   showPreview,
-  onTogglePreview
+  onTogglePreview,
 }) {
   return (
     <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-gray-900 bg-sidebar overflow-hidden">
@@ -36,7 +36,10 @@ export function EditorHeader({
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
         ) : hasUnsavedChanges ? (
-          <div className="h-2 w-2 rounded-full bg-rose-600 shrink-0" title="Modifications non versionnées" />
+          <div
+            className="h-2 w-2 rounded-full bg-rose-600 shrink-0"
+            title="Modifications non versionnées"
+          />
         ) : null}
         {!isOnline && (
           <Badge variant="outline" className="text-xs shrink-0">
@@ -48,15 +51,6 @@ export function EditorHeader({
 
       {/* Right section - Actions */}
       <div className="flex items-center gap-1">
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={onCreateVersion}
-          title="Créer un point de restauration"
-        >
-          <Save className="h-4 w-4" />
-        </Button>
-
         {/* Undo/Redo - masqués sur mobile */}
         <Separator orientation="vertical" className="h-4 hidden sm:block" />
         <Button
@@ -80,18 +74,16 @@ export function EditorHeader({
           <Redo2 className="h-4 w-4" />
         </Button>
 
-        {/* Toggle preview - masqué sur mobile */}
-        <Separator orientation="vertical" className="h-4 hidden sm:block" />
+        {/* Sauvegarde */}
         <Button
-          variant={showPreview ? "secondary" : "ghost"}
+          variant="secondary"
           size="icon"
-          onClick={onTogglePreview}
-          title="Aperçu"
-          className="hidden sm:inline-flex"
+          onClick={onCreateVersion}
+          title="Créer un point de restauration"
         >
-          <BookOpen className="h-4 w-4" />
+          <Save className="h-4 w-4" />
         </Button>
       </div>
     </header>
-  )
+  );
 }
