@@ -539,7 +539,7 @@ export default function EditorPage() {
         onOpenStats={handleOpenStats}
       />
 
-      <SidebarInset className="flex flex-col h-dvh overflow-hidden bg-gray-400">
+      <SidebarInset className="flex flex-col h-full overflow-hidden bg-gray-400">
         <EditorHeader
           title={play?.title || ""}
           onTitleChange={handleTitleChange}
@@ -556,8 +556,7 @@ export default function EditorPage() {
           onTogglePreview={() => setShowPreview((prev) => !prev)}
         />
 
-        <main className="flex-1 overflow-hidden p-4 min-h-0 h-dvh bg-gray-400">
-          {/* VERIFIER SI h-dvh ICI PERMET DE RESPECTER LE CLAVIER */}
+        <main className="flex-1 overflow-hidden p-4 min-h-0 bg-gray-400">
           <div className="flex justify-center relative w-full h-full">
             {/* Bouton flottant pour ouvrir l'aide éditeur */}
             {!showEditorHelp && (
