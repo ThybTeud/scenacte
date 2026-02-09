@@ -1,5 +1,6 @@
 import { playsService } from './plays.service';
 import { templatesService } from './templates.service';
+import { calculatePlayStatistics } from '../utils/playStatistics';
 
 const GUEST_DATA_KEY = 'scenacte_guest_data';
 const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
@@ -101,13 +102,22 @@ const setGuestData = (data) => {
 
 const getLocalPlays = () => {
   const data = getGuestData();
-  // Retourne les pièces dans le même format que l'API
+  // Retourne les pièces dans le même format que l'API, avec stats calculées
+  const plays = data.plays.map((play) => {
+    const stats = calculatePlayStatistics(play.rawContent);
+    return {
+      ...play,
+      charactersCount: stats.totalCharacters ?? 0,
+      scenesCount: stats.totalScenes ?? 0,
+      repliquesCount: stats.totalRepliques ?? 0,
+    };
+  });
   return {
-    plays: data.plays,
+    plays,
     pagination: {
       page: 1,
-      limit: data.plays.length,
-      total: data.plays.length,
+      limit: plays.length,
+      total: plays.length,
       totalPages: 1,
     },
   };
@@ -198,7 +208,15 @@ export const storageService = {
       // En mode invité, on ignore la pagination et les filtres pour simplifier
       return getLocalPlays();
     }
-    return playsService.listPlays(params);
+    const response = await playsService.listPlays(params);
+    // Aplatir les stats depuis statistics (JSONB) vers les champs attendus par PlayCard
+    response.plays = response.plays.map((play) => ({
+      ...play,
+      charactersCount: play.statistics?.totalCharacters ?? 0,
+      scenesCount: play.statistics?.totalScenes ?? 0,
+      repliquesCount: play.statistics?.totalLines ?? 0,
+    }));
+    return response;
   },
 
   // Récupère une pièce par ID
