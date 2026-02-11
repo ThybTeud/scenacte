@@ -10,15 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { storageService } from "@/services/storage.service";
+import { DEFAULT_PRESETS, DEFAULT_PRESET_ID, PRESET_ORDER } from "@/config/template-presets";
 import { Loader2 } from "lucide-react";
-
-// === DATA ===
-
-const FORMATS = [
-    { id: "A5", label: "A5", dimensions: "148 x 210 mm" },
-    { id: "A4", label: "A4", dimensions: "210 x 297 mm" },
-];
 
 // === CHOICE CARD ===
 
@@ -29,9 +22,9 @@ function ChoiceCard({ selected, onClick, children, className, disabled }) {
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-center transition-colors",
+                "flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-colors",
                 "hover:bg-accent hover:text-accent-foreground",
-                selected && "border-primary bg-primary/5 ring-1 ring-primary",
+                selected && "border-primary bg-primary/5 ring-2 ring-primary",
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
@@ -43,63 +36,39 @@ function ChoiceCard({ selected, onClick, children, className, disabled }) {
 
 // === MODAL ===
 
+/**
+ * Modal de sélection de preset PDF
+ * @param {Object} props
+ * @param {boolean} props.open - Modal ouvert ou fermé
+ * @param {Function} props.onOpenChange - Callback pour changer l'état du modal
+ * @param {string} [props.currentPresetId] - ID du preset actuel
+ * @param {Function} props.onSettingsChange - Callback avec le nouveau presetId
+ */
 export default function PageSettingsModal({
     open,
     onOpenChange,
-    playId,
-    currentPaperSize = "A5",
-    currentTemplateId = null,
-    currentTemplate = null,
+    currentPresetId = DEFAULT_PRESET_ID,
     onSettingsChange,
 }) {
-    const [paperSize, setPaperSize] = useState(currentPaperSize);
-    const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplateId);
-
-    const [templates, setTemplates] = useState([]);
-    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+    const [selectedPresetId, setSelectedPresetId] = useState(currentPresetId);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (open) {
-            loadTemplates();
-            setPaperSize(currentPaperSize);
-            setSelectedTemplateId(currentTemplateId);
+            setSelectedPresetId(currentPresetId || DEFAULT_PRESET_ID);
         }
-    }, [open, currentPaperSize, currentTemplateId]);
-
-    const loadTemplates = async () => {
-        setIsLoadingTemplates(true);
-        try {
-            const response = await storageService.getPublicTemplates();
-            setTemplates(response.templates || []);
-
-            if (!currentTemplateId && response.templates?.length > 0) {
-                const defaultTemplate = response.templates.find(t => t.isDefault);
-                if (defaultTemplate) {
-                    setSelectedTemplateId(defaultTemplate.id);
-                }
-            }
-        } catch (error) {
-            console.error("Erreur chargement templates:", error);
-        } finally {
-            setIsLoadingTemplates(false);
-        }
-    };
+    }, [open, currentPresetId]);
 
     const handleSave = async () => {
-        const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
-
         if (onSettingsChange) {
             setIsSaving(true);
             try {
                 await onSettingsChange({
-                    paperSize,
-                    templateId: selectedTemplateId,
-                    template: selectedTemplate || null,
+                    presetId: selectedPresetId,
                 });
                 onOpenChange(false);
             } catch (error) {
-                console.error("Erreur sauvegarde settings:", error);
+                console.error("Erreur sauvegarde preset:", error);
             } finally {
                 setIsSaving(false);
             }
@@ -108,7 +77,36 @@ export default function PageSettingsModal({
         }
     };
 
-    const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || currentTemplate;
+    const selectedPreset = DEFAULT_PRESETS[selectedPresetId];
+
+    // Extraire les infos du preset pour l'affichage
+    const getPresetInfo = (presetId) => {
+        const preset = DEFAULT_PRESETS[presetId];
+        if (!preset) return null;
+
+        // Extraire la police principale
+        const fontFamily = preset.variables['--font-body']?.match(/'([^']+)'/)?.[1] || 'Crimson Text';
+
+        // Extraire le format de page
+        const pageWidth = preset.variables['--page-width'];
+        const pageHeight = preset.variables['--page-height'];
+
+        // Déterminer le format (approximatif)
+        let format = 'Custom';
+        if (pageWidth === '148mm' && pageHeight === '210mm') format = 'A5';
+        else if (pageWidth === '210mm' && pageHeight === '297mm') format = 'A4';
+        else if (pageWidth === '110mm' && pageHeight === '180mm') format = 'Poche';
+        else if (pageWidth === '140mm' && pageHeight === '210mm') format = 'Intermédiaire';
+
+        return {
+            fontFamily,
+            format,
+            pageWidth,
+            pageHeight,
+        };
+    };
+
+    const selectedInfo = selectedPreset ? getPresetInfo(selectedPresetId) : null;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,92 +114,80 @@ export default function PageSettingsModal({
                 <DialogHeader>
                     <DialogTitle>Mise en page</DialogTitle>
                     <DialogDescription>
-                        Configurez le format et le template d'export
+                        Choisissez un preset d'export PDF
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
-                    {/* Format papier */}
+                    {/* Liste des presets */}
                     <div className="space-y-3">
-                        <Label>Format</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                            {FORMATS.map((f) => (
-                                <ChoiceCard
-                                    key={f.id}
-                                    selected={paperSize === f.id}
-                                    onClick={() => setPaperSize(f.id)}
-                                >
-                                    <span className="font-medium">
-                                        {f.label}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {f.dimensions}
-                                    </span>
-                                </ChoiceCard>
-                            ))}
+                        <Label>Presets disponibles</Label>
+                        <div className="grid grid-cols-1 gap-3">
+                            {PRESET_ORDER.map((presetId) => {
+                                const preset = DEFAULT_PRESETS[presetId];
+                                if (!preset) return null;
+
+                                const info = getPresetInfo(presetId);
+
+                                return (
+                                    <ChoiceCard
+                                        key={presetId}
+                                        selected={selectedPresetId === presetId}
+                                        onClick={() => setSelectedPresetId(presetId)}
+                                    >
+                                        <div className="flex items-start justify-between w-full">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-base">
+                                                    {preset.name}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground mt-1">
+                                                    {preset.description}
+                                                </div>
+                                                <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                                                    <span>📏 {info.format}</span>
+                                                    <span>✍️ {info.fontFamily}</span>
+                                                    <span>
+                                                        📐 {preset.layout === 'centered' ? 'Centré' :
+                                                           preset.layout === 'inline' ? 'En ligne' : 'Marginal'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {selectedPresetId === presetId && (
+                                                <div className="h-3 w-3 rounded-full bg-primary shrink-0 ml-2" />
+                                            )}
+                                        </div>
+                                    </ChoiceCard>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* Template */}
-                    <div className="space-y-3">
-                        <Label>Template</Label>
-                        {isLoadingTemplates ? (
-                            <div className="flex items-center justify-center py-4">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                                <span className="ml-2 text-sm text-muted-foreground">
-                                    Chargement...
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-2">
-                                {templates.map((t) => (
-                                    <ChoiceCard
-                                        key={t.id}
-                                        selected={selectedTemplateId === t.id}
-                                        onClick={() => setSelectedTemplateId(t.id)}
-                                        className="flex-row items-center justify-between px-4"
-                                    >
-                                        <div className="text-left">
-                                            <span className="font-medium">
-                                                {t.name}
-                                            </span>
-                                            {t.settings?.fontFamily && (
-                                                <span className="ml-2 text-xs text-muted-foreground">
-                                                    {t.settings.fontFamily}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {selectedTemplateId === t.id && (
-                                            <div className="h-2 w-2 rounded-full bg-primary" />
-                                        )}
-                                    </ChoiceCard>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Apercu des marges du template */}
-                    {selectedTemplate?.settings?.margins && (
-                        <div className="space-y-3">
+                    {/* Aperçu des détails du preset sélectionné */}
+                    {selectedPreset && selectedInfo && (
+                        <div className="space-y-3 border-t pt-4">
                             <Label className="text-muted-foreground">
-                                Marges du template (mm)
+                                Détails du preset
                             </Label>
-                            <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
                                 <div>
-                                    <span className="text-xs text-muted-foreground block">Haut</span>
-                                    <span>{selectedTemplate.settings.margins.top}</span>
+                                    <span className="text-xs text-muted-foreground block">Format</span>
+                                    <span>{selectedInfo.pageWidth} × {selectedInfo.pageHeight}</span>
                                 </div>
                                 <div>
-                                    <span className="text-xs text-muted-foreground block">Bas</span>
-                                    <span>{selectedTemplate.settings.margins.bottom}</span>
+                                    <span className="text-xs text-muted-foreground block">Disposition</span>
+                                    <span>
+                                        {selectedPreset.layout === 'centered' ? 'Personnage centré' :
+                                         selectedPreset.layout === 'inline' ? 'Personnage en ligne' :
+                                         'Personnage en marge'}
+                                    </span>
                                 </div>
                                 <div>
-                                    <span className="text-xs text-muted-foreground block">Gauche</span>
-                                    <span>{selectedTemplate.settings.margins.left}</span>
+                                    <span className="text-xs text-muted-foreground block">Police</span>
+                                    <span>{selectedInfo.fontFamily}</span>
                                 </div>
                                 <div>
-                                    <span className="text-xs text-muted-foreground block">Droite</span>
-                                    <span>{selectedTemplate.settings.margins.right}</span>
+                                    <span className="text-xs text-muted-foreground block">Taille</span>
+                                    <span>{selectedPreset.variables['--font-size-body']}</span>
                                 </div>
                             </div>
                         </div>
