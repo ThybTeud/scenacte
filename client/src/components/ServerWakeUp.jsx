@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from './ui/card';
 import Logo from './ui/Logo';
 
@@ -16,6 +16,12 @@ export default function ServerWakeUp({ onReady }) {
   const [isVisible, setIsVisible] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [serverReady, setServerReady] = useState(false);
+  const onReadyRef = useRef(onReady);
+
+  // Garder la ref à jour sans déclencher l'effet
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
 
   useEffect(() => {
     let mounted = true;
@@ -41,9 +47,7 @@ export default function ServerWakeUp({ onReady }) {
           clearInterval(messageInterval);
 
           // Notifier le parent que le serveur est prêt
-          if (onReady) {
-            onReady();
-          }
+          onReadyRef.current?.();
           return true;
         }
       } catch (error) {
@@ -53,37 +57,35 @@ export default function ServerWakeUp({ onReady }) {
       return false;
     };
 
-    // Premier ping immédiat
-    checkHealth().then(ready => {
-      if (!ready && mounted) {
-        // Si le serveur ne répond pas immédiatement,
-        // on démarre le timer pour afficher l'écran après 2 sec
-        visibilityTimer = setTimeout(() => {
-          if (mounted && !serverReady) {
-            setIsVisible(true);
-          }
-        }, INITIAL_DELAY);
-
-        // Démarrer le ping toutes les 2 secondes
-        pingInterval = setInterval(checkHealth, PING_INTERVAL);
-
-        // Démarrer la rotation des messages toutes les 5 secondes
-        messageInterval = setInterval(() => {
-          if (mounted) {
-            setCurrentMessageIndex(prev => (prev + 1) % MESSAGES.length);
-          }
-        }, MESSAGE_ROTATION_INTERVAL);
+    // Démarrer le timer de visibilité immédiatement,
+    // sans attendre la résolution du premier fetch
+    visibilityTimer = setTimeout(() => {
+      if (mounted) {
+        setIsVisible(true);
       }
-    });
+    }, INITIAL_DELAY);
+
+    // Premier ping immédiat
+    checkHealth();
+
+    // Démarrer le ping toutes les 2 secondes
+    pingInterval = setInterval(checkHealth, PING_INTERVAL);
+
+    // Démarrer la rotation des messages toutes les 5 secondes
+    messageInterval = setInterval(() => {
+      if (mounted) {
+        setCurrentMessageIndex(prev => (prev + 1) % MESSAGES.length);
+      }
+    }, MESSAGE_ROTATION_INTERVAL);
 
     // Cleanup
     return () => {
       mounted = false;
-      if (visibilityTimer) clearTimeout(visibilityTimer);
-      if (pingInterval) clearInterval(pingInterval);
-      if (messageInterval) clearInterval(messageInterval);
+      clearTimeout(visibilityTimer);
+      clearInterval(pingInterval);
+      clearInterval(messageInterval);
     };
-  }, [onReady]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ne rien afficher si le serveur est prêt ou si on n'a pas dépassé les 2 sec
   if (serverReady || !isVisible) {
