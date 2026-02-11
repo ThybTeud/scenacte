@@ -99,7 +99,6 @@ export default function ServerWakeUp({ onReady }) {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <Logo size={40} />
-            <span className="text-2xl font-bold">Scenacte</span>
           </div>
 
           {/* Message rotatif */}
