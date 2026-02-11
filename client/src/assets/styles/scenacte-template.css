@@ -1,0 +1,339 @@
+/* ============================================================
+   SCENACTE — Template unique de mise en page théâtrale
+   ============================================================
+
+   Architecture :
+   1 seul fichier CSS de base
+   + presets JSON de surcharges (custom properties + data-layout)
+
+   Le frontend injecte un bloc :root { ... } avec les valeurs du preset
+   et pose data-layout="xxx" sur .piece
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   1. CUSTOM PROPERTIES — Valeurs par défaut (preset "neutre")
+   ──────────────────────────────────────────────────────────── */
+
+:root {
+  /* Page */
+  --page-width: 148mm;            /* A5 par défaut */
+  --page-height: 210mm;
+  --margin-top: 20mm;
+  --margin-bottom: 25mm;
+  --margin-inside: 20mm;
+  --margin-outside: 15mm;
+
+  /* Typographie */
+  --font-body: "Crimson Text", Georgia, serif;
+  --font-personnage: "Crimson Text", Georgia, serif;
+  --font-size-body: 11pt;
+  --font-size-personnage: 11pt;
+  --font-size-didascalie: 10pt;
+  --font-size-acte: 16pt;
+  --font-size-scene: 13pt;
+  --line-height: 1.4;
+
+  /* Espacements */
+  --space-replique: 0.6em;
+  --space-didascalie-inter: 0.8em;
+  --space-before-scene: 1.5em;
+  --space-before-acte: 0;          /* Acte = saut de page, pas d'espace */
+
+  /* Didascalies */
+  --didascalie-color: inherit;
+  --didascalie-pre-separator: "(";
+  --didascalie-pre-separator-end: ")";
+  --didascalie-intra-separator: "(";
+  --didascalie-intra-separator-end: ")";
+}
+
+/* ────────────────────────────────────────────────────────────
+   2. @PAGE — Structure de page (commun à tous les layouts)
+   ──────────────────────────────────────────────────────────── */
+
+@page {
+  size: var(--page-width) var(--page-height);
+  margin-top: var(--margin-top);
+  margin-bottom: var(--margin-bottom);
+
+  @top-center {
+    content: string(titre-courant);
+    font-family: var(--font-body);
+    font-size: 8pt;
+    font-style: italic;
+    color: #666;
+  }
+
+  @bottom-center {
+    content: counter(page);
+    font-family: var(--font-body);
+    font-size: 9pt;
+  }
+}
+
+/* Pages recto/verso avec marges intérieures */
+@page :left {
+  margin-left: var(--margin-outside);
+  margin-right: var(--margin-inside);
+}
+
+@page :right {
+  margin-left: var(--margin-inside);
+  margin-right: var(--margin-outside);
+}
+
+/* Première page : pas de header */
+@page :first {
+  @top-center { content: none; }
+}
+
+/* Page de titre */
+@page titre {
+  margin: 0;
+  @top-center { content: none; }
+  @bottom-center { content: none; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   3. STRUCTURE DE BASE (commun à tous les layouts)
+   ──────────────────────────────────────────────────────────── */
+
+.piece {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height);
+  counter-reset: acte scene;
+}
+
+/* Page de titre */
+.titre-piece {
+  page: titre;
+  break-after: page;
+}
+
+/* Running header : acte + scène en cours */
+.acte > h2 {
+  string-set: titre-courant content();
+}
+
+/* Actes */
+.acte {
+  break-before: page;
+  counter-increment: acte;
+  counter-reset: scene;
+}
+
+.acte > h2 {
+  font-size: var(--font-size-acte);
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+/* Scènes */
+.scene {
+  counter-increment: scene;
+  margin-top: var(--space-before-scene);
+}
+
+.scene > h3 {
+  font-size: var(--font-size-scene);
+  text-align: center;
+  margin-bottom: 0.8em;
+}
+
+/* Répliques */
+.replique {
+  margin-top: var(--space-replique);
+  break-inside: avoid;
+}
+
+.replique .texte {
+  margin: 0;
+}
+
+/* ────────────────────────────────────────────────────────────
+   4. DIDASCALIES — Styles par data-type (commun à tous)
+   ──────────────────────────────────────────────────────────── */
+
+.didascalie {
+  font-style: italic;
+  font-size: var(--font-size-didascalie);
+  color: var(--didascalie-color);
+}
+
+/* Liminaire : bloc descriptif en ouverture d'acte/scène */
+.didascalie[data-type="liminaire"] {
+  display: block;
+  margin: 0.8em 2em;
+  text-align: justify;
+  break-after: avoid; /* Coller à la première réplique */
+}
+
+/* Inter-répliques : bloc autonome entre deux répliques */
+.didascalie[data-type="inter-repliques"] {
+  display: block;
+  margin: var(--space-didascalie-inter) 2em;
+  text-align: center;
+}
+
+/* Pré-réplique : après le nom du personnage, avant le texte */
+.didascalie[data-type="pre-replique"] {
+  display: inline;
+}
+
+.didascalie[data-type="pre-replique"]::before {
+  content: var(--didascalie-pre-separator);
+}
+
+.didascalie[data-type="pre-replique"]::after {
+  content: var(--didascalie-pre-separator-end);
+}
+
+/* Intra-réplique : dans le corps du texte */
+.didascalie[data-type="intra-replique"] {
+  display: inline;
+}
+
+.didascalie[data-type="intra-replique"]::before {
+  content: var(--didascalie-intra-separator);
+}
+
+.didascalie[data-type="intra-replique"]::after {
+  content: var(--didascalie-intra-separator-end);
+}
+
+/* ────────────────────────────────────────────────────────────
+   5. CONTRÔLE DE FRAGMENTATION (commun à tous)
+   ──────────────────────────────────────────────────────────── */
+
+.replique {
+  break-inside: avoid;
+}
+
+.scene > h3 {
+  break-after: avoid;
+}
+
+.didascalie[data-type="liminaire"] {
+  break-after: avoid;
+}
+
+p {
+  orphans: 3;
+  widows: 3;
+}
+
+/* ════════════════════════════════════════════════════════════
+   6. LAYOUTS — Variantes structurelles par data-layout
+   ════════════════════════════════════════════════════════════
+
+   Activé par : <div class="piece" data-layout="centered">
+   ou           <div class="piece" data-layout="inline">
+   ou           <div class="piece" data-layout="marginal">
+
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Layout A : Personnage centré au-dessus ────────────────
+   Style classique Actes Sud-Papiers / L'Arche
+
+   PERSONNAGE
+   Texte de la réplique...
+   ────────────────────────────────────────────────────────── */
+
+.piece[data-layout="centered"] .personnage {
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-family: var(--font-personnage);
+  font-size: var(--font-size-personnage);
+  font-style: normal;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15em;
+}
+
+/* La pré-réplique suit le nom, centrée aussi */
+.piece[data-layout="centered"] .didascalie[data-type="pre-replique"] {
+  display: block;
+  text-align: center;
+  font-size: var(--font-size-didascalie);
+  margin-bottom: 0.2em;
+}
+
+.piece[data-layout="centered"] .replique .texte {
+  text-align: justify;
+}
+
+/* ── Layout B : Personnage en ligne à gauche ───────────────
+   Style Éditions Théâtrales / manuscrit classique
+
+   PERSONNAGE. — Texte de la réplique...
+   ────────────────────────────────────────────────────────── */
+
+.piece[data-layout="inline"] .personnage {
+  display: inline;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-family: var(--font-personnage);
+  font-size: var(--font-size-personnage);
+  font-style: normal;
+  letter-spacing: 0.03em;
+}
+
+/* Tiret cadratin après le nom */
+.piece[data-layout="inline"] .personnage::after {
+  content: ". — ";
+  font-weight: normal;
+}
+
+/* La pré-réplique reste inline, entre le nom et le texte */
+.piece[data-layout="inline"] .didascalie[data-type="pre-replique"] {
+  display: inline;
+  margin-right: 0.3em;
+}
+
+/* Supprimer le tiret quand il y a une pré-réplique */
+.piece[data-layout="inline"] .personnage:has(+ .didascalie[data-type="pre-replique"])::after {
+  content: ", ";
+}
+
+/* Le texte suit en inline */
+.piece[data-layout="inline"] .replique .texte {
+  display: inline;
+}
+
+/* ── Layout C : Personnage en marge ────────────────────────
+   Style marginal / expérimental
+
+   PERSONNAGE |  Texte de la réplique...
+   (en marge)  |  suite du texte...
+   ────────────────────────────────────────────────────────── */
+
+.piece[data-layout="marginal"] .replique {
+  display: grid;
+  grid-template-columns: 25mm 1fr;
+  gap: 0 1em;
+}
+
+.piece[data-layout="marginal"] .personnage {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  text-transform: uppercase;
+  font-size: 8pt;
+  font-weight: bold;
+  font-family: var(--font-personnage);
+  letter-spacing: 0.05em;
+  text-align: right;
+  padding-top: 0.15em;
+}
+
+.piece[data-layout="marginal"] .didascalie[data-type="pre-replique"] {
+  grid-column: 2;
+  display: block;
+  margin-bottom: 0.15em;
+}
+
+.piece[data-layout="marginal"] .replique .texte {
+  grid-column: 2;
+  text-align: justify;
+}
