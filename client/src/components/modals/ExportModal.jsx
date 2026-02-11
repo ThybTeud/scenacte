@@ -20,8 +20,8 @@ import { printPdf } from "@/utils/pdfExport";
  * @param {string} props.htmlContent - Contenu HTML de la piece
  * @param {string} props.playTitle - Titre de la piece
  * @param {string} [props.playSubtitle] - Sous-titre de la piece
- * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
- * @param {Object} [props.template] - Objet template avec name et settings
+ * @param {string} [props.presetId] - ID du preset à utiliser
+ * @param {Object} [props.preset] - Objet preset avec name, layout, variables
  * @param {Function} [props.onOpenLayoutModal] - Callback pour ouvrir le modal de mise en page
  */
 export default function ExportModal({
@@ -30,8 +30,8 @@ export default function ExportModal({
     htmlContent,
     playTitle,
     playSubtitle,
-    pageFormat = "A5",
-    template = null,
+    presetId,
+    preset = null,
     onOpenLayoutModal,
 }) {
     const [format, setFormat] = useState("pdf");
@@ -47,8 +47,8 @@ export default function ExportModal({
         onOpenChange(false);
     };
 
-    // Afficher le nom du template ou "Par defaut" si aucun template
-    const templateLabel = template?.name || "Par defaut";
+    // Afficher le nom du preset ou "Par defaut" si aucun preset
+    const presetLabel = preset?.name || "L'Arche Éditeur";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,12 +71,8 @@ export default function ExportModal({
                                 </label>
                                 <div className="mt-3 space-y-1 text-sm">
                                     <div>
-                                        <span className="text-muted-foreground">Format : </span>
-                                        <span>{pageFormat}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Template : </span>
-                                        <span>{templateLabel}</span>
+                                        <span className="text-muted-foreground">Preset : </span>
+                                        <span>{presetLabel}</span>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">Pages : </span>
@@ -131,8 +127,8 @@ export default function ExportModal({
                                 htmlContent={htmlContent}
                                 playTitle={playTitle}
                                 playSubtitle={playSubtitle}
-                                template={template}
-                                pageFormat={pageFormat}
+                                presetId={presetId}
+                                customPreset={preset}
                                 onPagesRendered={setPageCount}
                             />
                         ) : (

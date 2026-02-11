@@ -17,11 +17,22 @@ export const NodeType = {
   ROOT: 'root',
   ACTE: 'acte',
   SCENE: 'scene',
+  REPLIQUE: 'replique',
   PERSONNAGE: 'personnage',
   DIDASCALIE: 'didascalie',
   DIALOGUE: 'dialogue',
   TEXT: 'text',
   LINE_BREAK: 'linebreak'
+};
+
+/**
+ * Types de didascalies selon leur position contextuelle
+ */
+export const DidascalieType = {
+  LIMINAIRE: 'liminaire',           // Après acte/scène, avant première réplique
+  INTER_REPLIQUES: 'inter-repliques', // Entre deux répliques
+  PRE_REPLIQUE: 'pre-replique',      // Après personnage, avant dialogue
+  INTRA_REPLIQUE: 'intra-replique'   // Dans le texte du dialogue
 };
 
 /**
@@ -86,8 +97,9 @@ export class PlayParser {
     // Contextes hiérarchiques
     let currentActe = null;
     let currentScene = null;
+    let currentReplique = null;
     let currentPersonnage = null;
-    let currentSpeaker = null;
+    let justAddedStructure = false; // Acte ou scène vient d'être ajouté
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -101,16 +113,16 @@ export class PlayParser {
       const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
       if (acteMatch) {
         const number = acteMatch[1] || '1';
-        const node = new ASTNode(NodeType.ACTE, null, { number });
+        const node = new ASTNode(NodeType.ACTE, acteMatch[1].trim(), { number });
         node.position = { start: i, end: i };
-        node.value = acteMatch[1].trim();
         root.addChild(node);
 
         // Mettre à jour les contextes
         currentActe = node;
         currentScene = null;
+        currentReplique = null;
         currentPersonnage = null;
-        currentSpeaker = null;
+        justAddedStructure = true;
         continue;
       }
 
@@ -118,18 +130,18 @@ export class PlayParser {
       const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
       if (sceneMatch) {
         const number = sceneMatch[1] || '1';
-        const node = new ASTNode(NodeType.SCENE, null, { number });
+        const node = new ASTNode(NodeType.SCENE, sceneMatch[1].trim(), { number });
         node.position = { start: i, end: i };
-        node.value = sceneMatch[1].trim();
 
         // Ajouter la scène au parent approprié
-        const parent = this.getParentFor(NodeType.SCENE, currentActe, currentScene, currentPersonnage, root);
+        const parent = currentActe || root;
         parent.addChild(node);
 
         // Mettre à jour les contextes
         currentScene = node;
+        currentReplique = null;
         currentPersonnage = null;
-        currentSpeaker = null;
+        justAddedStructure = true;
         continue;
       }
 
@@ -137,61 +149,71 @@ export class PlayParser {
       const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
       if (personnageMatch) {
         const name = personnageMatch[1].trim();
-        currentSpeaker = name;
-        const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
+
+        // Créer une nouvelle réplique
+        const replique = new ASTNode(NodeType.REPLIQUE);
+        replique.position = { start: i, end: i };
+
+        // Ajouter le personnage dans la réplique
+        const personnageNode = new ASTNode(NodeType.PERSONNAGE, name, { name });
+        personnageNode.position = { start: i, end: i };
+        replique.addChild(personnageNode);
+
+        // Ajouter la réplique au parent approprié
+        const parent = currentScene || currentActe || root;
+        parent.addChild(replique);
+
+        // Mettre à jour les contextes
+        currentReplique = replique;
+        currentPersonnage = name;
+        justAddedStructure = false;
+        continue;
+      }
+
+      // Vérifier si c'est une didascalie seule (inter-répliques ou liminaire)
+      const didascalieSeuleMatch = TAG_PATTERNS.didascalie.exec(trimmedLine);
+      if (didascalieSeuleMatch) {
+        const content = didascalieSeuleMatch[1].trim();
+
+        // Déterminer le type de didascalie
+        let didascalieType;
+        if (justAddedStructure) {
+          // Juste après un acte ou une scène → liminaire
+          didascalieType = DidascalieType.LIMINAIRE;
+        } else {
+          // Sinon → inter-répliques
+          didascalieType = DidascalieType.INTER_REPLIQUES;
+        }
+
+        const node = new ASTNode(NodeType.DIDASCALIE, content, { type: didascalieType });
         node.position = { start: i, end: i };
 
-        // Ajouter le personnage au parent approprié
-        const parent = this.getParentFor(NodeType.PERSONNAGE, currentActe, currentScene, currentPersonnage, root);
+        // Ajouter au parent approprié (scene ou acte, pas replique)
+        const parent = currentScene || currentActe || root;
         parent.addChild(node);
 
-        // Mettre à jour le contexte
-        currentPersonnage = node;
+        justAddedStructure = false;
         continue;
       }
 
       // Parser la ligne pour les didascalies et le dialogue
-      const parsedLine = this.parseLine(trimmedLine, currentSpeaker, i);
-      parsedLine.forEach(node => {
-        // Ajouter au parent approprié
-        const parent = this.getParentFor(node.type, currentActe, currentScene, currentPersonnage, root);
-        parent.addChild(node);
-      });
+      const parsedNodes = this.parseLine(trimmedLine, currentPersonnage, i);
+
+      if (parsedNodes.length > 0) {
+        // Si on a un personnage actif, ajouter à la réplique courante
+        if (currentReplique && currentPersonnage) {
+          parsedNodes.forEach(node => currentReplique.addChild(node));
+        } else {
+          // Sinon ajouter comme texte libre au parent
+          const parent = currentScene || currentActe || root;
+          parsedNodes.forEach(node => parent.addChild(node));
+        }
+
+        justAddedStructure = false;
+      }
     }
 
     return root;
-  }
-
-  /**
-   * Détermine le parent approprié pour un type de nœud donné
-   * @param {string} type - Type du nœud
-   * @param {ASTNode|null} currentActe - Acte courant
-   * @param {ASTNode|null} currentScene - Scène courante
-   * @param {ASTNode|null} currentPersonnage - Personnage courant
-   * @param {ASTNode} root - Nœud racine
-   * @returns {ASTNode} - Parent approprié
-   */
-  getParentFor(type, currentActe, currentScene, currentPersonnage, root) {
-    switch(type) {
-      case NodeType.ACTE:
-        return root;
-
-      case NodeType.SCENE:
-        return currentActe || root;
-
-      case NodeType.PERSONNAGE:
-        return currentScene || currentActe || root;
-
-      case NodeType.DIALOGUE:
-      case NodeType.DIDASCALIE:
-        return currentPersonnage || currentScene || currentActe || root;
-
-      case NodeType.TEXT:
-        return currentPersonnage || currentScene || currentActe || root;
-
-      default:
-        return root;
-    }
   }
 
   /**
@@ -203,7 +225,6 @@ export class PlayParser {
    */
   parseLine(line, speaker, lineNumber) {
     const nodes = [];
-    let lastIndex = 0;
     const didascalieRegex = /\(([^)]+)\)/g;
     let match;
 
@@ -217,13 +238,15 @@ export class PlayParser {
       });
     }
 
+    // Si aucune didascalie, traiter comme dialogue simple
     if (didascalies.length === 0) {
-      // Pas de didascalie, traiter comme dialogue ou texte
       if (speaker) {
+        // C'est une réplique simple
         const node = new ASTNode(NodeType.DIALOGUE, line.trim(), { speaker });
         node.position = { start: lineNumber, end: lineNumber };
         nodes.push(node);
       } else {
+        // Texte libre
         const node = new ASTNode(NodeType.TEXT, line.trim());
         node.position = { start: lineNumber, end: lineNumber };
         nodes.push(node);
@@ -231,47 +254,73 @@ export class PlayParser {
       return nodes;
     }
 
-    // Traiter les didascalies et le texte entre elles
+    // Déterminer si c'est une pré-réplique ou intra-réplique
+    const firstDidascalie = didascalies[0];
+    const textBeforeFirst = line.substring(0, firstDidascalie.start).trim();
+
+    // Si la ligne commence par une didascalie (ou juste des espaces), c'est une pré-réplique
+    const isPreReplique = textBeforeFirst === '';
+
+    if (isPreReplique && didascalies.length === 1 && firstDidascalie.end >= line.trim().length) {
+      // Didascalie seule au début → pré-réplique
+      const node = new ASTNode(
+        NodeType.DIDASCALIE,
+        firstDidascalie.text,
+        { type: DidascalieType.PRE_REPLIQUE }
+      );
+      node.position = { start: lineNumber, end: lineNumber };
+      nodes.push(node);
+      return nodes;
+    }
+
+    // Construire le dialogue avec les didascalies intra-réplique
+    const fragments = [];
+    let lastIndex = 0;
+
     didascalies.forEach((didascalie, index) => {
       // Texte avant la didascalie
       if (didascalie.start > lastIndex) {
-        const textBefore = line.substring(lastIndex, didascalie.start).trim();
-        if (textBefore) {
-          if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textBefore, { speaker });
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          } else {
-            const node = new ASTNode(NodeType.TEXT, textBefore);
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          }
+        const textBefore = line.substring(lastIndex, didascalie.start);
+        if (textBefore.trim()) {
+          fragments.push({
+            type: 'text',
+            content: textBefore
+          });
         }
       }
 
-      // Didascalie
-      const node = new ASTNode(NodeType.DIDASCALIE, didascalie.text);
-      node.position = { start: lineNumber, end: lineNumber };
-      nodes.push(node);
+      // Didascalie (pré-réplique si première et pas de texte avant, sinon intra)
+      const type = (index === 0 && lastIndex === 0)
+        ? DidascalieType.PRE_REPLIQUE
+        : DidascalieType.INTRA_REPLIQUE;
+
+      fragments.push({
+        type: 'didascalie',
+        content: didascalie.text,
+        didascalieType: type
+      });
 
       lastIndex = didascalie.end;
-
-      // Texte après la dernière didascalie
-      if (index === didascalies.length - 1 && lastIndex < line.length) {
-        const textAfter = line.substring(lastIndex).trim();
-        if (textAfter) {
-          if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textAfter, { speaker });
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          } else {
-            const node = new ASTNode(NodeType.TEXT, textAfter);
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          }
-        }
-      }
     });
+
+    // Texte après la dernière didascalie
+    if (lastIndex < line.length) {
+      const textAfter = line.substring(lastIndex);
+      if (textAfter.trim()) {
+        fragments.push({
+          type: 'text',
+          content: textAfter
+        });
+      }
+    }
+
+    // Créer un nœud DIALOGUE composite avec les fragments
+    const dialogueNode = new ASTNode(NodeType.DIALOGUE, null, {
+      speaker,
+      fragments: fragments
+    });
+    dialogueNode.position = { start: lineNumber, end: lineNumber };
+    nodes.push(dialogueNode);
 
     return nodes;
   }
@@ -280,9 +329,10 @@ export class PlayParser {
 /**
  * Convertit l'AST en HTML pour le rendu
  * @param {ASTNode} ast - Nœud racine de l'AST
+ * @param {string} layout - Layout à appliquer (centered, inline, marginal)
  * @returns {string} - HTML généré
  */
-export function astToHTML(ast) {
+export function astToHTML(ast, layout = 'centered') {
   if (!ast) {
     return '';
   }
@@ -295,22 +345,45 @@ export function astToHTML(ast) {
 
     switch (node.type) {
       case NodeType.ROOT:
-        return `<div class="play-root">${childrenHTML}</div>`;
+        return `<div class="piece" data-layout="${escapeHTML(layout)}">${childrenHTML}</div>`;
 
       case NodeType.ACTE:
-        return `<div class="acte-container"><h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+        return `<section class="acte"><h2>${escapeHTML(node.value)}</h2>${childrenHTML}</section>`;
 
       case NodeType.SCENE:
-        return `<div class="scene-container"><h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+        return `<section class="scene"><h3>${escapeHTML(node.value)}</h3>${childrenHTML}</section>`;
+
+      case NodeType.REPLIQUE:
+        return `<div class="replique">${childrenHTML}</div>`;
 
       case NodeType.PERSONNAGE:
-        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>${childrenHTML}</div>`;
+        return `<span class="personnage">${escapeHTML(node.value)}</span>`;
 
-      case NodeType.DIDASCALIE:
-        return `<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`;
+      case NodeType.DIDASCALIE: {
+        const type = node.attributes.type || DidascalieType.INTER_REPLIQUES;
+        const isBlock = type === DidascalieType.LIMINAIRE || type === DidascalieType.INTER_REPLIQUES;
+        const tag = isBlock ? 'div' : 'span';
+        return `<${tag} class="didascalie" data-type="${type}">${escapeHTML(node.value)}</${tag}>`;
+      }
 
-      case NodeType.DIALOGUE:
-        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`;
+      case NodeType.DIALOGUE: {
+        // Si le dialogue a des fragments (avec didascalies intra-réplique)
+        if (node.attributes.fragments) {
+          const content = node.attributes.fragments.map(frag => {
+            if (frag.type === 'text') {
+              return escapeHTML(frag.content);
+            } else if (frag.type === 'didascalie') {
+              const type = frag.didascalieType || DidascalieType.INTRA_REPLIQUE;
+              return `<span class="didascalie" data-type="${type}">${escapeHTML(frag.content)}</span>`;
+            }
+            return '';
+          }).join('');
+          return `<p class="texte">${content}</p>`;
+        }
+
+        // Dialogue simple
+        return `<p class="texte">${escapeHTML(node.value)}</p>`;
+      }
 
       case NodeType.TEXT:
         return `<p class="text">${escapeHTML(node.value)}</p>`;
@@ -329,6 +402,9 @@ export function astToHTML(ast) {
  * @returns {string} - Texte échappé
  */
 function escapeHTML(text) {
+  if (text === null || text === undefined) {
+    return '';
+  }
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
@@ -375,7 +451,7 @@ export function extractStructure(ast) {
         break;
 
       case NodeType.PERSONNAGE:
-        result.personnages.add(node.attributes.name);
+        result.personnages.add(node.value);
         break;
 
       case NodeType.DIALOGUE:
@@ -405,6 +481,7 @@ export default {
   PlayParser,
   ASTNode,
   NodeType,
+  DidascalieType,
   astToHTML,
   extractStructure
 };

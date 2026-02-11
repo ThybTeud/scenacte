@@ -11,9 +11,10 @@ import { calculateStatsFromAST } from "../utils/playStatistics";
  * Parse l'AST une seule fois et dérive toutes les valeurs nécessaires
  * @param {string} content - Le contenu brut de la pièce
  * @param {PlayParser} parser - Instance du parser
+ * @param {string} [layout='centered'] - Layout à utiliser pour la génération HTML (centered, inline, marginal)
  * @returns {Object} { ast, structure, statistics, htmlContent }
  */
-export function usePlayParsing(content, parser) {
+export function usePlayParsing(content, parser, layout = 'centered') {
     return useMemo(() => {
         if (!content) {
             return {
@@ -31,7 +32,7 @@ export function usePlayParsing(content, parser) {
             // Dérive toutes les valeurs nécessaires depuis l'AST
             const structure = extractStructure(ast);
             const statistics = calculateStatsFromAST(ast);
-            const htmlContent = astToHTML(ast);
+            const htmlContent = astToHTML(ast, layout);
 
             return {
                 ast,
@@ -48,5 +49,5 @@ export function usePlayParsing(content, parser) {
                 htmlContent: "",
             };
         }
-    }, [content, parser]);
+    }, [content, parser, layout]);
 }
