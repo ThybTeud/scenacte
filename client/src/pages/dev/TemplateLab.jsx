@@ -66,6 +66,9 @@ export default function TemplateLab() {
   <meta charset="UTF-8">
   <title>Template Lab — ${preset.name}</title>
 
+  <!-- PagedJS -->
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+
   <!-- Google Fonts -->
 ${googleFontsImports}
 
@@ -107,60 +110,25 @@ ${presetOverridesCSS}
 </head>
 <body>
   ${htmlWithLayout}
-
-  <!-- Signal que le DOM est prêt -->
-  <script>window.__SCENACTE_DOM_READY__ = true;</script>
 </body>
 </html>
     `;
   };
 
-  // Injecter le HTML dans l'iframe à chaque changement de preset
+  // Observer quand PagedJS a terminé la pagination
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
     setIsLoading(true);
 
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return;
+    let observer;
+    let checkInterval;
+    let timeoutId;
 
-    const fullHtml = generateLabHTML();
-
-    doc.open();
-    doc.write(fullHtml);
-    doc.close();
-
-    // Attendre que le DOM soit prêt avant de charger PagedJS
-    const waitForDOMAndLoadPagedJS = () => {
-      const contentWindow = iframe.contentWindow;
-      if (!contentWindow) return;
-
-      // Vérifier que le signal DOM_READY est présent
-      if (!contentWindow.__SCENACTE_DOM_READY__) {
-        setTimeout(waitForDOMAndLoadPagedJS, 50);
-        return;
-      }
-
-      // DOM prêt, on peut maintenant charger PagedJS
-      const script = doc.createElement('script');
-      script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
-      script.onload = () => {
-        // PagedJS chargé, observer la création des pages
-        setupPagedJSObserver();
-      };
-      script.onerror = () => {
-        console.error('Erreur de chargement de PagedJS');
-        setIsLoading(false);
-      };
-
-      doc.body.appendChild(script);
-    };
-
-    // Observer la création des pages par PagedJS
-    const setupPagedJSObserver = () => {
-      let observer;
-      let checkInterval;
+    const handleIframeLoad = () => {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) return;
 
       const checkPagedJSReady = () => {
         const pagedPages = doc.querySelector('.pagedjs_pages');
@@ -168,44 +136,52 @@ ${presetOverridesCSS}
           setIsLoading(false);
           if (observer) observer.disconnect();
           if (checkInterval) clearInterval(checkInterval);
+          if (timeoutId) clearTimeout(timeoutId);
           return true;
         }
         return false;
       };
 
-      // Vérifier immédiatement
-      if (!checkPagedJSReady()) {
-        // MutationObserver pour détecter les changements
-        observer = new MutationObserver(() => {
-          checkPagedJSReady();
-        });
-
-        if (doc.body) {
-          observer.observe(doc.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['class']
+      // Attendre un peu que PagedJS commence son travail
+      setTimeout(() => {
+        if (!checkPagedJSReady()) {
+          // MutationObserver pour détecter les changements
+          observer = new MutationObserver(() => {
+            checkPagedJSReady();
           });
+
+          if (doc.body) {
+            observer.observe(doc.body, {
+              childList: true,
+              subtree: true,
+              attributes: true,
+              attributeFilter: ['class']
+            });
+          }
+
+          // Vérification périodique comme fallback
+          checkInterval = setInterval(() => {
+            checkPagedJSReady();
+          }, 200);
+
+          // Timeout de sécurité
+          timeoutId = setTimeout(() => {
+            setIsLoading(false);
+            if (observer) observer.disconnect();
+            if (checkInterval) clearInterval(checkInterval);
+          }, 8000);
         }
-
-        // Vérification périodique comme fallback
-        checkInterval = setInterval(() => {
-          checkPagedJSReady();
-        }, 200);
-
-        // Timeout de sécurité
-        setTimeout(() => {
-          setIsLoading(false);
-          if (observer) observer.disconnect();
-          if (checkInterval) clearInterval(checkInterval);
-        }, 8000);
-      }
+      }, 100);
     };
 
-    // Démarrer le processus
-    waitForDOMAndLoadPagedJS();
+    iframe.addEventListener('load', handleIframeLoad);
 
+    return () => {
+      iframe.removeEventListener('load', handleIframeLoad);
+      if (observer) observer.disconnect();
+      if (checkInterval) clearInterval(checkInterval);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [presetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fonction d'impression
@@ -344,7 +320,9 @@ ${presetOverridesCSS}
             </div>
           )}
           <iframe
+            key={presetId}
             ref={iframeRef}
+            srcDoc={generateLabHTML()}
             className="w-full bg-white rounded-lg shadow-lg border-0"
             style={{ minHeight: '297mm', display: isLoading ? 'none' : 'block' }}
             title="Template Lab Preview"
