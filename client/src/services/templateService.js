@@ -142,3 +142,16 @@ export function getPreset(presetId) {
     ...DEFAULT_PRESETS[presetId]
   };
 }
+
+/**
+ * Export par défaut - Service de gestion des presets
+ */
+export const templateService = {
+  applyPreset,
+  getActivePreset,
+  saveActivePreset,
+  listPresets,
+  getPreset
+};
+
+export default templateService;
