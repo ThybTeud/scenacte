@@ -95,6 +95,13 @@ ${presetOverridesCSS}
       visibility: visible !important;
     }
 
+    /* Séparation visuelle entre les pages */
+    .pagedjs_page {
+      margin-bottom: 20px !important;
+      border: 1px solid #e0e0e0 !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
     /* Reset */
     * {
       box-sizing: border-box;
@@ -124,25 +131,52 @@ ${presetOverridesCSS}
     doc.write(fullHtml);
     doc.close();
 
-    // Attendre que PagedJS soit prêt
+    // Détecter quand PagedJS a terminé la pagination
     const contentWindow = iframe.contentWindow;
-    let timeoutId;
+    let observer;
+    let checkInterval;
 
-    const handlePagedReady = () => {
-      clearTimeout(timeoutId);
-      setIsLoading(false);
+    const checkPagedJSReady = () => {
+      const pagedPages = doc.querySelector('.pagedjs_pages');
+      if (pagedPages && pagedPages.children.length > 0) {
+        setIsLoading(false);
+        if (observer) observer.disconnect();
+        if (checkInterval) clearInterval(checkInterval);
+        return true;
+      }
+      return false;
     };
 
-    contentWindow?.addEventListener('pagedjs-ready', handlePagedReady);
+    // Vérifier immédiatement et périodiquement
+    if (!checkPagedJSReady()) {
+      // Utiliser un MutationObserver pour détecter les changements
+      observer = new MutationObserver(() => {
+        checkPagedJSReady();
+      });
 
-    // Timeout de sécurité
-    timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 10000);
+      observer.observe(doc.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      // Vérification périodique comme fallback
+      checkInterval = setInterval(() => {
+        checkPagedJSReady();
+      }, 200);
+
+      // Timeout de sécurité (5s au lieu de 10s)
+      setTimeout(() => {
+        setIsLoading(false);
+        if (observer) observer.disconnect();
+        if (checkInterval) clearInterval(checkInterval);
+      }, 5000);
+    }
 
     return () => {
-      contentWindow?.removeEventListener('pagedjs-ready', handlePagedReady);
-      clearTimeout(timeoutId);
+      if (observer) observer.disconnect();
+      if (checkInterval) clearInterval(checkInterval);
     };
   }, [presetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -273,18 +307,18 @@ ${presetOverridesCSS}
       </div>
 
       {/* Zone principale - iframe */}
-      <div className="flex-1 overflow-auto bg-stone-200 p-8">
-        <div className="max-w-[210mm] mx-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-stone-200 p-8">
+        <div className="w-full mx-auto" style={{ maxWidth: '210mm' }}>
           {isLoading && (
-            <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div className="bg-white rounded-lg shadow-lg p-12 text-center mb-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-900 mx-auto mb-4"></div>
               <p className="text-stone-600">Génération des pages...</p>
             </div>
           )}
           <iframe
             ref={iframeRef}
-            className="w-full bg-white rounded-lg shadow-lg"
-            style={{ minHeight: '297mm' }}
+            className="w-full bg-white rounded-lg shadow-lg border-0"
+            style={{ minHeight: '297mm', display: isLoading ? 'none' : 'block' }}
             title="Template Lab Preview"
           />
         </div>
