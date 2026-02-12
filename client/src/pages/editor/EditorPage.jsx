@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { storageService } from "@/services/storage.service";
+import { templateService } from "@/services/templateService";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
@@ -19,7 +20,7 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { getPreviewCSS } from "@/utils/pdfExport";
+import { DEFAULT_PRESETS, DEFAULT_PRESET_ID } from "@/config/template-presets";
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -76,16 +77,9 @@ export default function EditorPage() {
   const [showVersionsModal, setShowVersionsModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
 
-  // Settings de mise en page
-  const [paperSize, setPaperSize] = useState("A5");
-  const [templateId, setTemplateId] = useState(null);
-  const [template, setTemplate] = useState(null);
-
-  // CSS dynamique pour la preview basé sur le template
-  const previewCSS = useMemo(
-    () => getPreviewCSS(template?.settings),
-    [template?.settings],
-  );
+  // Settings de mise en page (preset system)
+  const [presetId, setPresetId] = useState(DEFAULT_PRESET_ID);
+  const [preset, setPreset] = useState(null);
 
   // Instance du parser (créée une seule fois)
   const parser = useMemo(() => new PlayParser(), []);
@@ -107,11 +101,11 @@ export default function EditorPage() {
   } = useVersioning(id, !isGuest);
 
   // Hook parsing (utilise le contenu debouncé pour optimiser les performances)
-  // PROPOSITION ARRIVEE DANS LE REFACTO : A CONSIDERER PAR RAPPORT A LA LIGNE SUIVANTE
-  // const { htmlContent, structure } = usePlayParsing(debouncedContent, parser);
+  // Le layout du preset détermine la structure HTML générée
   const { structure, statistics, htmlContent } = usePlayParsing(
     debouncedContent,
     parser,
+    preset?.layout || 'centered'
   );
 
   // Chargement initial de la pièce
@@ -129,10 +123,10 @@ export default function EditorPage() {
       setLastSavedContent(rawContent);
       setHasUnsavedChanges(false);
 
-      // Charger les settings de mise en page
-      setPaperSize(response.play.paperSize || "A5");
-      setTemplateId(response.play.templateId || null);
-      setTemplate(response.play.template || null);
+      // Charger le preset actif (depuis BDD ou localStorage)
+      const activePresetId = response.play.presetId || DEFAULT_PRESET_ID;
+      setPresetId(activePresetId);
+      setPreset(DEFAULT_PRESETS[activePresetId] || DEFAULT_PRESETS[DEFAULT_PRESET_ID]);
     } catch (error) {
       toast.error("Erreur lors du chargement de la piece");
       navigate("/library");
@@ -501,24 +495,24 @@ export default function EditorPage() {
   }, []);
 
   /**
-   * Gere les changements de settings de mise en page
+   * Gere les changements de preset de mise en page
    */
   const handleSettingsChange = useCallback(
     async (newSettings) => {
-      // Mettre a jour les etats locaux
-      setPaperSize(newSettings.paperSize);
-      setTemplateId(newSettings.templateId);
-      setTemplate(newSettings.template);
+      const newPresetId = newSettings.presetId;
+      const newPreset = DEFAULT_PRESETS[newPresetId] || DEFAULT_PRESETS[DEFAULT_PRESET_ID];
 
-      // Sauvegarder sur le serveur
+      // Mettre a jour les etats locaux
+      setPresetId(newPresetId);
+      setPreset(newPreset);
+
+      // Sauvegarder le preset via le service (localStorage + BDD)
       try {
-        await storageService.updatePlaySettings(id, {
-          paperSize: newSettings.paperSize,
-          templateId: newSettings.templateId,
-        });
-        toast.success("Parametres de mise en page enregistres");
+        await templateService.saveActivePreset(id, newPresetId);
+        toast.success("Preset de mise en page enregistre");
       } catch (error) {
-        toast.error("Erreur lors de la sauvegarde des parametres");
+        console.error("Erreur sauvegarde preset:", error);
+        toast.error("Erreur lors de la sauvegarde du preset");
         throw error;
       }
     },
@@ -723,10 +717,7 @@ export default function EditorPage() {
       <PageSettingsModal
         open={showPageSettingsModal}
         onOpenChange={setShowPageSettingsModal}
-        playId={id}
-        currentPaperSize={paperSize}
-        currentTemplateId={templateId}
-        currentTemplate={template}
+        currentPresetId={presetId}
         onSettingsChange={handleSettingsChange}
       />
 
@@ -737,8 +728,8 @@ export default function EditorPage() {
         htmlContent={htmlContent}
         playTitle={play?.title}
         playSubtitle={play?.subtitle}
-        pageFormat={paperSize}
-        template={template}
+        presetId={presetId}
+        preset={preset}
         onOpenLayoutModal={handleOpenLayoutModal}
       />
 
