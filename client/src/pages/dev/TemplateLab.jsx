@@ -299,7 +299,6 @@ ${presetOverridesCSS}
           <iframe
             key={presetId}
             ref={iframeRef}
-            srcDoc={generateLabHTML()}
             className="w-full bg-white rounded-lg shadow-lg border-0"
             style={{ minHeight: '297mm', display: isLoading ? 'none' : 'block' }}
             title="Template Lab Preview"

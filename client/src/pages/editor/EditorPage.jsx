@@ -508,7 +508,7 @@ export default function EditorPage() {
 
       // Sauvegarder le preset via le service (localStorage + BDD)
       try {
-        await templateService.saveActivePreset(id, newPresetId);
+        await templateService.saveActivePreset(newPresetId, id);
         toast.success("Preset de mise en page enregistre");
       } catch (error) {
         console.error("Erreur sauvegarde preset:", error);
@@ -693,7 +693,6 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <style>{previewCSS}</style>
                   <div
                     className="preview-content h-full w-full bg-white overflow-auto p-4"
                     dangerouslySetInnerHTML={{
