@@ -26,7 +26,23 @@ export default function TemplateLab() {
       .map(([key, value]) => `  ${key}: ${value};`)
       .join('\n');
 
-    const presetOverridesCSS = `:root {\n${presetOverrides}\n}`;
+    const presetOverridesCSS = `:root {\n${presetOverrides}\n}
+
+@page {
+  size: ${preset.variables['--page-width']} ${preset.variables['--page-height']};
+  margin-top: ${preset.variables['--margin-top']};
+  margin-bottom: ${preset.variables['--margin-bottom']};
+}
+
+@page :left {
+  margin-left: ${preset.variables['--margin-outside']};
+  margin-right: ${preset.variables['--margin-inside']};
+}
+
+@page :right {
+  margin-left: ${preset.variables['--margin-inside']};
+  margin-right: ${preset.variables['--margin-outside']};
+}`;
 
     // Extraire les polices à importer
     const fontFamilies = new Set();
