@@ -108,8 +108,8 @@ ${presetOverridesCSS}
 <body>
   ${htmlWithLayout}
 
-  <!-- PagedJS - chargé après le contenu pour éviter les erreurs de timing -->
-  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+  <!-- Signal que le DOM est prêt -->
+  <script>window.__SCENACTE_DOM_READY__ = true;</script>
 </body>
 </html>
     `;
@@ -131,31 +131,55 @@ ${presetOverridesCSS}
     doc.write(fullHtml);
     doc.close();
 
-    // Détecter quand PagedJS a terminé la pagination
-    const contentWindow = iframe.contentWindow;
-    let observer;
-    let checkInterval;
+    // Attendre que le DOM soit prêt avant de charger PagedJS
+    const waitForDOMAndLoadPagedJS = () => {
+      const contentWindow = iframe.contentWindow;
+      if (!contentWindow) return;
 
-    const checkPagedJSReady = () => {
-      const pagedPages = doc.querySelector('.pagedjs_pages');
-      if (pagedPages && pagedPages.children.length > 0) {
-        setIsLoading(false);
-        if (observer) observer.disconnect();
-        if (checkInterval) clearInterval(checkInterval);
-        return true;
+      // Vérifier que le signal DOM_READY est présent
+      if (!contentWindow.__SCENACTE_DOM_READY__) {
+        setTimeout(waitForDOMAndLoadPagedJS, 50);
+        return;
       }
-      return false;
+
+      // DOM prêt, on peut maintenant charger PagedJS
+      const script = doc.createElement('script');
+      script.src = 'https://unpkg.com/pagedjs/dist/paged.polyfill.js';
+      script.onload = () => {
+        // PagedJS chargé, observer la création des pages
+        setupPagedJSObserver();
+      };
+      script.onerror = () => {
+        console.error('Erreur de chargement de PagedJS');
+        setIsLoading(false);
+      };
+
+      doc.body.appendChild(script);
     };
 
-    // Vérifier immédiatement et périodiquement
-    if (!checkPagedJSReady()) {
-      // Utiliser un MutationObserver pour détecter les changements
-      observer = new MutationObserver(() => {
-        checkPagedJSReady();
-      });
+    // Observer la création des pages par PagedJS
+    const setupPagedJSObserver = () => {
+      let observer;
+      let checkInterval;
 
-      // Attendre que doc.body existe avant d'observer
-      const startObserving = () => {
+      const checkPagedJSReady = () => {
+        const pagedPages = doc.querySelector('.pagedjs_pages');
+        if (pagedPages && pagedPages.children.length > 0) {
+          setIsLoading(false);
+          if (observer) observer.disconnect();
+          if (checkInterval) clearInterval(checkInterval);
+          return true;
+        }
+        return false;
+      };
+
+      // Vérifier immédiatement
+      if (!checkPagedJSReady()) {
+        // MutationObserver pour détecter les changements
+        observer = new MutationObserver(() => {
+          checkPagedJSReady();
+        });
+
         if (doc.body) {
           observer.observe(doc.body, {
             childList: true,
@@ -163,30 +187,25 @@ ${presetOverridesCSS}
             attributes: true,
             attributeFilter: ['class']
           });
-        } else {
-          // Si body n'existe pas encore, réessayer dans 50ms
-          setTimeout(startObserving, 50);
         }
-      };
-      startObserving();
 
-      // Vérification périodique comme fallback
-      checkInterval = setInterval(() => {
-        checkPagedJSReady();
-      }, 200);
+        // Vérification périodique comme fallback
+        checkInterval = setInterval(() => {
+          checkPagedJSReady();
+        }, 200);
 
-      // Timeout de sécurité (5s au lieu de 10s)
-      setTimeout(() => {
-        setIsLoading(false);
-        if (observer) observer.disconnect();
-        if (checkInterval) clearInterval(checkInterval);
-      }, 5000);
-    }
-
-    return () => {
-      if (observer) observer.disconnect();
-      if (checkInterval) clearInterval(checkInterval);
+        // Timeout de sécurité
+        setTimeout(() => {
+          setIsLoading(false);
+          if (observer) observer.disconnect();
+          if (checkInterval) clearInterval(checkInterval);
+        }, 8000);
+      }
     };
+
+    // Démarrer le processus
+    waitForDOMAndLoadPagedJS();
+
   }, [presetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fonction d'impression
