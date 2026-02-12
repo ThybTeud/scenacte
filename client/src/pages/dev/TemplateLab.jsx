@@ -84,27 +84,20 @@ ${presetOverridesCSS}
 
   <!-- Styles additionnels pour la preview -->
   <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+    }
+
     /* Cacher le contenu jusqu'à ce que PagedJS soit prêt */
     body {
-      visibility: hidden;
       margin: 0;
       padding: 0;
     }
 
+    /* S'assurer que les pages PagedJS sont visibles */
     .pagedjs_pages {
-      visibility: visible !important;
-    }
-
-    /* Séparation visuelle entre les pages */
-    .pagedjs_page {
-      margin-bottom: 20px !important;
-      border: 1px solid #e0e0e0 !important;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    /* Reset */
-    * {
-      box-sizing: border-box;
+      display: block !important;
     }
   </style>
 </head>
@@ -115,72 +108,56 @@ ${presetOverridesCSS}
     `;
   };
 
-  // Observer quand PagedJS a terminé la pagination
+  // Injecter le HTML dans l'iframe à chaque changement de preset
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
     setIsLoading(true);
 
-    let observer;
-    let checkInterval;
     let timeoutId;
+    let contentWindow;
+
+    const handlePagedReady = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      setIsLoading(false);
+    };
 
     const handleIframeLoad = () => {
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!doc) return;
 
-      const checkPagedJSReady = () => {
-        const pagedPages = doc.querySelector('.pagedjs_pages');
-        if (pagedPages && pagedPages.children.length > 0) {
-          setIsLoading(false);
-          if (observer) observer.disconnect();
-          if (checkInterval) clearInterval(checkInterval);
-          if (timeoutId) clearTimeout(timeoutId);
-          return true;
-        }
-        return false;
-      };
+      const fullHtml = generateLabHTML();
 
-      // Attendre un peu que PagedJS commence son travail
-      setTimeout(() => {
-        if (!checkPagedJSReady()) {
-          // MutationObserver pour détecter les changements
-          observer = new MutationObserver(() => {
-            checkPagedJSReady();
-          });
+      doc.open();
+      doc.write(fullHtml);
+      doc.close();
 
-          if (doc.body) {
-            observer.observe(doc.body, {
-              childList: true,
-              subtree: true,
-              attributes: true,
-              attributeFilter: ['class']
-            });
-          }
+      // Écouter l'événement officiel de PagedJS
+      contentWindow = iframe.contentWindow;
+      contentWindow?.addEventListener('pagedjs-ready', handlePagedReady);
 
-          // Vérification périodique comme fallback
-          checkInterval = setInterval(() => {
-            checkPagedJSReady();
-          }, 200);
-
-          // Timeout de sécurité
-          timeoutId = setTimeout(() => {
-            setIsLoading(false);
-            if (observer) observer.disconnect();
-            if (checkInterval) clearInterval(checkInterval);
-          }, 8000);
-        }
-      }, 100);
+      // Timeout de sécurité
+      timeoutId = setTimeout(() => {
+        console.warn('PagedJS timeout - pagination non terminée dans les 10s');
+        setIsLoading(false);
+      }, 10000);
     };
 
-    iframe.addEventListener('load', handleIframeLoad);
+    // Attendre que l'iframe soit prête (avec key, elle se recrée à chaque preset)
+    if (iframe.contentDocument?.readyState === 'complete') {
+      handleIframeLoad();
+    } else {
+      iframe.addEventListener('load', handleIframeLoad, { once: true });
+    }
 
     return () => {
-      iframe.removeEventListener('load', handleIframeLoad);
-      if (observer) observer.disconnect();
-      if (checkInterval) clearInterval(checkInterval);
-      if (timeoutId) clearTimeout(timeoutId);
+      if (contentWindow) {
+        contentWindow.removeEventListener('pagedjs-ready', handlePagedReady);
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [presetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
