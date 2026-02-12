@@ -154,12 +154,21 @@ ${presetOverridesCSS}
         checkPagedJSReady();
       });
 
-      observer.observe(doc.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['class']
-      });
+      // Attendre que doc.body existe avant d'observer
+      const startObserving = () => {
+        if (doc.body) {
+          observer.observe(doc.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class']
+          });
+        } else {
+          // Si body n'existe pas encore, réessayer dans 50ms
+          setTimeout(startObserving, 50);
+        }
+      };
+      startObserving();
 
       // Vérification périodique comme fallback
       checkInterval = setInterval(() => {
