@@ -66,9 +66,6 @@ export default function TemplateLab() {
   <meta charset="UTF-8">
   <title>Template Lab — ${preset.name}</title>
 
-  <!-- PagedJS -->
-  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
-
   <!-- Google Fonts -->
 ${googleFontsImports}
 
@@ -110,6 +107,9 @@ ${presetOverridesCSS}
 </head>
 <body>
   ${htmlWithLayout}
+
+  <!-- PagedJS - chargé après le contenu pour éviter les erreurs de timing -->
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
 </body>
 </html>
     `;
