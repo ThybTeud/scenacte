@@ -66,8 +66,8 @@ export async function getActivePreset(playId = null) {
   if (authService.isAuthenticated() && playId) {
     // User connecté : récupérer le preset depuis la BDD
     try {
-      const play = await playsService.getPlay(playId);
-      presetId = play.preset_id || play.template_id; // Fallback sur template_id pour compatibilité
+      const response = await playsService.getPlay(playId);
+      presetId = response.play.presetId || response.play.templateId; // Fallback sur templateId pour compatibilité
     } catch (error) {
       console.error('Erreur lors de la récupération du preset en BDD:', error);
     }
@@ -103,7 +103,7 @@ export async function saveActivePreset(presetId, playId = null) {
   if (authService.isAuthenticated() && playId) {
     // User connecté : sauvegarder en BDD
     try {
-      await playsService.renamePlay(playId, { preset_id: presetId });
+      await playsService.renamePlay(playId, { presetId });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du preset en BDD:', error);
       throw error;

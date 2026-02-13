@@ -262,6 +262,7 @@ export async function getPlay(req, res, next) {
         status: row.status,
         paperSize: row.paper_size || 'A5',
         templateId: row.template_id,
+        presetId: row.preset_id || 'arche',
         template: row.template_id_val ? {
           id: row.template_id_val,
           name: row.template_name,
@@ -488,7 +489,7 @@ export async function getPlayAST(req, res, next) {
 export async function updatePlay(req, res, next) {
   try {
     const { id } = req.params;
-    const { title, subtitle, paperSize, templateId } = req.body;
+    const { title, subtitle, paperSize, templateId, presetId } = req.body;
     const userId = req.user.id;
 
     // Validation UUID
@@ -498,8 +499,8 @@ export async function updatePlay(req, res, next) {
     }
 
     // Au moins un champ à mettre à jour
-    if (title === undefined && subtitle === undefined && paperSize === undefined && templateId === undefined) {
-      throw new ValidationError('Au moins un champ (title, subtitle, paperSize ou templateId) est requis');
+    if (title === undefined && subtitle === undefined && paperSize === undefined && templateId === undefined && presetId === undefined) {
+      throw new ValidationError('Au moins un champ (title, subtitle, paperSize, templateId ou presetId) est requis');
     }
 
     // Validation du titre si fourni
@@ -533,6 +534,14 @@ export async function updatePlay(req, res, next) {
       const templateCheckResult = await pool.query(templateCheckQuery, [templateId, userId]);
       if (templateCheckResult.rows.length === 0) {
         throw new NotFoundError('Template non trouvé ou non accessible');
+      }
+    }
+
+    // Validation de presetId si fourni
+    if (presetId !== undefined && presetId !== null) {
+      const validPresetIds = ['arche', 'actes-sud-papiers', 'editions-theatrales'];
+      if (!validPresetIds.includes(presetId)) {
+        throw new ValidationError(`presetId doit être l'un de: ${validPresetIds.join(', ')}`);
       }
     }
 
@@ -579,6 +588,12 @@ export async function updatePlay(req, res, next) {
       paramIndex++;
     }
 
+    if (presetId !== undefined) {
+      updates.push(`preset_id = $${paramIndex}`);
+      values.push(presetId || 'arche');
+      paramIndex++;
+    }
+
     updates.push('updated_at = NOW()');
     values.push(id);
 
@@ -613,6 +628,7 @@ export async function updatePlay(req, res, next) {
         status: updatedPlay.status,
         paperSize: updatedPlay.paper_size || 'A5',
         templateId: updatedPlay.template_id,
+        presetId: updatedPlay.preset_id || 'arche',
         template: template ? {
           id: template.id,
           name: template.name,
@@ -685,6 +701,7 @@ export async function updatePlayStatus(req, res, next) {
         contentVersion: updatedPlay.content_version,
         status: updatedPlay.status,
         paperSize: updatedPlay.paper_size || 'A5',
+        presetId: updatedPlay.preset_id || 'arche',
         createdAt: updatedPlay.created_at,
         updatedAt: updatedPlay.updated_at,
         lastEditedAt: updatedPlay.last_edited_at,

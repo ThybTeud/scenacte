@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS plays (
   status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'completed', 'archived')),
   paper_size VARCHAR(10) DEFAULT 'A5' CHECK (paper_size IN ('A4', 'A5')),
   template_id UUID REFERENCES export_templates(id) ON DELETE SET NULL,
+  preset_id VARCHAR(50) DEFAULT 'arche',
   statistics JSONB DEFAULT '{}',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
