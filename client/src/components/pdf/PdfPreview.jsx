@@ -16,10 +16,11 @@ const PAGE_WIDTHS = {
  * @param {string} [props.playSubtitle] - Sous-titre de la piece
  * @param {Object} [props.template] - Objet template avec settings (depuis BDD)
  * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
+ * @param {string} [props.presetId] - ID du preset à utiliser (nouveau système)
  * @param {Function} [props.onPagesRendered] - Callback avec le nombre de pages
  */
 export const PdfPreview = forwardRef(function PdfPreview(
-    { htmlContent, playTitle, playSubtitle, template, pageFormat = 'A5', onPagesRendered },
+    { htmlContent, playTitle, playSubtitle, template, pageFormat = 'A5', presetId, onPagesRendered },
     ref
 ) {
     const containerRef = useRef(null);
@@ -69,6 +70,7 @@ export const PdfPreview = forwardRef(function PdfPreview(
             playSubtitle,
             pageFormat,
             templateSettings: template?.settings || null,
+            presetId,
         });
 
         doc.open();
@@ -99,7 +101,7 @@ export const PdfPreview = forwardRef(function PdfPreview(
             contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
             clearTimeout(timeoutId);
         };
-    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered, updateScale]);
+    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, presetId, onPagesRendered, updateScale]);
 
     // Injection du style de scale dans l'iframe
     useEffect(() => {

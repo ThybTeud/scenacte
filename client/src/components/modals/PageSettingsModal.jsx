@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { storageService } from "@/services/storage.service";
 import { Loader2 } from "lucide-react";
+import { DEFAULT_PRESETS } from "@/config/template-presets";
 
 // === DATA ===
 
@@ -19,6 +20,11 @@ const FORMATS = [
     { id: "A5", label: "A5", dimensions: "148 x 210 mm" },
     { id: "A4", label: "A4", dimensions: "210 x 297 mm" },
 ];
+
+const PRESETS = Object.entries(DEFAULT_PRESETS).map(([id, preset]) => ({
+    id,
+    ...preset,
+}));
 
 // === CHOICE CARD ===
 
@@ -50,10 +56,12 @@ export default function PageSettingsModal({
     currentPaperSize = "A5",
     currentTemplateId = null,
     currentTemplate = null,
+    currentPresetId = null,
     onSettingsChange,
 }) {
     const [paperSize, setPaperSize] = useState(currentPaperSize);
     const [selectedTemplateId, setSelectedTemplateId] = useState(currentTemplateId);
+    const [selectedPresetId, setSelectedPresetId] = useState(currentPresetId);
 
     const [templates, setTemplates] = useState([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
@@ -64,8 +72,25 @@ export default function PageSettingsModal({
             loadTemplates();
             setPaperSize(currentPaperSize);
             setSelectedTemplateId(currentTemplateId);
+            setSelectedPresetId(currentPresetId);
         }
-    }, [open, currentPaperSize, currentTemplateId]);
+    }, [open, currentPaperSize, currentTemplateId, currentPresetId]);
+
+    // Quand un preset est sélectionné, mettre à jour le format papier automatiquement
+    const handlePresetChange = (presetId) => {
+        setSelectedPresetId(presetId);
+        setSelectedTemplateId(null); // Désélectionner le template si un preset est choisi
+        const preset = DEFAULT_PRESETS[presetId];
+        if (preset?.pageFormat) {
+            setPaperSize(preset.pageFormat);
+        }
+    };
+
+    // Quand un template est sélectionné, désélectionner le preset
+    const handleTemplateChange = (templateId) => {
+        setSelectedTemplateId(templateId);
+        setSelectedPresetId(null); // Désélectionner le preset si un template est choisi
+    };
 
     const loadTemplates = async () => {
         setIsLoadingTemplates(true);
@@ -96,6 +121,7 @@ export default function PageSettingsModal({
                     paperSize,
                     templateId: selectedTemplateId,
                     template: selectedTemplate || null,
+                    presetId: selectedPresetId,
                 });
                 onOpenChange(false);
             } catch (error) {
@@ -142,7 +168,34 @@ export default function PageSettingsModal({
                         </div>
                     </div>
 
-                    {/* Template */}
+                    {/* Presets (nouveau système) */}
+                    <div className="space-y-3">
+                        <Label>Presets éditeurs</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                            {PRESETS.map((preset) => (
+                                <ChoiceCard
+                                    key={preset.id}
+                                    selected={selectedPresetId === preset.id}
+                                    onClick={() => handlePresetChange(preset.id)}
+                                    className="flex-row items-center justify-between px-4"
+                                >
+                                    <div className="text-left">
+                                        <span className="font-medium">
+                                            {preset.name}
+                                        </span>
+                                        <span className="ml-2 text-xs text-muted-foreground">
+                                            {preset.description}
+                                        </span>
+                                    </div>
+                                    {selectedPresetId === preset.id && (
+                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                    )}
+                                </ChoiceCard>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Template (ancien système) */}
                     <div className="space-y-3">
                         <Label>Template</Label>
                         {isLoadingTemplates ? (
@@ -158,7 +211,7 @@ export default function PageSettingsModal({
                                     <ChoiceCard
                                         key={t.id}
                                         selected={selectedTemplateId === t.id}
-                                        onClick={() => setSelectedTemplateId(t.id)}
+                                        onClick={() => handleTemplateChange(t.id)}
                                         className="flex-row items-center justify-between px-4"
                                     >
                                         <div className="text-left">

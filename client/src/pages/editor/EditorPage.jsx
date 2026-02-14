@@ -80,6 +80,7 @@ export default function EditorPage() {
   const [paperSize, setPaperSize] = useState("A5");
   const [templateId, setTemplateId] = useState(null);
   const [template, setTemplate] = useState(null);
+  const [presetId, setPresetId] = useState(null);
 
   // CSS dynamique pour la preview basé sur le template
   const previewCSS = useMemo(
@@ -133,6 +134,12 @@ export default function EditorPage() {
       setPaperSize(response.play.paperSize || "A5");
       setTemplateId(response.play.templateId || null);
       setTemplate(response.play.template || null);
+
+      // Charger le presetId depuis localStorage (en attendant la migration BDD)
+      const savedPresetId = localStorage.getItem(`scenacte_preset_${id}`);
+      if (savedPresetId) {
+        setPresetId(savedPresetId);
+      }
     } catch (error) {
       toast.error("Erreur lors du chargement de la piece");
       navigate("/library");
@@ -509,13 +516,23 @@ export default function EditorPage() {
       setPaperSize(newSettings.paperSize);
       setTemplateId(newSettings.templateId);
       setTemplate(newSettings.template);
+      setPresetId(newSettings.presetId || null);
 
       // Sauvegarder sur le serveur
       try {
         await storageService.updatePlaySettings(id, {
           paperSize: newSettings.paperSize,
           templateId: newSettings.templateId,
+          // presetId sera persisté dans une future migration BDD
         });
+
+        // Persister le presetId en localStorage en attendant la migration BDD
+        if (newSettings.presetId) {
+          localStorage.setItem(`scenacte_preset_${id}`, newSettings.presetId);
+        } else {
+          localStorage.removeItem(`scenacte_preset_${id}`);
+        }
+
         toast.success("Parametres de mise en page enregistres");
       } catch (error) {
         toast.error("Erreur lors de la sauvegarde des parametres");
@@ -727,6 +744,7 @@ export default function EditorPage() {
         currentPaperSize={paperSize}
         currentTemplateId={templateId}
         currentTemplate={template}
+        currentPresetId={presetId}
         onSettingsChange={handleSettingsChange}
       />
 
@@ -739,6 +757,7 @@ export default function EditorPage() {
         playSubtitle={play?.subtitle}
         pageFormat={paperSize}
         template={template}
+        presetId={presetId}
         onOpenLayoutModal={handleOpenLayoutModal}
       />
 

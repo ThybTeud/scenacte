@@ -2,6 +2,10 @@
  * Utilitaires pour l'export PDF avec PagedJS
  */
 
+// Import du CSS de base pour le nouveau système de presets
+import baseCSS from '../assets/styles/scenacte-template.css?inline';
+import { getPreset, generatePresetCSS } from '../config/template-presets';
+
 /**
  * Mapping des polices pour les imports Google Fonts
  */
@@ -28,6 +32,7 @@ const FONT_FALLBACKS = {
  * @param {string} [params.playSubtitle] - Sous-titre de la piece
  * @param {string} [params.pageFormat='A5'] - Format de page (A4 ou A5)
  * @param {Object} [params.templateSettings] - Settings du template depuis la BDD
+ * @param {string} [params.presetId] - ID du preset à utiliser (nouveau système)
  * @returns {string} - HTML complet pour le PDF
  */
 export function generatePdfHtml({
@@ -36,7 +41,44 @@ export function generatePdfHtml({
   playSubtitle,
   pageFormat = 'A5',
   templateSettings = null,
+  presetId = null,
 }) {
+  // NOUVEAU SYSTÈME : Si presetId est fourni, utiliser le système de presets
+  if (presetId) {
+    const preset = getPreset(presetId);
+    const presetCSS = generatePresetCSS(preset);
+    const layout = preset.layout;
+
+    // Extraire la police du preset pour l'import Google Fonts
+    const fontFamily = preset.variables['--font-body']?.match(/'([^']+)'/)?.[1];
+    const fontImport = fontFamily ? fontFamily.replace(/ /g, '+') : 'Crimson+Text';
+    const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${fontImport}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(playTitle || '')}</title>
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+  <link href="${googleFontsUrl}" rel="stylesheet">
+  <style>${baseCSS}</style>
+  <style>${presetCSS}</style>
+</head>
+<body>
+  <section class="title-page">
+    <h1>${escapeHtml(playTitle || '')}</h1>
+    ${playSubtitle ? `<p class="subtitle">${escapeHtml(playSubtitle)}</p>` : ''}
+  </section>
+  <section class="play-content">
+    <div class="play-root" data-layout="${layout}">
+      ${htmlContent}
+    </div>
+  </section>
+</body>
+</html>`;
+  }
+
+  // ANCIEN SYSTÈME : Comportement conservé pour rétrocompatibilité
   // Settings par defaut si aucun template fourni
   const settings = templateSettings || {
     fontFamily: 'Crimson Text',
