@@ -72,6 +72,7 @@ export function LibrarySidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
+
                 {/* Légal */}
                 <SidebarMenuItem>
                   <SidebarMenuButton
