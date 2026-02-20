@@ -33,7 +33,7 @@ function PresetCard({ preset, selected, onClick }) {
 }
 
 export default function TemplateLab() {
-  const [selectedPresetId, setSelectedPresetId] = useState("arche");
+  const [selectedPresetId, setSelectedPresetId] = useState("classique");
   const iframeRef = useRef(null);
 
   // Injecter le HTML dans l'iframe à chaque changement de preset

@@ -4,9 +4,9 @@
  */
 
 export const DEFAULT_PRESETS = {
-  'actes-sud': {
-    name: 'Actes Sud-Papiers',
-    description: 'A5 standard, personnage centré',
+  'classique': {
+    name: 'Classique',
+    description: 'A5, personnage centré',
     layout: 'centered',
     pageFormat: 'A5',
     variables: {
@@ -23,12 +23,11 @@ export const DEFAULT_PRESETS = {
       '--font-size-scene': '12pt',
       '--line-height': '1.35',
       '--space-replique': '0.5em',
-      '--color-text' : '#32a852',
     }
   },
-  'editions-theatrales': {
-    name: 'Éditions Théâtrales',
-    description: 'A5 standard, personnage en ligne',
+  'moderne': {
+    name: 'Moderne',
+    description: 'A5, personnage en ligne',
     layout: 'inline',
     pageFormat: 'A5',
     variables: {
@@ -47,30 +46,9 @@ export const DEFAULT_PRESETS = {
       '--space-replique': '0.6em',
     }
   },
-  'arche': {
-    name: "L'Arche Éditeur",
-    description: 'A5 classique, personnage centré, typographie aérée',
-    layout: 'centered',
-    pageFormat: 'A5',
-    variables: {
-      '--page-width': '148mm',
-      '--page-height': '210mm',
-      '--margin-top': '20mm',
-      '--margin-bottom': '25mm',
-      '--margin-inside': '20mm',
-      '--margin-outside': '15mm',
-      '--font-body': "'Crimson Text', Georgia, serif",
-      '--font-size-body': '11pt',
-      '--font-size-personnage': '11.5pt',
-      '--font-size-acte': '18pt',
-      '--font-size-scene': '14pt',
-      '--line-height': '1.45',
-      '--space-replique': '0.8em',
-    }
-  }
 };
 
-export const DEFAULT_PRESET_ID = 'arche';
+export const DEFAULT_PRESET_ID = 'classique';
 
 /**
  * Retourne un preset par ID avec fallback sur le défaut.

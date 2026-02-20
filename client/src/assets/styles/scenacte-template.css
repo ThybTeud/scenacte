@@ -68,21 +68,14 @@
    PagedJS ne supporte pas la concaténation dans content,
    on utilise donc deux margin boxes séparées. */
 @page :right {
-  @top-left {
+  @top-center {
     content: string(current-acte);
     font-family: var(--font-body);
     font-size: 9pt;
     font-style: italic;
     text-transform: uppercase;
     letter-spacing: 0.5pt;
-    text-align: right;
-  }
-  @top-center {
-    content: "—";
-    font-family: var(--font-body);
-    font-size: 9pt;
-    font-style: italic;
-    letter-spacing: 0.5pt;
+    text-align: center;
   }
   @top-right {
     content: string(current-scene);
