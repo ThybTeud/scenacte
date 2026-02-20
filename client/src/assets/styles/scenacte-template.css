@@ -51,15 +51,47 @@
     font-size: 10pt;
     color: var(--color-text);
   }
+}
 
-  /* Running header avec le titre de l'acte en cours */
+/* Running header sur les pages de gauche (verso) : titre de la pièce */
+@page :left {
   @top-center {
+    content: string(play-title);
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    letter-spacing: 0.5pt;
+  }
+}
+
+/* Running header sur les pages de droite (recto) :
+   PagedJS ne supporte pas la concaténation dans content,
+   on utilise donc deux margin boxes séparées. */
+@page :right {
+  @top-left {
     content: string(current-acte);
     font-family: var(--font-body);
     font-size: 9pt;
     font-style: italic;
     text-transform: uppercase;
     letter-spacing: 0.5pt;
+    text-align: right;
+  }
+  @top-center {
+    content: "—";
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    letter-spacing: 0.5pt;
+  }
+  @top-right {
+    content: string(current-scene);
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    text-align: left;
   }
 }
 
@@ -126,6 +158,9 @@ p {
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
+
+  /* Capturer le titre pour les en-têtes des pages de gauche */
+  string-set: play-title content();
 }
 
 .title-page .subtitle {
@@ -175,6 +210,9 @@ h2.scene {
   text-transform: uppercase;
   text-align: center;
   margin: var(--space-scene) 0 1em;
+
+  /* Alimenter le running header */
+  string-set: current-scene content();
 }
 
 /* === RÉPLIQUES === */
