@@ -19,7 +19,7 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { getPreviewCSS } from "@/utils/pdfExport";
+import { getPreviewCSSFromPreset } from "@/utils/pdfExport";
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -82,10 +82,10 @@ export default function EditorPage() {
   const [template, setTemplate] = useState(null);
   const [presetId, setPresetId] = useState('classique');
 
-  // CSS dynamique pour la preview basé sur le template
+  // CSS dynamique pour la preview basé sur le preset
   const previewCSS = useMemo(
-    () => getPreviewCSS(template?.settings),
-    [template?.settings],
+    () => getPreviewCSSFromPreset(presetId),
+    [presetId],
   );
 
   // Instance du parser (créée une seule fois)
