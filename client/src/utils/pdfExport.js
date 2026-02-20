@@ -74,6 +74,20 @@ export function generatePdfHtml({
       ${htmlContent}
     </div>
   </section>
+  <script>
+    // Handler PagedJS pour dispatcher l'événement quand le rendu est terminé
+    class PagedHandler extends Paged.Handler {
+      constructor(chunker, polisher, caller) {
+        super(chunker, polisher, caller);
+      }
+
+      afterRendered(pages) {
+        window.dispatchEvent(new Event('pagedjs-ready'));
+      }
+    }
+
+    Paged.registerHandlers(PagedHandler);
+  </script>
 </body>
 </html>`;
   }
@@ -231,6 +245,20 @@ export function generatePdfHtml({
   <section class="play-content">
     ${htmlContent}
   </section>
+  <script>
+    // Handler PagedJS pour dispatcher l'événement quand le rendu est terminé
+    class PagedHandler extends Paged.Handler {
+      constructor(chunker, polisher, caller) {
+        super(chunker, polisher, caller);
+      }
+
+      afterRendered(pages) {
+        window.dispatchEvent(new Event('pagedjs-ready'));
+      }
+    }
+
+    Paged.registerHandlers(PagedHandler);
+  </script>
 </body>
 </html>
   `;
