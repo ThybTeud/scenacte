@@ -46,7 +46,8 @@ export default function ExportModal({
 
     const handleOpenLayoutModal = () => {
         onOpenLayoutModal?.();
-        onOpenChange(false);
+        // Ne pas fermer ExportModal - laisser les deux modales ouvertes
+        // ExportModal se mettra à jour automatiquement quand le preset change
     };
 
     // Afficher le nom du template ou "Par defaut" si aucun template
