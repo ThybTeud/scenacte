@@ -6,12 +6,12 @@
 export const DEFAULT_PRESETS = {
   'actes-sud': {
     name: 'Actes Sud-Papiers',
-    description: 'Format poche, personnage centré',
+    description: 'A5 standard, personnage centré',
     layout: 'centered',
     pageFormat: 'A5',
     variables: {
-      '--page-width': '110mm',
-      '--page-height': '180mm',
+      '--page-width': '148mm',
+      '--page-height': '210mm',
       '--margin-top': '15mm',
       '--margin-bottom': '20mm',
       '--margin-inside': '15mm',
@@ -23,6 +23,7 @@ export const DEFAULT_PRESETS = {
       '--font-size-scene': '12pt',
       '--line-height': '1.35',
       '--space-replique': '0.5em',
+      '--color-text' : '#32a852',
     }
   },
   'editions-theatrales': {
@@ -82,12 +83,23 @@ export function getPreset(presetId) {
 
 /**
  * Génère un bloc CSS de surcharges à partir des variables d'un preset.
+ * Les valeurs de @page size et marges sont résolues directement car PagedJS
+ * ne garantit pas la résolution des var() dans les règles @page.
  * @param {Object} preset - Objet preset avec ses variables
- * @returns {string} - CSS avec les custom properties
+ * @returns {string} - CSS avec les custom properties et la règle @page résolue
  */
 export function generatePresetCSS(preset) {
   const vars = Object.entries(preset.variables)
     .map(([key, value]) => `  ${key}: ${value};`)
     .join('\n');
-  return `:root {\n${vars}\n}`;
+
+  // Résoudre les valeurs directement dans @page pour garantir leur prise en compte par PagedJS
+  const pageWidth = preset.variables['--page-width'] || '148mm';
+  const pageHeight = preset.variables['--page-height'] || '210mm';
+  const marginTop = preset.variables['--margin-top'] || '20mm';
+  const marginBottom = preset.variables['--margin-bottom'] || '25mm';
+  const marginInside = preset.variables['--margin-inside'] || '20mm';
+  const marginOutside = preset.variables['--margin-outside'] || '15mm';
+
+  return `:root {\n${vars}\n}\n\n@page {\n  size: ${pageWidth} ${pageHeight};\n  margin-top: ${marginTop};\n  margin-bottom: ${marginBottom};\n  margin-inside: ${marginInside};\n  margin-outside: ${marginOutside};\n}`;
 }
