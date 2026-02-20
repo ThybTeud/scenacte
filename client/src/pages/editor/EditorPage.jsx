@@ -80,7 +80,7 @@ export default function EditorPage() {
   const [paperSize, setPaperSize] = useState("A5");
   const [templateId, setTemplateId] = useState(null);
   const [template, setTemplate] = useState(null);
-  const [presetId, setPresetId] = useState(null);
+  const [presetId, setPresetId] = useState('classique');
 
   // CSS dynamique pour la preview basé sur le template
   const previewCSS = useMemo(

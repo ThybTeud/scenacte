@@ -104,22 +104,14 @@ export default function PageSettingsModal({
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
-                    {/* Format papier */}
-                    <div className="space-y-3">
+                    {/* Format papier (désactivé car défini par le preset) */}
+                    <div className="space-y-3 opacity-60">
                         <Label>Format</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                            {FORMATS.map((f) => (
-                                <ChoiceCard
-                                    key={f.id}
-                                    selected={paperSize === f.id}
-                                    onClick={() => setPaperSize(f.id)}
-                                >
-                                    <span className="font-medium">{f.label}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {f.dimensions}
-                                    </span>
-                                </ChoiceCard>
-                            ))}
+                        <div className="rounded-lg border p-3 bg-muted/30 text-center">
+                            <span className="font-medium">A5</span>
+                            <span className="text-xs text-muted-foreground block">
+                                Défini par le preset
+                            </span>
                         </div>
                     </div>
 
