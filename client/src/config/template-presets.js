@@ -1,6 +1,5 @@
 /**
  * Presets de templates PDF pour Scenacte
- * Chaque preset correspond à une configuration typographique d'un éditeur de théâtre
  */
 
 export const DEFAULT_PRESETS = {
