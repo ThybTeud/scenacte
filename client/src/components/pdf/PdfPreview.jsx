@@ -73,10 +73,6 @@ export const PdfPreview = forwardRef(function PdfPreview(
             presetId,
         });
 
-        doc.open();
-        doc.write(fullHtml);
-        doc.close();
-
         // Référence stable pour le cleanup
         const contentWindow = iframe.contentWindow;
         let timeoutId;
@@ -89,6 +85,8 @@ export const PdfPreview = forwardRef(function PdfPreview(
             updateScale();
         };
 
+        // IMPORTANT: Ajouter l'event listener AVANT d'écrire le HTML
+        // pour éviter la race condition (PagedJS peut dispatch l'événement très vite)
         contentWindow?.addEventListener("pagedjs-ready", handlePagedReady);
 
         // Timeout de sécurité
@@ -96,6 +94,10 @@ export const PdfPreview = forwardRef(function PdfPreview(
             setIsLoading(false);
             onPagesRendered?.(0);
         }, 10000);
+
+        doc.open();
+        doc.write(fullHtml);
+        doc.close();
 
         return () => {
             contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
