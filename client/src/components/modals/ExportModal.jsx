@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ExternalLink } from "lucide-react";
 import { PdfPreview } from "@/components/pdf/PdfPreview";
 import { printPdf } from "@/utils/pdfExport";
+import { getPreset } from "@/config/template-presets";
 
 /**
  * Modal d'export PDF
@@ -50,8 +51,10 @@ export default function ExportModal({
         // ExportModal se mettra à jour automatiquement quand le preset change
     };
 
-    // Afficher le nom du template ou "Par defaut" si aucun template
-    const templateLabel = template?.name || "Par defaut";
+    // Afficher le nom du preset (nouveau système) ou du template BDD (ancien système)
+    const templateLabel = presetId
+        ? getPreset(presetId).name
+        : (template?.name || "Par défaut");
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,7 +86,7 @@ export default function ExportModal({
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">Pages : </span>
-                                        <span>{pageCount}</span>
+                                        <span>{pageCount > 0 ? pageCount : "Calcul..."}</span>
                                     </div>
                                 </div>
                             </div>
