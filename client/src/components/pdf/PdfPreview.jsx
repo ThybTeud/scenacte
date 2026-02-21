@@ -61,9 +61,6 @@ export const PdfPreview = forwardRef(function PdfPreview(
 
         setIsLoading(true);
 
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!doc) return;
-
         const fullHtml = generatePdfHtml({
             htmlContent,
             playTitle,
@@ -73,35 +70,46 @@ export const PdfPreview = forwardRef(function PdfPreview(
             presetId,
         });
 
-        // Référence stable pour le cleanup
-        const contentWindow = iframe.contentWindow;
         let timeoutId;
+        let pagedReadyTarget = null; // référence capturée pour le cleanup
 
         const handlePagedReady = () => {
             clearTimeout(timeoutId);
-            const pages = doc.querySelectorAll(".pagedjs_page");
-            onPagesRendered?.(pages.length);
+            const pages = iframe.contentDocument?.querySelectorAll(".pagedjs_page");
+            onPagesRendered?.(pages?.length || 0);
             setIsLoading(false);
             updateScale();
         };
 
-        // IMPORTANT: Ajouter l'event listener AVANT d'écrire le HTML
-        // pour éviter la race condition (PagedJS peut dispatch l'événement très vite)
-        contentWindow?.addEventListener("pagedjs-ready", handlePagedReady);
+        const handleIframeLoad = () => {
+            // L'iframe est chargée : le vrai contentWindow est maintenant stable.
+            // On attache le listener ici pour être certain de ne jamais le rater,
+            // même si PagedJS est en cache navigateur (chargement quasi-instantané).
+            const contentWindow = iframe.contentWindow;
+            if (!contentWindow) return;
 
-        // Timeout de sécurité
-        timeoutId = setTimeout(() => {
-            setIsLoading(false);
-            onPagesRendered?.(0);
-        }, 10000);
+            pagedReadyTarget = contentWindow;
+            contentWindow.addEventListener("pagedjs-ready", handlePagedReady);
 
-        doc.open();
-        doc.write(fullHtml);
-        doc.close();
+            timeoutId = setTimeout(() => {
+                setIsLoading(false);
+                onPagesRendered?.(0);
+            }, 10000);
+        };
+
+        iframe.addEventListener("load", handleIframeLoad);
+
+        // Blob URL : navigue l'iframe proprement sans document.write()
+        // (document.write invalide le contentWindow capturé avant doc.open())
+        const blob = new Blob([fullHtml], { type: "text/html" });
+        const blobUrl = URL.createObjectURL(blob);
+        iframe.src = blobUrl;
 
         return () => {
-            contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
+            iframe.removeEventListener("load", handleIframeLoad);
+            pagedReadyTarget?.removeEventListener("pagedjs-ready", handlePagedReady);
             clearTimeout(timeoutId);
+            URL.revokeObjectURL(blobUrl);
         };
     }, [htmlContent, playTitle, playSubtitle, template, pageFormat, presetId, onPagesRendered, updateScale]);
 
