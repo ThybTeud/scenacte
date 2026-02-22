@@ -8,14 +8,35 @@ import { getPreset, generatePresetCSS } from '../config/template-presets';
 
 export { baseCSS };
 
-// Version du CSS de base pour la preview navigateur :
-// neutralise visibility:hidden (réservé à PagedJS) en retirant uniquement
-// cette déclaration du bloc body, tout en conservant les propriétés
-// typographiques (font-family, font-size, line-height, color).
-export const previewCSS = baseCSS.replace(
-  /(body\s*\{[^}]*)visibility\s*:\s*hidden\s*;?\s*/g,
-  '$1',
-);
+/**
+ * Scope le baseCSS pour le preview en neutralisant les sélecteurs globaux.
+ * Les règles @page et .pagedjs_* sont inoffensives sans PagedJS, on ne les touche pas.
+ */
+function buildPreviewCSS(raw) {
+  return raw
+    // Supprimer visibility: hidden (PagedJS only)
+    .replace(/visibility\s*:\s*hidden\s*;?\s*/g, '')
+    // * {} → .preview-content * {}
+    .replace(/^\*\s*\{/gm, '.preview-content * {')
+    // body {} → .preview-content {}
+    .replace(/\bbody\s*\{/g, '.preview-content {')
+    // p {} nu (orphans/widows) → .preview-content p {}
+    .replace(/^p\s*\{/gm, '.preview-content p {')
+    // :root {} → .preview-content {}
+    .replace(/:root\s*\{/g, '.preview-content {');
+}
+
+export const previewCSS = buildPreviewCSS(baseCSS);
+
+/**
+ * Scope un CSS dynamique (ex: preset) pour le preview.
+ * Ne traite que :root et body — les autres sélecteurs sont déjà spécifiques.
+ */
+export function scopeForPreview(css) {
+  return css
+    .replace(/:root\s*\{/g, '.preview-content {')
+    .replace(/\bbody\s*\{/g, '.preview-content {');
+}
 
 /**
  * Mapping des polices pour les imports Google Fonts
