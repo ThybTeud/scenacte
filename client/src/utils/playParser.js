@@ -287,23 +287,28 @@ export function astToHTML(ast) {
       case NodeType.ROOT:
         return `<div class="play-root">${childrenHTML}</div>`;
 
-      case NodeType.ACTE:
-        return `<div class="acte-container"><h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+      case NodeType.SECTION:
+        return `<div class="acte-container"><h1 class="acte">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
 
-      case NodeType.SCENE:
-        return `<div class="scene-container"><h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+      case NodeType.SUBSECTION:
+        return `<div class="scene-container"><h2 class="scene">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
 
-      case NodeType.PERSONNAGE:
-        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>${childrenHTML}</div>`;
+      case NodeType.SPEECH:
+        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
 
-      case NodeType.DIDASCALIE:
-        return `<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`;
+      case NodeType.STAGE_DIRECTION: {
+        const dtype = node.attributes.directionType || 'between';
+        if (dtype === 'intra') {
+          return `<span class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</span>`;
+        }
+        return `<p class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</p>`;
+      }
 
-      case NodeType.DIALOGUE:
-        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`;
+      case NodeType.LINE:
+        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${childrenHTML}</p>`;
 
-      case NodeType.TEXT:
-        return `<p class="text">${escapeHTML(node.value)}</p>`;
+      case NodeType.TEXT_RUN:
+        return escapeHTML(node.value);
 
       default:
         return '';
