@@ -29,34 +29,25 @@ export function calculateStatsFromAST(ast) {
    */
   const traverse = (node) => {
     switch (node.type) {
-      case NodeType.ACTE:
-      case NodeType.SCENE:
-        totalActs += node.type === NodeType.ACTE ? 1 : 0;
-        totalScenes += node.type === NodeType.SCENE ? 1 : 0;
+      case NodeType.SECTION:
+      case NodeType.SUBSECTION:
+        totalActs += node.type === NodeType.SECTION ? 1 : 0;
+        totalScenes += node.type === NodeType.SUBSECTION ? 1 : 0;
         lastSpeaker = null; // Reset au changement de section
         break;
 
-      case NodeType.PERSONNAGE:
-        if (node.attributes && node.attributes.name) {
-          if (lastSpeaker !== node.attributes.name) {
-            totalRepliques++;
-            lastSpeaker = node.attributes.name;
-          }
-          characters.add(node.attributes.name);
-        }
-        break;
-
-      case NodeType.DIALOGUE:
+      case NodeType.SPEECH:
         if (node.attributes && node.attributes.speaker) {
+          if (lastSpeaker !== node.attributes.speaker) {
+            totalRepliques++;
+            lastSpeaker = node.attributes.speaker;
+          }
           characters.add(node.attributes.speaker);
         }
-        if (node.value) {
-          wordCount += countWords(node.value);
-        }
         break;
 
-      case NodeType.DIDASCALIE:
-      case NodeType.TEXT:
+      case NodeType.STAGE_DIRECTION:
+      case NodeType.TEXT_RUN:
         if (node.value) {
           wordCount += countWords(node.value);
         }

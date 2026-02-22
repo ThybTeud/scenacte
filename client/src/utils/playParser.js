@@ -15,23 +15,24 @@
  */
 export const NodeType = {
   ROOT: 'root',
-  ACTE: 'acte',
-  SCENE: 'scene',
-  PERSONNAGE: 'personnage',
-  DIDASCALIE: 'didascalie',
-  DIALOGUE: 'dialogue',
-  TEXT: 'text',
-  LINE_BREAK: 'linebreak'
+  SECTION: 'section',
+  SUBSECTION: 'subsection',
+  SPEECH: 'speech',
+  STAGE_DIRECTION: 'stage_direction',
+  LINE: 'line',
+  TEXT_RUN: 'text_run',
+  LINE_BREAK: 'line_break'
 };
 
 /**
  * Expression régulière pour détecter les balises
  */
 const TAG_PATTERNS = {
-  acte: /^#(?!#)\s*(.+?)\s*$/i,
-  scene: /^##\s*(.+?)\s*$/mi,
-  personnage: /^@\s*(.+?)\s*$/mi,
-  didascalie: /^\(\s*(.+?)\s*\)$/i
+  section: /^#(?!#)\s*(.+?)\s*$/i,
+  subsection: /^##\s*(.+?)\s*$/i,
+  speaker: /^@\s*(.+?)\s*$/i,
+  stageDirection: /^\(\s*([^)]+)\s*\)$/i,
+  preWithText: /^\(([^)]+)\)\s*(.+)$/
 };
 
 /**
@@ -84,79 +85,106 @@ export class PlayParser {
     const lines = text.split('\n');
 
     // Contextes hiérarchiques
-    let currentActe = null;
-    let currentScene = null;
-    let currentPersonnage = null;
+    let currentSection = null;
+    let currentSubsection = null;
+    let currentSpeech = null;
     let currentSpeaker = null;
 
+    // Tracking pour la classification des didascalies
+    let hasSpeechInCurrentContainer = false;
+    let isFirstLineInSpeech = false;
+
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmedLine = line.trim();
+      const trimmedLine = lines[i].trim();
+      if (!trimmedLine) continue;
 
-      if (!trimmedLine) {
-        continue; // Ignorer les lignes vides
-      }
-
-      // Vérifier acte (#)
-      const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
-      if (acteMatch) {
-        const number = acteMatch[1] || '1';
-        const node = new ASTNode(NodeType.ACTE, null, { number });
+      // SECTION (#)
+      const sectionMatch = TAG_PATTERNS.section.exec(trimmedLine);
+      if (sectionMatch) {
+        const title = sectionMatch[1].trim();
+        const node = new ASTNode(NodeType.SECTION, title, { title });
         node.position = { start: i, end: i };
-        node.value = acteMatch[1].trim();
         root.addChild(node);
-
-        // Mettre à jour les contextes
-        currentActe = node;
-        currentScene = null;
-        currentPersonnage = null;
+        currentSection = node;
+        currentSubsection = null;
+        currentSpeech = null;
         currentSpeaker = null;
+        hasSpeechInCurrentContainer = false;
+        isFirstLineInSpeech = false;
         continue;
       }
 
-      // Vérifier scène (##)
-      const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
-      if (sceneMatch) {
-        const number = sceneMatch[1] || '1';
-        const node = new ASTNode(NodeType.SCENE, null, { number });
+      // SUBSECTION (##)
+      const subsectionMatch = TAG_PATTERNS.subsection.exec(trimmedLine);
+      if (subsectionMatch) {
+        const title = subsectionMatch[1].trim();
+        const node = new ASTNode(NodeType.SUBSECTION, title, { title });
         node.position = { start: i, end: i };
-        node.value = sceneMatch[1].trim();
-
-        // Ajouter la scène au parent approprié
-        const parent = this.getParentFor(NodeType.SCENE, currentActe, currentScene, currentPersonnage, root);
-        parent.addChild(node);
-
-        // Mettre à jour les contextes
-        currentScene = node;
-        currentPersonnage = null;
+        this.getParentFor(NodeType.SUBSECTION, currentSection, currentSubsection, root).addChild(node);
+        currentSubsection = node;
+        currentSpeech = null;
         currentSpeaker = null;
+        hasSpeechInCurrentContainer = false;
+        isFirstLineInSpeech = false;
         continue;
       }
 
-      // Vérifier personnage (@)
-      const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
-      if (personnageMatch) {
-        const name = personnageMatch[1].trim();
-        currentSpeaker = name;
-        const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
+      // SPEECH (@)
+      const speakerMatch = TAG_PATTERNS.speaker.exec(trimmedLine);
+      if (speakerMatch) {
+        const speaker = speakerMatch[1].trim();
+        currentSpeaker = speaker;
+        const node = new ASTNode(NodeType.SPEECH, null, { speaker });
         node.position = { start: i, end: i };
-
-        // Ajouter le personnage au parent approprié
-        const parent = this.getParentFor(NodeType.PERSONNAGE, currentActe, currentScene, currentPersonnage, root);
-        parent.addChild(node);
-
-        // Mettre à jour le contexte
-        currentPersonnage = node;
+        this.getParentFor(NodeType.SPEECH, currentSection, currentSubsection, root).addChild(node);
+        currentSpeech = node;
+        hasSpeechInCurrentContainer = true;
+        isFirstLineInSpeech = true;
         continue;
       }
 
-      // Parser la ligne pour les didascalies et le dialogue
-      const parsedLine = this.parseLine(trimmedLine, currentSpeaker, i);
-      parsedLine.forEach(node => {
-        // Ajouter au parent approprié
-        const parent = this.getParentFor(node.type, currentActe, currentScene, currentPersonnage, root);
-        parent.addChild(node);
-      });
+      // Didascalie ligne entière : (texte)
+      const sdMatch = TAG_PATTERNS.stageDirection.exec(trimmedLine);
+      if (sdMatch) {
+        const sdNode = new ASTNode(NodeType.STAGE_DIRECTION, sdMatch[1].trim());
+        sdNode.position = { start: i, end: i };
+        if (isFirstLineInSpeech) {
+          sdNode.attributes = { directionType: 'pre' };
+          currentSpeech.addChild(sdNode);
+          isFirstLineInSpeech = false;
+        } else if (!hasSpeechInCurrentContainer) {
+          sdNode.attributes = { directionType: 'opening' };
+          this.getParentFor(NodeType.STAGE_DIRECTION, currentSection, currentSubsection, root).addChild(sdNode);
+        } else {
+          sdNode.attributes = { directionType: 'between' };
+          this.getParentFor(NodeType.STAGE_DIRECTION, currentSection, currentSubsection, root).addChild(sdNode);
+        }
+        continue;
+      }
+
+      // Ligne de contenu (dialogue ou texte libre)
+      if (currentSpeaker) {
+        if (isFirstLineInSpeech) {
+          isFirstLineInSpeech = false;
+          const preMatch = TAG_PATTERNS.preWithText.exec(trimmedLine);
+          if (preMatch) {
+            // Pré-réplique suivie de texte : (pre) texte dialogue
+            const preNode = new ASTNode(NodeType.STAGE_DIRECTION, preMatch[1].trim(), { directionType: 'pre' });
+            preNode.position = { start: i, end: i };
+            currentSpeech.addChild(preNode);
+            currentSpeech.addChild(this.parseLine(preMatch[2], currentSpeaker, i));
+          } else {
+            currentSpeech.addChild(this.parseLine(trimmedLine, currentSpeaker, i));
+          }
+        } else {
+          currentSpeech.addChild(this.parseLine(trimmedLine, currentSpeaker, i));
+        }
+      } else {
+        // Texte libre hors SPEECH
+        this.getParentFor(NodeType.STAGE_DIRECTION, currentSection, currentSubsection, root).addChild(
+          this.parseLine(trimmedLine, null, i)
+        );
+      }
     }
 
     return root;
@@ -165,29 +193,22 @@ export class PlayParser {
   /**
    * Détermine le parent approprié pour un type de nœud donné
    * @param {string} type - Type du nœud
-   * @param {ASTNode|null} currentActe - Acte courant
-   * @param {ASTNode|null} currentScene - Scène courante
-   * @param {ASTNode|null} currentPersonnage - Personnage courant
+   * @param {ASTNode|null} currentSection - Section courante
+   * @param {ASTNode|null} currentSubsection - Sous-section courante
    * @param {ASTNode} root - Nœud racine
    * @returns {ASTNode} - Parent approprié
    */
-  getParentFor(type, currentActe, currentScene, currentPersonnage, root) {
-    switch(type) {
-      case NodeType.ACTE:
+  getParentFor(type, currentSection, currentSubsection, root) {
+    switch (type) {
+      case NodeType.SECTION:
         return root;
 
-      case NodeType.SCENE:
-        return currentActe || root;
+      case NodeType.SUBSECTION:
+        return currentSection || root;
 
-      case NodeType.PERSONNAGE:
-        return currentScene || currentActe || root;
-
-      case NodeType.DIALOGUE:
-      case NodeType.DIDASCALIE:
-        return currentPersonnage || currentScene || currentActe || root;
-
-      case NodeType.TEXT:
-        return currentPersonnage || currentScene || currentActe || root;
+      case NodeType.SPEECH:
+      case NodeType.STAGE_DIRECTION:
+        return currentSubsection || currentSection || root;
 
       default:
         return root;
@@ -195,85 +216,54 @@ export class PlayParser {
   }
 
   /**
-   * Parse une ligne pour extraire les didascalies et le dialogue
+   * Parse une ligne de contenu et retourne un nœud LINE ou TEXT_RUN
    * @param {string} line - Ligne à parser
    * @param {string|null} speaker - Personnage actuel
    * @param {number} lineNumber - Numéro de ligne
-   * @returns {ASTNode[]} - Liste de nœuds
+   * @returns {ASTNode} - Nœud LINE (avec enfants) ou TEXT_RUN
    */
   parseLine(line, speaker, lineNumber) {
-    const nodes = [];
+    if (!speaker) {
+      const node = new ASTNode(NodeType.TEXT_RUN, line.trim());
+      node.position = { start: lineNumber, end: lineNumber };
+      return node;
+    }
+
+    const lineNode = new ASTNode(NodeType.LINE, null, { speaker });
+    lineNode.position = { start: lineNumber, end: lineNumber };
+
+    const intraRegex = /\(([^)]+)\)/g;
     let lastIndex = 0;
-    const didascalieRegex = /\(([^)]+)\)/g;
     let match;
 
-    // Extraire toutes les didascalies
-    const didascalies = [];
-    while ((match = didascalieRegex.exec(line)) !== null) {
-      didascalies.push({
-        text: match[1].trim(),
-        start: match.index,
-        end: match.index + match[0].length
-      });
-    }
-
-    if (didascalies.length === 0) {
-      // Pas de didascalie, traiter comme dialogue ou texte
-      if (speaker) {
-        const node = new ASTNode(NodeType.DIALOGUE, line.trim(), { speaker });
-        node.position = { start: lineNumber, end: lineNumber };
-        nodes.push(node);
-      } else {
-        const node = new ASTNode(NodeType.TEXT, line.trim());
-        node.position = { start: lineNumber, end: lineNumber };
-        nodes.push(node);
-      }
-      return nodes;
-    }
-
-    // Traiter les didascalies et le texte entre elles
-    didascalies.forEach((didascalie, index) => {
-      // Texte avant la didascalie
-      if (didascalie.start > lastIndex) {
-        const textBefore = line.substring(lastIndex, didascalie.start).trim();
-        if (textBefore) {
-          if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textBefore, { speaker });
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          } else {
-            const node = new ASTNode(NodeType.TEXT, textBefore);
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          }
+    while ((match = intraRegex.exec(line)) !== null) {
+      // Texte avant l'intra-réplique
+      if (match.index > lastIndex) {
+        const text = line.substring(lastIndex, match.index).trim();
+        if (text) {
+          const textNode = new ASTNode(NodeType.TEXT_RUN, text);
+          textNode.position = { start: lineNumber, end: lineNumber };
+          lineNode.addChild(textNode);
         }
       }
+      // Intra-réplique
+      const sdNode = new ASTNode(NodeType.STAGE_DIRECTION, match[1].trim(), { directionType: 'intra' });
+      sdNode.position = { start: lineNumber, end: lineNumber };
+      lineNode.addChild(sdNode);
+      lastIndex = match.index + match[0].length;
+    }
 
-      // Didascalie
-      const node = new ASTNode(NodeType.DIDASCALIE, didascalie.text);
-      node.position = { start: lineNumber, end: lineNumber };
-      nodes.push(node);
-
-      lastIndex = didascalie.end;
-
-      // Texte après la dernière didascalie
-      if (index === didascalies.length - 1 && lastIndex < line.length) {
-        const textAfter = line.substring(lastIndex).trim();
-        if (textAfter) {
-          if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textAfter, { speaker });
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          } else {
-            const node = new ASTNode(NodeType.TEXT, textAfter);
-            node.position = { start: lineNumber, end: lineNumber };
-            nodes.push(node);
-          }
-        }
+    // Texte restant après la dernière intra-réplique (ou ligne entière si aucune)
+    if (lastIndex < line.length) {
+      const text = line.substring(lastIndex).trim();
+      if (text) {
+        const textNode = new ASTNode(NodeType.TEXT_RUN, text);
+        textNode.position = { start: lineNumber, end: lineNumber };
+        lineNode.addChild(textNode);
       }
-    });
+    }
 
-    return nodes;
+    return lineNode;
   }
 }
 
@@ -297,23 +287,28 @@ export function astToHTML(ast) {
       case NodeType.ROOT:
         return `<div class="play-root">${childrenHTML}</div>`;
 
-      case NodeType.ACTE:
-        return `<div class="acte-container"><h1 class="acte" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+      case NodeType.SECTION:
+        return `<div class="acte-container"><h1 class="acte">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
 
-      case NodeType.SCENE:
-        return `<div class="scene-container"><h2 class="scene" data-number="${escapeHTML(node.attributes.number)}">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+      case NodeType.SUBSECTION:
+        return `<div class="scene-container"><h2 class="scene">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
 
-      case NodeType.PERSONNAGE:
-        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.name)}">${escapeHTML(node.attributes.name)}</h3>${childrenHTML}</div>`;
+      case NodeType.SPEECH:
+        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
 
-      case NodeType.DIDASCALIE:
-        return `<p class="didascalie"><em>${escapeHTML(node.value)}</em></p>`;
+      case NodeType.STAGE_DIRECTION: {
+        const dtype = node.attributes.directionType || 'between';
+        if (dtype === 'intra') {
+          return `<span class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</span>`;
+        }
+        return `<p class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</p>`;
+      }
 
-      case NodeType.DIALOGUE:
-        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.value)}</p>`;
+      case NodeType.LINE:
+        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${childrenHTML}</p>`;
 
-      case NodeType.TEXT:
-        return `<p class="text">${escapeHTML(node.value)}</p>`;
+      case NodeType.TEXT_RUN:
+        return escapeHTML(node.value);
 
       default:
         return '';
@@ -347,41 +342,36 @@ export function extractStructure(ast) {
     personnages: new Set()
   };
 
-  let currentActe = null;
+  let currentSection = null;
 
   const processNode = (node) => {
     switch (node.type) {
-      case NodeType.ACTE:
-        currentActe = {
+      case NodeType.SECTION:
+        currentSection = {
           type: 'acte',
           value: node.value,
           position: node.position,
           scenes: []
         };
-        result.items.push(currentActe);
+        result.items.push(currentSection);
         break;
 
-      case NodeType.SCENE:
+      case NodeType.SUBSECTION: {
         const sceneData = {
           type: 'scene',
           value: node.value,
           position: node.position
         };
-        if (currentActe) {
-          currentActe.scenes.push(sceneData);
+        if (currentSection) {
+          currentSection.scenes.push(sceneData);
         } else {
           result.orphanScenes.push(sceneData);
         }
         break;
+      }
 
-      case NodeType.PERSONNAGE:
-        result.personnages.add(node.attributes.name);
-        break;
-
-      case NodeType.DIALOGUE:
-        if (node.attributes && node.attributes.speaker) {
-          result.personnages.add(node.attributes.speaker);
-        }
+      case NodeType.SPEECH:
+        result.personnages.add(node.attributes.speaker);
         break;
     }
 

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "bench:parser": "node src/utils/__benchmarks__/parser-benchmark.js"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.19.1",
