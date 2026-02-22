@@ -16,10 +16,11 @@ const PAGE_WIDTHS = {
  * @param {string} [props.playSubtitle] - Sous-titre de la piece
  * @param {Object} [props.template] - Objet template avec settings (depuis BDD)
  * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
+ * @param {string} [props.presetId] - ID du preset à utiliser (nouveau système)
  * @param {Function} [props.onPagesRendered] - Callback avec le nombre de pages
  */
 export const PdfPreview = forwardRef(function PdfPreview(
-    { htmlContent, playTitle, playSubtitle, template, pageFormat = 'A5', onPagesRendered },
+    { htmlContent, playTitle, playSubtitle, template, pageFormat = 'A5', presetId, onPagesRendered },
     ref
 ) {
     const containerRef = useRef(null);
@@ -60,46 +61,57 @@ export const PdfPreview = forwardRef(function PdfPreview(
 
         setIsLoading(true);
 
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!doc) return;
-
         const fullHtml = generatePdfHtml({
             htmlContent,
             playTitle,
             playSubtitle,
             pageFormat,
             templateSettings: template?.settings || null,
+            presetId,
         });
 
-        doc.open();
-        doc.write(fullHtml);
-        doc.close();
-
-        // Référence stable pour le cleanup
-        const contentWindow = iframe.contentWindow;
         let timeoutId;
+        let pagedReadyTarget = null; // référence capturée pour le cleanup
 
         const handlePagedReady = () => {
             clearTimeout(timeoutId);
-            const pages = doc.querySelectorAll(".pagedjs_page");
-            onPagesRendered?.(pages.length);
+            const pages = iframe.contentDocument?.querySelectorAll(".pagedjs_page");
+            onPagesRendered?.(pages?.length || 0);
             setIsLoading(false);
             updateScale();
         };
 
-        contentWindow?.addEventListener("pagedjs-ready", handlePagedReady);
+        const handleIframeLoad = () => {
+            // L'iframe est chargée : le vrai contentWindow est maintenant stable.
+            // On attache le listener ici pour être certain de ne jamais le rater,
+            // même si PagedJS est en cache navigateur (chargement quasi-instantané).
+            const contentWindow = iframe.contentWindow;
+            if (!contentWindow) return;
 
-        // Timeout de sécurité
-        timeoutId = setTimeout(() => {
-            setIsLoading(false);
-            onPagesRendered?.(0);
-        }, 10000);
+            pagedReadyTarget = contentWindow;
+            contentWindow.addEventListener("pagedjs-ready", handlePagedReady);
+
+            timeoutId = setTimeout(() => {
+                setIsLoading(false);
+                onPagesRendered?.(0);
+            }, 10000);
+        };
+
+        iframe.addEventListener("load", handleIframeLoad);
+
+        // Blob URL : navigue l'iframe proprement sans document.write()
+        // (document.write invalide le contentWindow capturé avant doc.open())
+        const blob = new Blob([fullHtml], { type: "text/html" });
+        const blobUrl = URL.createObjectURL(blob);
+        iframe.src = blobUrl;
 
         return () => {
-            contentWindow?.removeEventListener("pagedjs-ready", handlePagedReady);
+            iframe.removeEventListener("load", handleIframeLoad);
+            pagedReadyTarget?.removeEventListener("pagedjs-ready", handlePagedReady);
             clearTimeout(timeoutId);
+            URL.revokeObjectURL(blobUrl);
         };
-    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, onPagesRendered, updateScale]);
+    }, [htmlContent, playTitle, playSubtitle, template, pageFormat, presetId, onPagesRendered, updateScale]);
 
     // Injection du style de scale dans l'iframe
     useEffect(() => {

@@ -1,0 +1,277 @@
+/* ============================================================================
+   SCENACTE — Template CSS de base pour PagedJS
+   Ce fichier définit le système de mise en page PDF avec custom properties.
+   Les valeurs par défaut peuvent être surchargées par les presets.
+   ============================================================================ */
+
+/* === CUSTOM PROPERTIES (VARIABLES) === */
+:root {
+  /* Format de page */
+  --page-width: 148mm;
+  --page-height: 210mm;
+
+  /* Marges */
+  --margin-top: 20mm;
+  --margin-bottom: 25mm;
+  --margin-inside: 20mm;
+  --margin-outside: 15mm;
+
+  /* Typographie */
+  --font-body: 'Crimson Text', Georgia, serif;
+  --font-size-body: 11pt;
+  --font-size-personnage: 11.5pt;
+  --font-size-acte: 18pt;
+  --font-size-scene: 14pt;
+  --line-height: 1.45;
+
+  /* Espacements */
+  --space-replique: 0.8em;
+  --space-acte: 2em;
+  --space-scene: 1.5em;
+
+  /* Couleurs */
+  --color-text: #1a1a1a;
+  --color-subtitle: #555;
+}
+
+/* === CONFIGURATION PAGEDJS === */
+
+/* Configuration des pages */
+@page {
+  size: var(--page-width) var(--page-height);
+  margin-top: var(--margin-top);
+  margin-bottom: var(--margin-bottom);
+  margin-inside: var(--margin-inside);
+  margin-outside: var(--margin-outside);
+
+  /* Numéro de page en bas au centre */
+  @bottom-center {
+    content: counter(page);
+    font-family: var(--font-body);
+    font-size: 10pt;
+    color: var(--color-text);
+  }
+}
+
+/* Running header sur les pages de gauche (verso) : titre de la pièce */
+@page :left {
+  @top-center {
+    content: string(play-title);
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    letter-spacing: 0.5pt;
+  }
+}
+
+/* Running header sur les pages de droite (recto) :
+   PagedJS ne supporte pas la concaténation dans content,
+   on utilise donc deux margin boxes séparées. */
+@page :right {
+  @top-center {
+    content: string(current-acte);
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    text-align: center;
+  }
+  @top-right {
+    content: string(current-scene);
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    text-align: left;
+  }
+}
+
+/* Pas de numéro ni header sur la première page (titre) */
+@page :first {
+  @bottom-center {
+    content: none;
+  }
+  @top-center {
+    content: none;
+  }
+}
+
+/* Page de titre dédiée */
+@page title-page {
+  @bottom-center {
+    content: none;
+  }
+  @top-center {
+    content: none;
+  }
+}
+
+/* === STYLES DE BASE === */
+
+/* Reset et base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cacher le contenu jusqu'à ce que PagedJS soit prêt */
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height);
+  color: var(--color-text);
+  visibility: hidden;
+}
+
+/* PagedJS ajoute .pagedjs_pages quand la pagination est terminée */
+.pagedjs_pages {
+  visibility: visible;
+}
+
+/* Contrôle des veuves et orphelins */
+p {
+  orphans: 3;
+  widows: 3;
+}
+
+/* === PAGE DE TITRE === */
+
+.title-page {
+  page: title-page;
+  text-align: center;
+  padding-top: 30%;
+  break-after: page;
+}
+
+.title-page h1 {
+  font-size: calc(var(--font-size-body) * 2.3);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+
+  /* Capturer le titre pour les en-têtes des pages de gauche */
+  string-set: play-title content();
+}
+
+.title-page .subtitle {
+  font-size: calc(var(--font-size-body) * 1.5);
+  font-style: italic;
+  color: var(--color-subtitle);
+}
+
+/* === CONTENU THÉÂTRAL === */
+
+.play-content {
+  break-before: page;
+}
+
+/* Conteneur racine */
+.play-root {
+  /* Le data-layout sera appliqué ici */
+}
+
+/* === ACTES === */
+
+.acte-container {
+  /* Conteneur d'acte */
+}
+
+h1.acte {
+  font-size: var(--font-size-acte);
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  margin: var(--space-acte) 0 1em;
+  break-before: page;
+
+  /* Définir le running header avec le titre de l'acte */
+  string-set: current-acte content();
+}
+
+/* === SCÈNES === */
+
+.scene-container {
+  /* Conteneur de scène */
+}
+
+h2.scene {
+  font-size: var(--font-size-scene);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  margin: var(--space-scene) 0 1em;
+
+  /* Alimenter le running header */
+  string-set: current-scene content();
+}
+
+/* === RÉPLIQUES === */
+
+.personnage-container {
+  /* Conteneur de réplique - éviter les coupures */
+  break-inside: avoid;
+  margin-bottom: var(--space-replique);
+}
+
+h3.personnage {
+  font-size: var(--font-size-personnage);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0 0 0.3em;
+}
+
+p.dialogue {
+  text-align: justify;
+  margin: 0.2em 0;
+}
+
+/* === DIDASCALIES === */
+
+p.didascalie {
+  font-style: italic;
+  margin: 0.5em 0;
+}
+
+/* === TEXTE LIBRE === */
+
+p.text {
+  margin: 0.5em 0;
+}
+
+/* === LAYOUTS PAR DATA-LAYOUT === */
+
+/* Layout CENTERED : personnage au centre */
+.play-root[data-layout="centered"] h3.personnage {
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Layout INLINE : personnage en ligne avec séparateur */
+.play-root[data-layout="inline"] h3.personnage {
+  display: inline;
+  text-transform: uppercase;
+}
+
+.play-root[data-layout="inline"] h3.personnage::after {
+  content: '. — ';
+  font-weight: normal;
+}
+
+.play-root[data-layout="inline"] p.dialogue {
+  display: inline;
+}
+
+.play-root[data-layout="inline"] .personnage-container {
+  margin-bottom: var(--space-replique);
+}
+
+/* === VISUALISATION LAB (bordures pages en dev) === */
+
+.pagedjs_page {
+  box-shadow: 0 0 0 1px #ccc;
+  margin-bottom: 10px;
+}

@@ -16,6 +16,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import LegalPage from './pages/legal/LegalPage';
 import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
+import TemplateLab from './pages/dev/TemplateLab';
 
 function RootRedirect() {
   const { user, guestMode } = useAuth();
@@ -57,7 +58,10 @@ function App() {
 
               {/* DEV only */}
               {import.meta.env.DEV && (
-                <Route path="/dev" element={<DevPlayground />} />
+                <>
+                  <Route path="/dev" element={<DevPlayground />} />
+                  <Route path="/lab" element={<TemplateLab />} />
+                </>
               )}
 
               {/* Legal routes */}
