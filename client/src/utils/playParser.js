@@ -342,41 +342,36 @@ export function extractStructure(ast) {
     personnages: new Set()
   };
 
-  let currentActe = null;
+  let currentSection = null;
 
   const processNode = (node) => {
     switch (node.type) {
-      case NodeType.ACTE:
-        currentActe = {
+      case NodeType.SECTION:
+        currentSection = {
           type: 'acte',
           value: node.value,
           position: node.position,
           scenes: []
         };
-        result.items.push(currentActe);
+        result.items.push(currentSection);
         break;
 
-      case NodeType.SCENE:
+      case NodeType.SUBSECTION: {
         const sceneData = {
           type: 'scene',
           value: node.value,
           position: node.position
         };
-        if (currentActe) {
-          currentActe.scenes.push(sceneData);
+        if (currentSection) {
+          currentSection.scenes.push(sceneData);
         } else {
           result.orphanScenes.push(sceneData);
         }
         break;
+      }
 
-      case NodeType.PERSONNAGE:
-        result.personnages.add(node.attributes.name);
-        break;
-
-      case NodeType.DIALOGUE:
-        if (node.attributes && node.attributes.speaker) {
-          result.personnages.add(node.attributes.speaker);
-        }
+      case NodeType.SPEECH:
+        result.personnages.add(node.attributes.speaker);
         break;
     }
 
