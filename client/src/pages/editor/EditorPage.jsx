@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { EditorSidebar } from "@/components/sidebar";
 import { EditorHeader } from "@/components/editor/EditorHeader";
-import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
@@ -19,14 +18,13 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { getPreviewCSS } from "@/utils/pdfExport";
+import { getPreviewCSSFromPreset } from "@/utils/pdfExport";
 import {
   PanelRightClose,
   PanelRightOpen,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { Separator } from "@radix-ui/react-dropdown-menu";
 
 export default function EditorPage() {
   const { id } = useParams();
@@ -42,7 +40,6 @@ export default function EditorPage() {
   // Référence à l'éditeur CodeMirror pour l'insertion de texte
   const editorRef = useRef(null);
 
-  // A NETTOYER : currentLine est utilisé, mais setCurrentLine n'est pas utilisé
   const [currentLine, setCurrentLine] = useState(0);
 
   // Timeout de sauvegarde automatique
@@ -80,11 +77,12 @@ export default function EditorPage() {
   const [paperSize, setPaperSize] = useState("A5");
   const [templateId, setTemplateId] = useState(null);
   const [template, setTemplate] = useState(null);
+  const [presetId, setPresetId] = useState('classique');
 
-  // CSS dynamique pour la preview basé sur le template
+  // CSS dynamique pour la preview basé sur le preset
   const previewCSS = useMemo(
-    () => getPreviewCSS(template?.settings),
-    [template?.settings],
+    () => getPreviewCSSFromPreset(presetId),
+    [presetId],
   );
 
   // Instance du parser (créée une seule fois)
@@ -107,8 +105,6 @@ export default function EditorPage() {
   } = useVersioning(id, !isGuest);
 
   // Hook parsing (utilise le contenu debouncé pour optimiser les performances)
-  // PROPOSITION ARRIVEE DANS LE REFACTO : A CONSIDERER PAR RAPPORT A LA LIGNE SUIVANTE
-  // const { htmlContent, structure } = usePlayParsing(debouncedContent, parser);
   const { structure, statistics, htmlContent } = usePlayParsing(
     debouncedContent,
     parser,
@@ -133,6 +129,12 @@ export default function EditorPage() {
       setPaperSize(response.play.paperSize || "A5");
       setTemplateId(response.play.templateId || null);
       setTemplate(response.play.template || null);
+
+      // Charger le presetId depuis localStorage (en attendant la migration BDD)
+      const savedPresetId = localStorage.getItem(`scenacte_preset_${id}`);
+      if (savedPresetId) {
+        setPresetId(savedPresetId);
+      }
     } catch (error) {
       toast.error("Erreur lors du chargement de la piece");
       navigate("/library");
@@ -401,46 +403,6 @@ export default function EditorPage() {
     };
   }, [content, lastSavedContent, savePlay, play]);
 
-  // MODIFICATION FONCTIONNALITÉ INTEGRATION : INSÉRER SYNTAXE =/= TOGGLE FORMAT
-  // const handleInsertSyntax = useCallback((syntax) => {
-  //     if (!editorRef.current) return;
-
-  //     // Mapper la syntaxe vers le formatType attendu par toggleLineFormat
-  //     const formatMap = {
-  //         "#": "heading1",
-  //         "##": "heading2",
-  //         "@": "personnage",
-  //         "(": "didascalie",
-  //         "": "dialogue",
-  //     };
-
-  //     const formatType = formatMap[syntax];
-  //     if (formatType) {
-  //         editorRef.current.toggleLineFormat(formatType);
-  //     }
-  // }, []);
-
-  /**
-   * Toggle un format de ligne dans l'éditeur
-   */
-  const toggleFormat = useCallback((formatId) => {
-    if (!editorRef.current || !editorRef.current.toggleLineFormat) return;
-
-    // Mapper les IDs des boutons vers les types de format
-    const formatTypeMap = {
-      acte: "heading",
-      scene: "heading",
-      personnage: "personnage",
-      didascalie: "didascalie",
-      dialogue: "dialogue",
-    };
-
-    const formatType = formatTypeMap[formatId];
-    if (formatType) {
-      editorRef.current.toggleLineFormat(formatType);
-    }
-  }, []);
-
   /**
    * Insérer un nom de personnage dans l'éditeur
    */
@@ -509,13 +471,23 @@ export default function EditorPage() {
       setPaperSize(newSettings.paperSize);
       setTemplateId(newSettings.templateId);
       setTemplate(newSettings.template);
+      setPresetId(newSettings.presetId || null);
 
       // Sauvegarder sur le serveur
       try {
         await storageService.updatePlaySettings(id, {
           paperSize: newSettings.paperSize,
           templateId: newSettings.templateId,
+          // presetId sera persisté dans une future migration BDD
         });
+
+        // Persister le presetId en localStorage en attendant la migration BDD
+        if (newSettings.presetId) {
+          localStorage.setItem(`scenacte_preset_${id}`, newSettings.presetId);
+        } else {
+          localStorage.removeItem(`scenacte_preset_${id}`);
+        }
+
         toast.success("Parametres de mise en page enregistres");
       } catch (error) {
         toast.error("Erreur lors de la sauvegarde des parametres");
@@ -674,16 +646,6 @@ export default function EditorPage() {
                   />
                 </div>
 
-                {/* MASQUE EN ATTENDANT D'ACTIVER LES BOUTONS */}
-                {/* <div className="w-full max-w-3xl mx-auto mt-2 shrink-0">
-                                <SyntaxBar
-                                    onInsert={toggleFormat}
-                                    onUndo={handleUndo}
-                                    onRedo={handleRedo}
-                                    canUndo={canUndo}
-                                    canRedo={canRedo}
-                                />
-                            </div> */}
               </div>
 
               {/* Preview - masquée sous md */}
@@ -725,8 +687,7 @@ export default function EditorPage() {
         onOpenChange={setShowPageSettingsModal}
         playId={id}
         currentPaperSize={paperSize}
-        currentTemplateId={templateId}
-        currentTemplate={template}
+        currentPresetId={presetId}
         onSettingsChange={handleSettingsChange}
       />
 
@@ -739,6 +700,7 @@ export default function EditorPage() {
         playSubtitle={play?.subtitle}
         pageFormat={paperSize}
         template={template}
+        presetId={presetId}
         onOpenLayoutModal={handleOpenLayoutModal}
       />
 

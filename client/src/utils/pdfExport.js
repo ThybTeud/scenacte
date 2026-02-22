@@ -2,6 +2,10 @@
  * Utilitaires pour l'export PDF avec PagedJS
  */
 
+// Import du CSS de base pour le nouveau système de presets
+import baseCSS from '../assets/styles/scenacte-template.css?inline';
+import { getPreset, generatePresetCSS } from '../config/template-presets';
+
 /**
  * Mapping des polices pour les imports Google Fonts
  */
@@ -28,6 +32,7 @@ const FONT_FALLBACKS = {
  * @param {string} [params.playSubtitle] - Sous-titre de la piece
  * @param {string} [params.pageFormat='A5'] - Format de page (A4 ou A5)
  * @param {Object} [params.templateSettings] - Settings du template depuis la BDD
+ * @param {string} [params.presetId] - ID du preset à utiliser (nouveau système)
  * @returns {string} - HTML complet pour le PDF
  */
 export function generatePdfHtml({
@@ -36,7 +41,58 @@ export function generatePdfHtml({
   playSubtitle,
   pageFormat = 'A5',
   templateSettings = null,
+  presetId = null,
 }) {
+  // NOUVEAU SYSTÈME : Si presetId est fourni, utiliser le système de presets
+  if (presetId) {
+    const preset = getPreset(presetId);
+    const presetCSS = generatePresetCSS(preset);
+    const layout = preset.layout;
+
+    // Extraire la police du preset pour l'import Google Fonts
+    const fontFamily = preset.variables['--font-body']?.match(/'([^']+)'/)?.[1];
+    const fontImport = fontFamily ? fontFamily.replace(/ /g, '+') : 'Crimson+Text';
+    const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${fontImport}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(playTitle || '')}</title>
+  <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
+  <link href="${googleFontsUrl}" rel="stylesheet">
+  <style>${baseCSS}</style>
+  <style>${presetCSS}</style>
+</head>
+<body>
+  <section class="title-page">
+    <h1>${escapeHtml(playTitle || '')}</h1>
+    ${playSubtitle ? `<p class="subtitle">${escapeHtml(playSubtitle)}</p>` : ''}
+  </section>
+  <section class="play-content">
+    <div class="play-root" data-layout="${layout}">
+      ${htmlContent}
+    </div>
+  </section>
+  <script>
+    // Handler PagedJS pour dispatcher l'événement quand le rendu est terminé
+    class PagedHandler extends Paged.Handler {
+      constructor(chunker, polisher, caller) {
+        super(chunker, polisher, caller);
+      }
+
+      afterRendered(pages) {
+        window.dispatchEvent(new Event('pagedjs-ready'));
+      }
+    }
+
+    Paged.registerHandlers(PagedHandler);
+  </script>
+</body>
+</html>`;
+  }
+
+  // ANCIEN SYSTÈME : Comportement conservé pour rétrocompatibilité
   // Settings par defaut si aucun template fourni
   const settings = templateSettings || {
     fontFamily: 'Crimson Text',
@@ -189,6 +245,20 @@ export function generatePdfHtml({
   <section class="play-content">
     ${htmlContent}
   </section>
+  <script>
+    // Handler PagedJS pour dispatcher l'événement quand le rendu est terminé
+    class PagedHandler extends Paged.Handler {
+      constructor(chunker, polisher, caller) {
+        super(chunker, polisher, caller);
+      }
+
+      afterRendered(pages) {
+        window.dispatchEvent(new Event('pagedjs-ready'));
+      }
+    }
+
+    Paged.registerHandlers(PagedHandler);
+  </script>
 </body>
 </html>
   `;
@@ -244,7 +314,100 @@ export function getPreviewStyles(templateSettings) {
 }
 
 /**
- * Genere le CSS pour les elements theatraux de la preview
+ * Genere le CSS pour la preview inline depuis un preset
+ * @param {string} presetId - ID du preset
+ * @returns {string} - Styles CSS sous forme de string
+ */
+export function getPreviewCSSFromPreset(presetId) {
+  const preset = getPreset(presetId);
+  const vars = preset.variables;
+
+  // Extraire les valeurs du preset
+  const fontBody = vars['--font-body']?.replace(/'/g, '') || 'Crimson Text, Georgia, serif';
+  const fontSizeBody = vars['--font-size-body']?.replace('pt', '') || '11';
+  const lineHeight = vars['--line-height'] || '1.45';
+  const fontSizeActe = vars['--font-size-acte']?.replace('pt', '') || '18';
+  const fontSizeScene = vars['--font-size-scene']?.replace('pt', '') || '14';
+  const fontSizePersonnage = vars['--font-size-personnage']?.replace('pt', '') || '11.5';
+  const spaceReplique = vars['--space-replique'] || '0.8em';
+
+  // Adapter le style du personnage selon le layout
+  const personnageStyle = preset.layout === 'centered'
+    ? `
+      display: block;
+      text-align: center;
+      text-transform: uppercase;
+    `
+    : `
+      display: inline;
+      text-transform: uppercase;
+    `;
+
+  const personnageAfter = preset.layout === 'inline'
+    ? `
+    .preview-content .personnage::after {
+      content: '. — ';
+      font-weight: normal;
+    }
+    `
+    : '';
+
+  const dialogueStyle = preset.layout === 'inline'
+    ? 'display: inline; text-align: justify;'
+    : 'text-align: justify;';
+
+  return `
+    .preview-content {
+      font-family: ${fontBody};
+      font-size: ${fontSizeBody}pt;
+      line-height: ${lineHeight};
+    }
+
+    .preview-content .acte {
+      font-size: ${fontSizeActe}pt;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 2rem 0 1rem;
+    }
+
+    .preview-content .scene {
+      font-size: ${fontSizeScene}pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .preview-content .personnage {
+      font-size: ${fontSizePersonnage}pt;
+      font-weight: 600;
+      margin: 1rem 0 0.5rem;
+      ${personnageStyle}
+    }
+
+    ${personnageAfter}
+
+    .preview-content .personnage-container {
+      margin-bottom: ${spaceReplique};
+    }
+
+    .preview-content .didascalie {
+      font-style: italic;
+      text-align: right;
+      margin: 0.75rem 0;
+      padding-left: 4rem;
+    }
+
+    .preview-content .dialogue {
+      ${dialogueStyle}
+      margin: 0.5rem 0;
+    }
+  `;
+}
+
+/**
+ * Genere le CSS pour les elements theatraux de la preview (ancien système BDD)
  * @param {Object} templateSettings - Settings du template depuis la BDD
  * @returns {string} - Styles CSS sous forme de string
  */
