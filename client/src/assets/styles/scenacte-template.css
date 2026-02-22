@@ -224,21 +224,45 @@ h3.personnage {
 }
 
 p.dialogue {
-  text-align: justify;
   margin: 0.2em 0;
 }
 
 /* === DIDASCALIES === */
 
-p.didascalie {
+/* Base commune */
+.didascalie {
   font-style: italic;
-  margin: 0.5em 0;
 }
 
-/* === TEXTE LIBRE === */
+/* Liminaire — bloc après acte/scène */
+p.didascalie[data-type="opening"] {
+  text-align: justify;
+  margin: 0.8em 0;
+}
 
-p.text {
-  margin: 0.5em 0;
+/* Inter-répliques — bloc flottant à droite, largeur au contenu */
+p.didascalie[data-type="between"] {
+  display: block;
+  text-align: right;
+  width: fit-content;
+  margin-left: auto;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Pré-réplique — inline après le personnage, minuscules */
+p.didascalie[data-type="pre"] {
+  display: inline;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+/* Intra-réplique — inline dans le dialogue */
+span.didascalie[data-type="intra"]::before {
+  content: '(';
+}
+span.didascalie[data-type="intra"]::after {
+  content: ')';
 }
 
 /* === LAYOUTS PAR DATA-LAYOUT === */
@@ -250,15 +274,67 @@ p.text {
   text-transform: uppercase;
 }
 
-/* Layout INLINE : personnage en ligne avec séparateur */
+/* Layout CENTERED : réplique justifiée */
+.play-root[data-layout="centered"] p.dialogue {
+  text-align: justify;
+}
+
+/* Centré SANS pré-réplique : pas de ponctuation après le nom */
+.play-root[data-layout="centered"] .personnage-container:not(:has(> .didascalie[data-type="pre"])) h3.personnage::after {
+  content: none;
+}
+
+/* Centré AVEC pré-réplique : centrer le nom + la pré-réplique */
+.play-root[data-layout="centered"] .personnage-container:has(> .didascalie[data-type="pre"]) {
+  text-align: center;
+}
+
+/* Centré AVEC pré-réplique : virgule avant la didascalie */
+.play-root[data-layout="centered"] .personnage-container:has(> .didascalie[data-type="pre"]) h3.personnage {
+  display: inline;
+}
+.play-root[data-layout="centered"] .personnage-container:has(> .didascalie[data-type="pre"]) h3.personnage::after {
+  content: ', ';
+  font-weight: normal;
+}
+
+/* Pré-réplique centré : inline, suivie d'un point */
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"] {
+  display: inline;
+  text-align: center;
+}
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"]::before {
+  content: none;
+}
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"]::after {
+  content: '.';
+}
+
+/* Layout INLINE : personnage en ligne */
 .play-root[data-layout="inline"] h3.personnage {
   display: inline;
   text-transform: uppercase;
 }
 
-.play-root[data-layout="inline"] h3.personnage::after {
-  content: '. — ';
+/* Inline SANS pré-réplique : point + tiret */
+.play-root[data-layout="inline"] .personnage-container:not(:has(> .didascalie[data-type="pre"])) h3.personnage::after {
+  content: '. \2014\a0 ';
   font-weight: normal;
+}
+
+/* Inline AVEC pré-réplique : virgule */
+.play-root[data-layout="inline"] .personnage-container:has(> .didascalie[data-type="pre"]) h3.personnage::after {
+  content: ', ';
+  font-weight: normal;
+}
+
+/* Pré-réplique inline : point + tiret après */
+.play-root[data-layout="inline"] p.didascalie[data-type="pre"]::before {
+  content: none;
+}
+.play-root[data-layout="inline"] p.didascalie[data-type="pre"]::after {
+  content: '.\a0 \2014\a0 ';
+  font-style: normal;
 }
 
 .play-root[data-layout="inline"] p.dialogue {
@@ -267,6 +343,7 @@ p.text {
 
 .play-root[data-layout="inline"] .personnage-container {
   margin-bottom: var(--space-replique);
+  text-align: justify;
 }
 
 /* === VISUALISATION LAB (bordures pages en dev) === */

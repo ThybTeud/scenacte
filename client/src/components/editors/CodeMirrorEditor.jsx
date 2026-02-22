@@ -41,22 +41,37 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
       }
       buildDeco(view) {
         const builder = new RangeSetBuilder();
-        const { from, to } = view.viewport; // visible range for performance
+        const { from, to } = view.viewport;
         let pos = from;
+
         while (pos <= to) {
           const line = view.state.doc.lineAt(pos);
           const text = line.text;
+
           if (/^##\s*/.test(text)) {
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-scene' }));
           } else if (/^#(?!#)\s*/.test(text)) {
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-act' }));
           } else if (/^@\s*/.test(text)) {
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-character' }));
-          } else if (/^\([^\)]*\)\s*$/.test(text)) { // Vérifie que l'échappement '\' est nécessaire pour les didascalies.
+          } else if (/^\([^)]*\)\s*$/.test(text)) {
             builder.add(line.from, line.from, Decoration.line({ class: 'cm-didascalie' }));
+          } else {
+            // Chercher les (...) inline dans la ligne
+            const regex = /\([^)]+\)/g;
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+              builder.add(
+                line.from + match.index,
+                line.from + match.index + match[0].length,
+                Decoration.mark({ class: 'cm-didascalie-inline' })
+              );
+            }
           }
+
           pos = line.to + 1;
         }
+
         return builder.finish();
       }
     }, { decorations: v => v.decorations });
@@ -137,6 +152,10 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
         fontWeight: '600',
       },
       '.cm-didascalie': {
+        color: 'oklch(44.6% 0.03 256.802)',
+        fontStyle: 'italic',
+      },
+      '.cm-didascalie-inline': {
         color: 'oklch(44.6% 0.03 256.802)',
         fontStyle: 'italic',
       }
