@@ -15,23 +15,23 @@
  */
 export const NodeType = {
   ROOT: 'root',
-  ACTE: 'acte',
-  SCENE: 'scene',
-  PERSONNAGE: 'personnage',
-  DIDASCALIE: 'didascalie',
-  DIALOGUE: 'dialogue',
-  TEXT: 'text',
-  LINE_BREAK: 'linebreak'
+  SECTION: 'section',
+  SUBSECTION: 'subsection',
+  SPEECH: 'speech',
+  STAGE_DIRECTION: 'stage_direction',
+  LINE: 'line',
+  TEXT_RUN: 'text_run',
+  LINE_BREAK: 'line_break'
 };
 
 /**
  * Expression régulière pour détecter les balises
  */
 const TAG_PATTERNS = {
-  acte: /^#(?!#)\s*(.+?)\s*$/i,
-  scene: /^##\s*(.+?)\s*$/mi,
-  personnage: /^@\s*(.+?)\s*$/mi,
-  didascalie: /^\(\s*(.+?)\s*\)$/i
+  section: /^#(?!#)\s*(.+?)\s*$/i,
+  subsection: /^##\s*(.+?)\s*$/i,
+  speaker: /^@\s*(.+?)\s*$/i,
+  stageDirection: /^\(\s*(.+?)\s*\)$/i
 };
 
 /**
@@ -98,10 +98,10 @@ export class PlayParser {
       }
 
       // Vérifier acte (#)
-      const acteMatch = TAG_PATTERNS.acte.exec(trimmedLine);
+      const acteMatch = TAG_PATTERNS.section.exec(trimmedLine);
       if (acteMatch) {
         const number = acteMatch[1] || '1';
-        const node = new ASTNode(NodeType.ACTE, null, { number });
+        const node = new ASTNode(NodeType.SECTION, null, { number });
         node.position = { start: i, end: i };
         node.value = acteMatch[1].trim();
         root.addChild(node);
@@ -115,15 +115,15 @@ export class PlayParser {
       }
 
       // Vérifier scène (##)
-      const sceneMatch = TAG_PATTERNS.scene.exec(trimmedLine);
+      const sceneMatch = TAG_PATTERNS.subsection.exec(trimmedLine);
       if (sceneMatch) {
         const number = sceneMatch[1] || '1';
-        const node = new ASTNode(NodeType.SCENE, null, { number });
+        const node = new ASTNode(NodeType.SUBSECTION, null, { number });
         node.position = { start: i, end: i };
         node.value = sceneMatch[1].trim();
 
         // Ajouter la scène au parent approprié
-        const parent = this.getParentFor(NodeType.SCENE, currentActe, currentScene, currentPersonnage, root);
+        const parent = this.getParentFor(NodeType.SUBSECTION, currentActe, currentScene, currentPersonnage, root);
         parent.addChild(node);
 
         // Mettre à jour les contextes
@@ -134,15 +134,15 @@ export class PlayParser {
       }
 
       // Vérifier personnage (@)
-      const personnageMatch = TAG_PATTERNS.personnage.exec(trimmedLine);
+      const personnageMatch = TAG_PATTERNS.speaker.exec(trimmedLine);
       if (personnageMatch) {
         const name = personnageMatch[1].trim();
         currentSpeaker = name;
-        const node = new ASTNode(NodeType.PERSONNAGE, null, { name });
+        const node = new ASTNode(NodeType.SPEECH, null, { name });
         node.position = { start: i, end: i };
 
         // Ajouter le personnage au parent approprié
-        const parent = this.getParentFor(NodeType.PERSONNAGE, currentActe, currentScene, currentPersonnage, root);
+        const parent = this.getParentFor(NodeType.SPEECH, currentActe, currentScene, currentPersonnage, root);
         parent.addChild(node);
 
         // Mettre à jour le contexte
@@ -173,20 +173,20 @@ export class PlayParser {
    */
   getParentFor(type, currentActe, currentScene, currentPersonnage, root) {
     switch(type) {
-      case NodeType.ACTE:
+      case NodeType.SECTION:
         return root;
 
-      case NodeType.SCENE:
+      case NodeType.SUBSECTION:
         return currentActe || root;
 
-      case NodeType.PERSONNAGE:
+      case NodeType.SPEECH:
         return currentScene || currentActe || root;
 
-      case NodeType.DIALOGUE:
-      case NodeType.DIDASCALIE:
+      case NodeType.LINE:
+      case NodeType.STAGE_DIRECTION:
         return currentPersonnage || currentScene || currentActe || root;
 
-      case NodeType.TEXT:
+      case NodeType.TEXT_RUN:
         return currentPersonnage || currentScene || currentActe || root;
 
       default:
@@ -220,11 +220,11 @@ export class PlayParser {
     if (didascalies.length === 0) {
       // Pas de didascalie, traiter comme dialogue ou texte
       if (speaker) {
-        const node = new ASTNode(NodeType.DIALOGUE, line.trim(), { speaker });
+        const node = new ASTNode(NodeType.LINE, line.trim(), { speaker });
         node.position = { start: lineNumber, end: lineNumber };
         nodes.push(node);
       } else {
-        const node = new ASTNode(NodeType.TEXT, line.trim());
+        const node = new ASTNode(NodeType.TEXT_RUN, line.trim());
         node.position = { start: lineNumber, end: lineNumber };
         nodes.push(node);
       }
@@ -238,11 +238,11 @@ export class PlayParser {
         const textBefore = line.substring(lastIndex, didascalie.start).trim();
         if (textBefore) {
           if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textBefore, { speaker });
+            const node = new ASTNode(NodeType.LINE, textBefore, { speaker });
             node.position = { start: lineNumber, end: lineNumber };
             nodes.push(node);
           } else {
-            const node = new ASTNode(NodeType.TEXT, textBefore);
+            const node = new ASTNode(NodeType.TEXT_RUN, textBefore);
             node.position = { start: lineNumber, end: lineNumber };
             nodes.push(node);
           }
@@ -250,7 +250,7 @@ export class PlayParser {
       }
 
       // Didascalie
-      const node = new ASTNode(NodeType.DIDASCALIE, didascalie.text);
+      const node = new ASTNode(NodeType.STAGE_DIRECTION, didascalie.text);
       node.position = { start: lineNumber, end: lineNumber };
       nodes.push(node);
 
@@ -261,11 +261,11 @@ export class PlayParser {
         const textAfter = line.substring(lastIndex).trim();
         if (textAfter) {
           if (speaker) {
-            const node = new ASTNode(NodeType.DIALOGUE, textAfter, { speaker });
+            const node = new ASTNode(NodeType.LINE, textAfter, { speaker });
             node.position = { start: lineNumber, end: lineNumber };
             nodes.push(node);
           } else {
-            const node = new ASTNode(NodeType.TEXT, textAfter);
+            const node = new ASTNode(NodeType.TEXT_RUN, textAfter);
             node.position = { start: lineNumber, end: lineNumber };
             nodes.push(node);
           }
