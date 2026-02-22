@@ -31,7 +31,7 @@ const TAG_PATTERNS = {
   section: /^#(?!#)\s*(.+?)\s*$/i,
   subsection: /^##\s*(.+?)\s*$/i,
   speaker: /^@\s*(.+?)\s*$/i,
-  stageDirection: /^\(\s*(.+?)\s*\)$/i,
+  stageDirection: /^\(\s*([^)]+)\s*\)$/i,
   preWithText: /^\(([^)]+)\)\s*(.+)$/
 };
 
