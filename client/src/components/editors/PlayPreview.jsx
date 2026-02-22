@@ -85,65 +85,132 @@ export function PlayPreview({ content = '', onScroll, scrollSync }) {
       className="h-full w-full overflow-y-auto border border-gray-200 rounded bg-white p-6"
     >
       <style>{`
-        /* Styles pour le rendu de la pièce */
-        .play-root {
-          font-family: var(--font-theater);
-          color: #1f2937;
-          text-align: center;
-        }
+  /* === Base === */
+  .play-root {
+    font-family: 'Crimson Text', Georgia, serif;
+    color: #1a1a1a;
+    line-height: 1.45;
+    max-width: 600px;
+    margin: 0 auto;
+  }
 
-        .acte {
-          font-weight: 900;
-          text-transform: uppercase;
-        }
+  /* === Actes === */
+  h1.acte {
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 2em 0 1em;
+  }
 
-        .scene {
-          font-weight: 900;
-          font-variant-caps: small-caps;
-        }
+  /* === Scènes === */
+  h2.scene {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 1.5em 0 1em;
+  }
 
-        .personnage {
-          margin: 1rem 0 1rem;
-          font-variant-caps: small-caps;
-        }
+  /* === Répliques === */
+  .personnage-container {
+    margin-bottom: 0.8em;
+  }
 
-        .didascalie {
-          margin: 2rem 0;
-          padding-left: 8rem;
-          font-style: italic;
-          text-align: right;
-        }
+  h3.personnage {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 0 0 0.3em;
+  }
 
-        .dialogue {
-          text-align: justify;
-        }
+  /* Personnage SANS pré-réplique */
+  .personnage-container:not(:has(> .didascalie[data-type="pre"])) h3.personnage::after {
+    content: none;
+  }
 
-        /* Vérifier l'utilités des styles suivants */
-        .text {
-          margin: 0.75rem 0;
-          color: #1f2937;
-        }
+  /* Personnage AVEC pré-réplique : inline + virgule */
+  .personnage-container:has(> .didascalie[data-type="pre"]) {
+    text-align: center;
+  }
+  .personnage-container:has(> .didascalie[data-type="pre"]) h3.personnage {
+    display: inline;
+  }
+  .personnage-container:has(> .didascalie[data-type="pre"]) h3.personnage::after {
+    content: ', ';
+    font-weight: normal;
+  }
 
-        .empty-state {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          color: #9ca3af;
-          font-style: italic;
-          text-align: center;
-        }
+  /* === Dialogue === */
+  p.dialogue {
+    text-align: justify;
+    margin: 0.2em 0;
+  }
 
-        .error-state {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          color: #ef4444;
-          font-weight: 500;
-          text-align: center;
-        }
-      `}</style>
+  /* === Didascalies === */
+  .didascalie {
+    font-style: italic;
+  }
+
+  /* Liminaire */
+  p.didascalie[data-type="opening"] {
+    text-align: justify;
+    margin: 0.8em 0;
+  }
+
+  /* Inter-répliques */
+  p.didascalie[data-type="between"] {
+    display: block;
+    text-align: right;
+    width: fit-content;
+    margin-left: auto;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  /* Pré-réplique */
+  p.didascalie[data-type="pre"] {
+    display: inline;
+    margin: 0;
+    text-transform: lowercase;
+  }
+  p.didascalie[data-type="pre"]::before {
+    content: none;
+  }
+  p.didascalie[data-type="pre"]::after {
+    content: '.';
+  }
+
+  /* Intra-réplique */
+  span.didascalie[data-type="intra"]::before {
+    content: '(';
+  }
+  span.didascalie[data-type="intra"]::after {
+    content: ')';
+  }
+
+  /* === États vides / erreur === */
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #9ca3af;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .error-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #ef4444;
+    font-weight: 500;
+    text-align: center;
+  }
+`}</style>
       <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </div>
   );
