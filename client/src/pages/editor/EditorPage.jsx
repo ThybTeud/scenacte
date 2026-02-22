@@ -18,7 +18,8 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { getPreviewCSSFromPreset } from "@/utils/pdfExport";
+import { baseCSS } from "@/utils/pdfExport";
+import { generatePresetCSS, getPreset } from "@/config/template-presets";
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -79,11 +80,8 @@ export default function EditorPage() {
   const [template, setTemplate] = useState(null);
   const [presetId, setPresetId] = useState('classique');
 
-  // CSS dynamique pour la preview basé sur le preset
-  const previewCSS = useMemo(
-    () => getPreviewCSSFromPreset(presetId),
-    [presetId],
-  );
+  // Preset actif pour la preview et le CSS
+  const preset = useMemo(() => getPreset(presetId), [presetId]);
 
   // Instance du parser (créée une seule fois)
   const parser = useMemo(() => new PlayParser(), []);
@@ -661,13 +659,17 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <style>{previewCSS}</style>
-                  <div
-                    className="preview-content h-full w-full bg-white overflow-auto p-4"
-                    dangerouslySetInnerHTML={{
-                      __html: htmlContent,
-                    }}
-                  />
+                  <style>{baseCSS}</style>
+                  <style>{generatePresetCSS(preset)}</style>
+                  <div className="preview-content h-full w-full bg-white overflow-auto p-4">
+                    <div
+                      className="play-root"
+                      data-layout={preset.layout}
+                      dangerouslySetInnerHTML={{
+                        __html: htmlContent,
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
