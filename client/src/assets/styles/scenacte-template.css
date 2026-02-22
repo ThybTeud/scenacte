@@ -230,15 +230,43 @@ p.dialogue {
 
 /* === DIDASCALIES === */
 
-p.didascalie {
+/* Base commune */
+.didascalie {
   font-style: italic;
+}
+
+/* Liminaire — bloc après acte/scène, avant première réplique */
+p.didascalie[data-type="opening"] {
+  text-align: justify;
+  margin: 0.8em 0;
+}
+
+/* Inter-répliques — bloc entre deux répliques */
+p.didascalie[data-type="between"] {
+  text-align: center;
   margin: 0.5em 0;
 }
 
-/* === TEXTE LIBRE === */
+/* Pré-réplique — bloc après le nom du personnage, avant le dialogue */
+p.didascalie[data-type="pre"] {
+  display: inline;
+  margin: 0;
+}
 
-p.text {
-  margin: 0.5em 0;
+/* Parenthèses CSS pour pré-réplique */
+p.didascalie[data-type="pre"]::before {
+  content: '(';
+}
+p.didascalie[data-type="pre"]::after {
+  content: ')';
+}
+
+/* Intra-réplique — inline dans le dialogue */
+span.didascalie[data-type="intra"]::before {
+  content: '(';
+}
+span.didascalie[data-type="intra"]::after {
+  content: ')';
 }
 
 /* === LAYOUTS PAR DATA-LAYOUT === */
@@ -248,6 +276,19 @@ p.text {
   display: block;
   text-align: center;
   text-transform: uppercase;
+}
+
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"] {
+  display: block;
+  text-align: center;
+  margin: 0 0 0.3em;
+}
+
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"]::before {
+  content: '(';
+}
+.play-root[data-layout="centered"] p.didascalie[data-type="pre"]::after {
+  content: ')';
 }
 
 /* Layout INLINE : personnage en ligne avec séparateur */
@@ -267,6 +308,10 @@ p.text {
 
 .play-root[data-layout="inline"] .personnage-container {
   margin-bottom: var(--space-replique);
+}
+
+.play-root[data-layout="inline"] p.didascalie[data-type="pre"] {
+  display: inline;
 }
 
 /* === VISUALISATION LAB (bordures pages en dev) === */
