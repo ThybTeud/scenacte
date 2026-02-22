@@ -18,7 +18,7 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { baseCSS } from "@/utils/pdfExport";
+import { previewCSS } from "@/utils/pdfExport";
 import { generatePresetCSS, getPreset } from "@/config/template-presets";
 import {
   PanelRightClose,
@@ -659,7 +659,7 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <style>{baseCSS}</style>
+                  <style>{previewCSS}</style>
                   <style>{generatePresetCSS(preset)}</style>
                   <div className="preview-content h-full w-full bg-white overflow-auto p-4">
                     <div

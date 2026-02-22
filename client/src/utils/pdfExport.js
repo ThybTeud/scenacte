@@ -8,6 +8,15 @@ import { getPreset, generatePresetCSS } from '../config/template-presets';
 
 export { baseCSS };
 
+// Version du CSS de base pour la preview navigateur :
+// neutralise visibility:hidden (réservé à PagedJS) en retirant uniquement
+// cette déclaration du bloc body, tout en conservant les propriétés
+// typographiques (font-family, font-size, line-height, color).
+export const previewCSS = baseCSS.replace(
+  /(body\s*\{[^}]*)visibility\s*:\s*hidden\s*;?\s*/g,
+  '$1',
+);
+
 /**
  * Mapping des polices pour les imports Google Fonts
  */
