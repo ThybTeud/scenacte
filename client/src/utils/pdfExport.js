@@ -343,15 +343,6 @@ export function getPreviewCSSFromPreset(presetId) {
       text-transform: uppercase;
     `;
 
-  const personnageAfter = preset.layout === 'inline'
-    ? `
-    .preview-content .personnage::after {
-      content: '. — ';
-      font-weight: normal;
-    }
-    `
-    : '';
-
   const dialogueStyle = preset.layout === 'inline'
     ? 'display: inline; text-align: justify;'
     : 'text-align: justify;';
@@ -386,22 +377,72 @@ export function getPreviewCSSFromPreset(presetId) {
       ${personnageStyle}
     }
 
-    ${personnageAfter}
+    /* Personnage SANS pré-réplique : pas de ponctuation */
+    .preview-content .personnage-container:not(:has(> .didascalie[data-type="pre"])) .personnage::after {
+      content: none;
+    }
+
+    /* Personnage AVEC pré-réplique : inline + virgule */
+    .preview-content .personnage-container:has(> .didascalie[data-type="pre"]) {
+      text-align: center;
+    }
+    .preview-content .personnage-container:has(> .didascalie[data-type="pre"]) .personnage {
+      display: inline;
+    }
+    .preview-content .personnage-container:has(> .didascalie[data-type="pre"]) .personnage::after {
+      content: ', ';
+      font-weight: normal;
+    }
 
     .preview-content .personnage-container {
       margin-bottom: ${spaceReplique};
     }
 
+    /* Base commune */
     .preview-content .didascalie {
       font-style: italic;
+    }
+
+    /* Liminaire */
+    .preview-content p.didascalie[data-type="opening"] {
+      text-align: justify;
+      margin: 0.8em 0;
+    }
+
+    /* Inter-répliques */
+    .preview-content p.didascalie[data-type="between"] {
+      display: block;
       text-align: right;
-      margin: 0.75rem 0;
-      padding-left: 4rem;
+      width: fit-content;
+      margin-left: auto;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+    }
+
+    /* Pré-réplique */
+    .preview-content p.didascalie[data-type="pre"] {
+      display: inline;
+      margin: 0;
+      text-transform: lowercase;
+    }
+    .preview-content p.didascalie[data-type="pre"]::before {
+      content: none;
+    }
+    .preview-content p.didascalie[data-type="pre"]::after {
+      content: '.';
+    }
+
+    /* Intra-réplique */
+    .preview-content span.didascalie[data-type="intra"]::before {
+      content: '(';
+    }
+    .preview-content span.didascalie[data-type="intra"]::after {
+      content: ')';
     }
 
     .preview-content .dialogue {
       ${dialogueStyle}
-      margin: 0.5rem 0;
+      margin: 0.2em 0;
     }
   `;
 }
