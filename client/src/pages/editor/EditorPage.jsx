@@ -665,30 +665,21 @@ export default function EditorPage() {
                   <style>{scopeForPreview(generatePresetCSS(preset))}</style>
                   <div
                     ref={previewContainerRef}
-                    className="h-full w-full bg-red-100 overflow-y-auto overflow-x-hidden"
+                    className="h-full w-full bg-gray-100 overflow-y-auto overflow-x-hidden flex justify-center p-4"
                   >
-                    <div className="flex justify-center p-4">
                     <div
+                      className="play-root bg-white outline outline-1 outline-gray-300 h-fit"
+                      data-layout={preset.layout}
                       style={{
                         width: `${pageWidthPx}px`,
                         zoom: previewScale,
+                        paddingLeft: preset.variables['--margin-inside'] || '20mm',
+                        paddingRight: preset.variables['--margin-outside'] || '15mm',
+                        paddingTop: preset.variables['--margin-top'] || '20mm',
+                        paddingBottom: preset.variables['--margin-bottom'] || '25mm',
                       }}
-                    >
-                      <div
-                        className="play-root bg-white outline outline-1 outline-gray-300"
-                        data-layout={preset.layout}
-                        style={{
-                          paddingLeft: preset.variables['--margin-inside'] || '20mm',
-                          paddingRight: preset.variables['--margin-outside'] || '15mm',
-                          paddingTop: preset.variables['--margin-top'] || '20mm',
-                          paddingBottom: preset.variables['--margin-bottom'] || '25mm',
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: htmlContent,
-                        }}
-                      />
-                    </div>
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: htmlContent }}
+                    />
                   </div>
                 </div>
               )}

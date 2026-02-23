@@ -8,18 +8,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export function useScaledPreview(pageWidth) {
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
-
+  const PX_PER_MM = 96 / 25.4;
+  
   // Convertir mm en px (96dpi)
-  const pageWidthPx = parseFloat(pageWidth) * (96 / 25.4);
+  const pageWidthPx = parseFloat(pageWidth) * PX_PER_MM;
 
   const updateScale = useCallback(() => {
     if (!containerRef.current) return;
-    const containerWidth = containerRef.current.clientWidth;
-    const padding = 32; // 16px de chaque côté
-    const availableWidth = containerWidth - padding;
+    const style = getComputedStyle(containerRef.current);
+    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const availableWidth = containerRef.current.clientWidth - paddingX;
     const newScale = Math.min(1, availableWidth / pageWidthPx);
     setScale(newScale);
-  }, [pageWidthPx]);
+}, [pageWidthPx]);
 
   useEffect(() => {
     const el = containerRef.current;
