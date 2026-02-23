@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
 import { useVersioning } from "@/hooks/useVersioning";
+import { useScaledPreview } from '@/hooks/useScaledPreview';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -82,6 +83,7 @@ export default function EditorPage() {
 
   // Preset actif pour la preview et le CSS
   const preset = useMemo(() => getPreset(presetId), [presetId]);
+  const { containerRef: previewContainerRef, scale: previewScale, pageWidthPx } = useScaledPreview(preset.variables['--page-width'] || '148mm');
 
   // Instance du parser (créée une seule fois)
   const parser = useMemo(() => new PlayParser(), []);
@@ -630,7 +632,7 @@ export default function EditorPage() {
               )}
 
               {/* Colonne éditeur */}
-              <div className="flex-1 flex flex-col min-w-0 max-w-3xl h-full">
+              <div className="flex-1 flex flex-col min-w-0 max-w-3xl mx-auto h-full">
                 <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
                   <div className="hidden sm:flex px-6 items-center h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
                     Éditeur
@@ -648,7 +650,7 @@ export default function EditorPage() {
 
               {/* Preview - masquée sous md */}
               {showPreview && (
-                <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
+                <div className="hidden md:flex md:flex-col w-96 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
                   <div className="px-6 h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
                     <div className="font-bold uppercase">Aperçu</div>
                     <Button
@@ -661,21 +663,32 @@ export default function EditorPage() {
                   </div>
                   <style>{previewCSS}</style>
                   <style>{scopeForPreview(generatePresetCSS(preset))}</style>
-                  <div className="preview-content h-full w-full bg-white overflow-auto flex justify-center p-4">
+                  <div
+                    ref={previewContainerRef}
+                    className="h-full w-full bg-red-100 overflow-y-auto overflow-x-hidden"
+                  >
+                    <div className="flex justify-center p-4">
                     <div
-                      className="play-root bg-white h-fit border-dashed border border-gray-400"
-                      data-layout={preset.layout}
                       style={{
-                        width: preset.variables['--page-width'] || '148mm',
-                        paddingLeft: preset.variables['--margin-inside'] || '20mm',
-                        paddingRight: preset.variables['--margin-outside'] || '15mm',
-                        paddingTop: preset.variables['--margin-top'] || '20mm',
-                        paddingBottom: preset.variables['--margin-bottom'] || '25mm',
+                        width: `${pageWidthPx}px`,
+                        zoom: previewScale,
                       }}
-                      dangerouslySetInnerHTML={{
-                        __html: htmlContent,
-                      }}
-                    />
+                    >
+                      <div
+                        className="play-root bg-white outline outline-1 outline-gray-300"
+                        data-layout={preset.layout}
+                        style={{
+                          paddingLeft: preset.variables['--margin-inside'] || '20mm',
+                          paddingRight: preset.variables['--margin-outside'] || '15mm',
+                          paddingTop: preset.variables['--margin-top'] || '20mm',
+                          paddingBottom: preset.variables['--margin-bottom'] || '25mm',
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: htmlContent,
+                        }}
+                      />
+                    </div>
+                    </div>
                   </div>
                 </div>
               )}
