@@ -661,10 +661,17 @@ export default function EditorPage() {
                   </div>
                   <style>{previewCSS}</style>
                   <style>{scopeForPreview(generatePresetCSS(preset))}</style>
-                  <div className="preview-content h-full w-full bg-white overflow-auto p-4">
+                  <div className="preview-content h-full w-full bg-white overflow-auto flex justify-center p-4">
                     <div
-                      className="play-root"
+                      className="play-root bg-white h-fit border-dashed border border-gray-400"
                       data-layout={preset.layout}
+                      style={{
+                        width: preset.variables['--page-width'] || '148mm',
+                        paddingLeft: preset.variables['--margin-inside'] || '20mm',
+                        paddingRight: preset.variables['--margin-outside'] || '15mm',
+                        paddingTop: preset.variables['--margin-top'] || '20mm',
+                        paddingBottom: preset.variables['--margin-bottom'] || '25mm',
+                      }}
                       dangerouslySetInnerHTML={{
                         __html: htmlContent,
                       }}
