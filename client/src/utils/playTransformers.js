@@ -1,6 +1,8 @@
 /**
  * Transformations de l'AST vers d'autres formats
  * Fonctions qui prennent un AST en entrée et produisent une sortie dérivée
+ *
+ * @module playTransformers
  */
 
 import { NodeType } from './playAST.js';

@@ -3,11 +3,13 @@
  * Génère un AST (Abstract Syntax Tree) à partir du texte brut
  *
  * Balises supportées :
- * - #Acte N - Marqueur d'acte (N = numéro optionnel)
- * - ##Scène N - Marqueur de scène (N = numéro optionnel)
- * - @PERSONNAGE - Marqueur de personnage
- * - (texte) - Didascalies (indications scéniques)
- * - Texte normal - Dialogue après un personnage
+ * - `#Acte N`       — Marqueur d'acte (N = numéro optionnel)
+ * - `##Scène N`     — Marqueur de scène (N = numéro optionnel)
+ * - `@PERSONNAGE`   — Marqueur de personnage
+ * - `(texte)`       — Didascalies (indications scéniques)
+ * - Texte normal    — Dialogue après un personnage
+ *
+ * @module playParser
  */
 
 import { NodeType, ASTNode } from './playAST.js';
