@@ -1,9 +1,6 @@
 import { useMemo } from "react";
-import {
-    PlayParser,
-    astToHTML,
-    extractStructure,
-} from "../utils/playParser";
+import { PlayParser } from "../utils/playParser";
+import { astToHTML, extractStructure } from "../utils/playTransformers";
 import { calculateStatsFromAST } from "../utils/playStatistics";
 
 /**
