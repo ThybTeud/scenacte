@@ -10,19 +10,12 @@
  * - Texte normal - Dialogue après un personnage
  */
 
-/**
- * Types de nœuds dans l'AST
- */
-export const NodeType = {
-  ROOT: 'root',
-  SECTION: 'section',
-  SUBSECTION: 'subsection',
-  SPEECH: 'speech',
-  STAGE_DIRECTION: 'stage_direction',
-  LINE: 'line',
-  TEXT_RUN: 'text_run',
-  LINE_BREAK: 'line_break'
-};
+import { NodeType, ASTNode } from './playAST.js';
+
+// Ré-export pour compatibilité ascendante — les consommateurs existants
+// qui importent depuis playParser continuent de fonctionner.
+export { NodeType, ASTNode } from './playAST.js';
+export { astToHTML, extractStructure } from './playTransformers.js';
 
 /**
  * Expression régulière pour détecter les balises
@@ -34,34 +27,6 @@ const TAG_PATTERNS = {
   stageDirection: /^\(\s*([^)]+)\s*\)$/i,
   preWithText: /^\(([^)]+)\)\s*(.+)$/
 };
-
-/**
- * Classe représentant un nœud de l'AST
- */
-export class ASTNode {
-  constructor(type, value = null, attributes = {}, children = []) {
-    this.type = type;
-    this.value = value;
-    this.attributes = attributes;
-    this.children = children;
-    this.position = { start: 0, end: 0 };
-  }
-
-  addChild(node) {
-    this.children.push(node);
-    return this;
-  }
-
-  toJSON() {
-    return {
-      type: this.type,
-      value: this.value,
-      attributes: this.attributes,
-      children: this.children.map(child => child.toJSON()),
-      position: this.position
-    };
-  }
-}
 
 /**
  * Parser principal
@@ -268,133 +233,10 @@ export class PlayParser {
 }
 
 /**
- * Convertit l'AST en HTML pour le rendu
- * @param {ASTNode} ast - Nœud racine de l'AST
- * @returns {string} - HTML généré
- */
-export function astToHTML(ast) {
-  if (!ast) {
-    return '';
-  }
-
-  const renderNode = (node) => {
-    // Rendu récursif des enfants
-    const childrenHTML = node.children && node.children.length > 0
-      ? node.children.map(renderNode).join('')
-      : '';
-
-    switch (node.type) {
-      case NodeType.ROOT:
-        return `<div class="play-root">${childrenHTML}</div>`;
-
-      case NodeType.SECTION:
-        return `<div class="acte-container"><h1 class="acte">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
-
-      case NodeType.SUBSECTION:
-        return `<div class="scene-container"><h2 class="scene">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
-
-      case NodeType.SPEECH:
-        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
-
-      case NodeType.STAGE_DIRECTION: {
-        const dtype = node.attributes.directionType || 'between';
-        if (dtype === 'intra') {
-          return `<span class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</span>`;
-        }
-        return `<p class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</p>`;
-      }
-
-      case NodeType.LINE:
-        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${childrenHTML}</p>`;
-
-      case NodeType.TEXT_RUN:
-        return escapeHTML(node.value);
-
-      default:
-        return '';
-    }
-  };
-
-  return renderNode(ast);
-}
-
-/**
- * Échappe les caractères HTML
- * @param {string} text - Texte à échapper
- * @returns {string} - Texte échappé
- */
-function escapeHTML(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-/**
- * Extrait les informations structurelles de l'AST
- * (utile pour la navigation)
- * @param {ASTNode} ast - Nœud racine de l'AST
- * @returns {Object} - Structure { items: [], orphanScenes: [], personnages: [] }
- */
-export function extractStructure(ast) {
-  const result = {
-    items: [],           // Actes avec scènes imbriquées
-    orphanScenes: [],    // Scènes avant le premier acte
-    personnages: new Set()
-  };
-
-  let currentSection = null;
-
-  const processNode = (node) => {
-    switch (node.type) {
-      case NodeType.SECTION:
-        currentSection = {
-          type: 'acte',
-          value: node.value,
-          position: node.position,
-          scenes: []
-        };
-        result.items.push(currentSection);
-        break;
-
-      case NodeType.SUBSECTION: {
-        const sceneData = {
-          type: 'scene',
-          value: node.value,
-          position: node.position
-        };
-        if (currentSection) {
-          currentSection.scenes.push(sceneData);
-        } else {
-          result.orphanScenes.push(sceneData);
-        }
-        break;
-      }
-
-      case NodeType.SPEECH:
-        result.personnages.add(node.attributes.speaker);
-        break;
-    }
-
-    if (node.children) {
-      node.children.forEach(processNode);
-    }
-  };
-
-  processNode(ast);
-
-  return {
-    ...result,
-    personnages: Array.from(result.personnages)
-  };
-}
-
-/**
  * Export des utilitaires
  */
 export default {
   PlayParser,
   ASTNode,
-  NodeType,
-  astToHTML,
-  extractStructure
+  NodeType
 };

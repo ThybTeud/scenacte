@@ -1,5 +1,6 @@
 import { useEffect, useRef, useMemo } from 'react';
-import { PlayParser, astToHTML } from '../../utils/playParser';
+import { PlayParser } from '../../utils/playParser';
+import { astToHTML } from '../../utils/playTransformers';
 
 /**
  * Composant preview pour afficher le rendu HTML d'une pièce de théâtre
