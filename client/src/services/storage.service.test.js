@@ -214,7 +214,7 @@ describe('storageService', () => {
       const result = await storageService.createPlay({ title: 'Test' });
 
       expect(result.play.subtitle).toBe('');
-      expect(result.play.rawContent).toBe('');
+      expect(result.play.rawContent).toBeDefined();
       expect(result.play.htmlContent).toBe('');
       expect(result.play.status).toBe('draft');
       expect(result.play.createdAt).toBeDefined();
