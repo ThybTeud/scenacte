@@ -47,6 +47,9 @@ export function astToHTML(ast) {
       case NodeType.LINE:
         return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${childrenHTML}</p>`;
 
+      case NodeType.LINE_BREAK:
+        return '<br>';
+
       case NodeType.TEXT_RUN:
         return escapeHTML(node.value);
 

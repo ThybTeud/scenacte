@@ -196,11 +196,18 @@ describe('PlayParser', () => {
 Telle est la question`);
 
       const speech = ast.children[0];
-      expect(speech.children).toHaveLength(2);
-      expect(speech.children[0].type).toBe(NodeType.LINE);
-      expect(speech.children[1].type).toBe(NodeType.LINE);
-      expect(speech.children[0].attributes.speaker).toBe('HAMLET');
-      expect(speech.children[1].attributes.speaker).toBe('HAMLET');
+      // Les lignes consécutives sont accumulées dans un seul nœud LINE avec des LINE_BREAK
+      expect(speech.children).toHaveLength(1);
+      const line = speech.children[0];
+      expect(line.type).toBe(NodeType.LINE);
+      expect(line.attributes.speaker).toBe('HAMLET');
+      // TEXT_RUN + LINE_BREAK + TEXT_RUN
+      expect(line.children).toHaveLength(3);
+      expect(line.children[0].type).toBe(NodeType.TEXT_RUN);
+      expect(line.children[0].value).toBe('Être ou ne pas être');
+      expect(line.children[1].type).toBe(NodeType.LINE_BREAK);
+      expect(line.children[2].type).toBe(NodeType.TEXT_RUN);
+      expect(line.children[2].value).toBe('Telle est la question');
     });
 
     it('should handle alternating speakers', () => {
