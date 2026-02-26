@@ -60,6 +60,7 @@ export class PlayParser {
     // Tracking pour la classification des didascalies
     let hasSpeechInCurrentContainer = false;
     let isFirstLineInSpeech = false;
+    let currentLine = null;
 
     for (let i = 0; i < lines.length; i++) {
       const trimmedLine = lines[i].trim();
@@ -78,6 +79,7 @@ export class PlayParser {
         currentSpeaker = null;
         hasSpeechInCurrentContainer = false;
         isFirstLineInSpeech = false;
+        currentLine = null;
         continue;
       }
 
@@ -93,6 +95,7 @@ export class PlayParser {
         currentSpeaker = null;
         hasSpeechInCurrentContainer = false;
         isFirstLineInSpeech = false;
+        currentLine = null;
         continue;
       }
 
@@ -107,6 +110,7 @@ export class PlayParser {
         currentSpeech = node;
         hasSpeechInCurrentContainer = true;
         isFirstLineInSpeech = true;
+        currentLine = null;
         continue;
       }
 
@@ -135,16 +139,26 @@ export class PlayParser {
           isFirstLineInSpeech = false;
           const preMatch = TAG_PATTERNS.preWithText.exec(trimmedLine);
           if (preMatch) {
-            // Pré-réplique suivie de texte : (pre) texte dialogue
             const preNode = new ASTNode(NodeType.STAGE_DIRECTION, preMatch[1].trim(), { directionType: 'pre' });
             preNode.position = { start: i, end: i };
             currentSpeech.addChild(preNode);
-            currentSpeech.addChild(this.parseLine(preMatch[2], currentSpeaker, i));
+            currentLine = this.parseLine(preMatch[2], currentSpeaker, i);
+            currentSpeech.addChild(currentLine);
           } else {
-            currentSpeech.addChild(this.parseLine(trimmedLine, currentSpeaker, i));
+            currentLine = this.parseLine(trimmedLine, currentSpeaker, i);
+            currentSpeech.addChild(currentLine);
           }
+        } else if (currentLine) {
+          // Accumuler dans le même <p> avec un <br>
+          const br = new ASTNode(NodeType.LINE_BREAK);
+          br.position = { start: i, end: i };
+          currentLine.addChild(br);
+          const newLine = this.parseLine(trimmedLine, currentSpeaker, i);
+          newLine.children.forEach(child => currentLine.addChild(child));
+          currentLine.position.end = i;
         } else {
-          currentSpeech.addChild(this.parseLine(trimmedLine, currentSpeaker, i));
+          currentLine = this.parseLine(trimmedLine, currentSpeaker, i);
+          currentSpeech.addChild(currentLine);
         }
       } else {
         // Texte libre hors SPEECH
