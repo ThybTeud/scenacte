@@ -1,4 +1,5 @@
-import { PlayParser, NodeType } from './playParser.js';
+import { NodeType } from './playAST.js';
+import { PlayParser } from './playParser.js';
 
 /**
  * Calcule les statistiques d'une pièce de théâtre à partir d'un AST

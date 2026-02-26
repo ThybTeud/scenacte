@@ -6,6 +6,38 @@
 import baseCSS from '../assets/styles/scenacte-template.css?inline';
 import { getPreset, generatePresetCSS } from '../config/template-presets';
 
+export { baseCSS };
+
+/**
+ * Scope le baseCSS pour le preview en neutralisant les sélecteurs globaux.
+ * Les règles @page et .pagedjs_* sont inoffensives sans PagedJS, on ne les touche pas.
+ */
+function buildPreviewCSS(raw) {
+  return raw
+    // Supprimer visibility: hidden (PagedJS only)
+    .replace(/visibility\s*:\s*hidden\s*;?\s*/g, '')
+    // * {} → .preview-content * {}
+    .replace(/^\*\s*\{/gm, '.preview-content * {')
+    // body {} → .preview-content {}
+    .replace(/\bbody\s*\{/g, '.preview-content {')
+    // p {} nu (orphans/widows) → .preview-content p {}
+    .replace(/^p\s*\{/gm, '.preview-content p {')
+    // :root {} → .preview-content {}
+    .replace(/:root\s*\{/g, '.preview-content {');
+}
+
+export const previewCSS = buildPreviewCSS(baseCSS);
+
+/**
+ * Scope un CSS dynamique (ex: preset) pour le preview.
+ * Ne traite que :root et body — les autres sélecteurs sont déjà spécifiques.
+ */
+export function scopeForPreview(css) {
+  return css
+    .replace(/:root\s*\{/g, '.preview-content {')
+    .replace(/\bbody\s*\{/g, '.preview-content {');
+}
+
 /**
  * Mapping des polices pour les imports Google Fonts
  */
@@ -313,98 +345,6 @@ export function getPreviewStyles(templateSettings) {
   };
 }
 
-/**
- * Genere le CSS pour la preview inline depuis un preset
- * @param {string} presetId - ID du preset
- * @returns {string} - Styles CSS sous forme de string
- */
-export function getPreviewCSSFromPreset(presetId) {
-  const preset = getPreset(presetId);
-  const vars = preset.variables;
-
-  // Extraire les valeurs du preset
-  const fontBody = vars['--font-body']?.replace(/'/g, '') || 'Crimson Text, Georgia, serif';
-  const fontSizeBody = vars['--font-size-body']?.replace('pt', '') || '11';
-  const lineHeight = vars['--line-height'] || '1.45';
-  const fontSizeActe = vars['--font-size-acte']?.replace('pt', '') || '18';
-  const fontSizeScene = vars['--font-size-scene']?.replace('pt', '') || '14';
-  const fontSizePersonnage = vars['--font-size-personnage']?.replace('pt', '') || '11.5';
-  const spaceReplique = vars['--space-replique'] || '0.8em';
-
-  // Adapter le style du personnage selon le layout
-  const personnageStyle = preset.layout === 'centered'
-    ? `
-      display: block;
-      text-align: center;
-      text-transform: uppercase;
-    `
-    : `
-      display: inline;
-      text-transform: uppercase;
-    `;
-
-  const personnageAfter = preset.layout === 'inline'
-    ? `
-    .preview-content .personnage::after {
-      content: '. — ';
-      font-weight: normal;
-    }
-    `
-    : '';
-
-  const dialogueStyle = preset.layout === 'inline'
-    ? 'display: inline; text-align: justify;'
-    : 'text-align: justify;';
-
-  return `
-    .preview-content {
-      font-family: ${fontBody};
-      font-size: ${fontSizeBody}pt;
-      line-height: ${lineHeight};
-    }
-
-    .preview-content .acte {
-      font-size: ${fontSizeActe}pt;
-      font-weight: 900;
-      text-transform: uppercase;
-      text-align: center;
-      margin: 2rem 0 1rem;
-    }
-
-    .preview-content .scene {
-      font-size: ${fontSizeScene}pt;
-      font-weight: 700;
-      text-transform: uppercase;
-      text-align: center;
-      margin: 1.5rem 0 1rem;
-    }
-
-    .preview-content .personnage {
-      font-size: ${fontSizePersonnage}pt;
-      font-weight: 600;
-      margin: 1rem 0 0.5rem;
-      ${personnageStyle}
-    }
-
-    ${personnageAfter}
-
-    .preview-content .personnage-container {
-      margin-bottom: ${spaceReplique};
-    }
-
-    .preview-content .didascalie {
-      font-style: italic;
-      text-align: right;
-      margin: 0.75rem 0;
-      padding-left: 4rem;
-    }
-
-    .preview-content .dialogue {
-      ${dialogueStyle}
-      margin: 0.5rem 0;
-    }
-  `;
-}
 
 /**
  * Genere le CSS pour les elements theatraux de la preview (ancien système BDD)
