@@ -7,9 +7,7 @@
 @theme {
     /* Couleurs du design system */
     --color-cream: #f8f5f2;
-    --color-orange: oklch(64.6% 0.222 41.116);
     --color-blue: oklch(54.6% 0.245 262.881);
-    --color-accent-hover: #e68a2e;
     --color-black: #0f172a;
     --color-white: #ffffff;
     --color-white-smoke: #fffffe;
@@ -90,14 +88,14 @@ body {
 }
 
 .legal-content a {
-    color: var(--color-orange);
+    color: var(--primary);
     text-decoration: underline;
     font-weight: 500;
     transition: color 0.2s;
 }
 
 .legal-content a:hover {
-    color: var(--color-accent-hover);
+    color: color-mix(in oklch, var(--primary) 85%, black);
 }
 
 .legal-content ul,
@@ -117,7 +115,7 @@ body {
     content: "▪";
     position: absolute;
     left: 0;
-    color: var(--color-orange);
+    color: var(--primary);
     font-weight: bold;
     font-size: 1.2em;
 }
@@ -138,7 +136,7 @@ body {
     content: counter(list-counter) ".";
     position: absolute;
     left: 0;
-    color: var(--color-orange);
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -178,7 +176,7 @@ body {
 }
 
 .legal-content blockquote {
-    border-left: 4px solid var(--color-orange);
+    border-left: 4px solid var(--primary);
     padding-left: 1rem;
     margin: 1.5rem 0;
     font-style: italic;
