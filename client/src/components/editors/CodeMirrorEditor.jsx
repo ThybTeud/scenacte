@@ -4,7 +4,7 @@ import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers, highlightActiv
 import { defaultKeymap, history, historyKeymap, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap, autocompletion, acceptCompletion } from '@codemirror/autocomplete';
-import { toggleLineFormat } from '../../utils/editorCommands';
+import { toggleLineFormat } from '@/utils/editorCommands';
 
 // Utilisation d'un mode StreamLanguage pour le surlignage personnalisé (voir createPlayExtension)
 

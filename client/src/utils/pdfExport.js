@@ -3,8 +3,8 @@
  */
 
 // Import du CSS de base pour le nouveau système de presets
-import baseCSS from '../assets/styles/scenacte-template.css?inline';
-import { getPreset, generatePresetCSS } from '../config/template-presets';
+import baseCSS from '@/assets/styles/scenacte-template.css?inline';
+import { getPreset, generatePresetCSS } from '@/config/template-presets';
 
 export { baseCSS };
 

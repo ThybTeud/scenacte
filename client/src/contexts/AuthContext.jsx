@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { authService } from '../services/auth.service';
-import { storageService } from '../services/storage.service';
+import { authService } from '@/services/auth.service';
+import { storageService } from '@/services/storage.service';
 
 export const AuthContext = createContext(null);
 

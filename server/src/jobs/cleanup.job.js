@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { cleanupOldVersions, getRetentionStats } from '../services/version-cleanup.service.js';
+import { cleanupOldVersions, getRetentionStats } from '../services/versionCleanup.service.js';
 
 /**
  * Job de nettoyage des anciennes versions

@@ -1,6 +1,6 @@
 import { playsService } from './plays.service';
 import { templatesService } from './templates.service';
-import { calculatePlayStatistics } from '../utils/playStatistics';
+import { calculatePlayStatistics } from '@/utils/playStatistics';
 
 const GUEST_DATA_KEY = 'scenacte_guest_data';
 const GUEST_SETTINGS_KEY = 'scenacte_page_settings';
