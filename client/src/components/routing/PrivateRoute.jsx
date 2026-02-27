@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { Loader } from '../ui/Loader';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader } from '@/components/ui/Loader';
 
 export function PrivateRoute({ children, requireAuth = false }) {
   const { user, guestMode, isLoading } = useAuth();

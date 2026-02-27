@@ -1,5 +1,5 @@
-import { cn } from "../../utils/cn";
-import { CloseIcon } from "../icons/CloseIcon";
+import { cn } from "@/utils/cn";
+import { CloseIcon } from "@/components/icons/CloseIcon";
 
 /**
  * Composant réutilisable pour les panneaux latéraux (gauche/droite)
