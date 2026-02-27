@@ -18,8 +18,9 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { previewCSS, scopeForPreview } from "@/utils/pdfExport";
+import { shadowPreviewCSS, adaptPresetForShadow } from "@/utils/pdfExport";
 import { generatePresetCSS, getPreset } from "@/config/template-presets";
+import ShadowPreview from "@/components/ShadowPreview";
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -659,17 +660,12 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <style>{previewCSS}</style>
-                  <style>{scopeForPreview(generatePresetCSS(preset))}</style>
-                  <div className="preview-content h-full w-full bg-white overflow-auto p-4">
-                    <div
-                      className="play-root"
-                      data-layout={preset.layout}
-                      dangerouslySetInnerHTML={{
-                        __html: htmlContent,
-                      }}
-                    />
-                  </div>
+                  <ShadowPreview
+                    css={`${shadowPreviewCSS}\n${adaptPresetForShadow(generatePresetCSS(preset))}`}
+                    htmlContent={htmlContent}
+                    layout={preset.layout}
+                    className="h-full w-full bg-white overflow-auto"
+                  />
                 </div>
               )}
             </div>

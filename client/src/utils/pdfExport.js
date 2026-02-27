@@ -9,33 +9,25 @@ import { getPreset, generatePresetCSS } from '@/config/template-presets';
 export { baseCSS };
 
 /**
- * Scope le baseCSS pour le preview en neutralisant les sélecteurs globaux.
- * Les règles @page et .pagedjs_* sont inoffensives sans PagedJS, on ne les touche pas.
+ * Adapte un CSS pour le rendu dans un Shadow DOM :
+ * - :root / body → :host (les CSS variables et styles de base s'appliquent au shadow host)
+ * - visibility: hidden supprimé (réservé à PagedJS)
  */
-function buildPreviewCSS(raw) {
+function adaptForShadow(raw) {
   return raw
-    // Supprimer visibility: hidden (PagedJS only)
     .replace(/visibility\s*:\s*hidden\s*;?\s*/g, '')
-    // * {} → .preview-content * {}
-    .replace(/^\*\s*\{/gm, '.preview-content * {')
-    // body {} → .preview-content {}
-    .replace(/\bbody\s*\{/g, '.preview-content {')
-    // p {} nu (orphans/widows) → .preview-content p {}
-    .replace(/^p\s*\{/gm, '.preview-content p {')
-    // :root {} → .preview-content {}
-    .replace(/:root\s*\{/g, '.preview-content {');
+    .replace(/:root\s*\{/g, ':host {')
+    .replace(/\bbody\s*\{/g, ':host {');
 }
 
-export const previewCSS = buildPreviewCSS(baseCSS);
+/** baseCSS adapté pour le shadow DOM preview */
+export const shadowPreviewCSS = adaptForShadow(baseCSS);
 
-/**
- * Scope un CSS dynamique (ex: preset) pour le preview.
- * Ne traite que :root et body — les autres sélecteurs sont déjà spécifiques.
- */
-export function scopeForPreview(css) {
+/** Adapte un CSS dynamique (preset) pour le shadow DOM */
+export function adaptPresetForShadow(css) {
   return css
-    .replace(/:root\s*\{/g, '.preview-content {')
-    .replace(/\bbody\s*\{/g, '.preview-content {');
+    .replace(/:root\s*\{/g, ':host {')
+    .replace(/\bbody\s*\{/g, ':host {');
 }
 
 /**
