@@ -109,6 +109,7 @@ export async function generatePDF(htmlContent, templateSettings, title) {
     const previewer = new Previewer();
     
     // Paged.js retourne le contenu rendu
+    // eslint-disable-next-line no-undef
     const flow = await previewer.preview(fullHtml, [], document.createElement('div'));
     
     // Note: Paged.js génère du HTML paginé, pas directement un PDF

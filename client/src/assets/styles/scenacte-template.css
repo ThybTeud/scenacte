@@ -259,10 +259,10 @@ p.didascalie[data-type="pre"] {
 
 /* Intra-réplique — inline dans le dialogue */
 span.didascalie[data-type="intra"]::before {
-  content: '(';
+  content: ' (';
 }
 span.didascalie[data-type="intra"]::after {
-  content: ')';
+  content: ') ';
 }
 
 /* === LAYOUTS PAR DATA-LAYOUT === */

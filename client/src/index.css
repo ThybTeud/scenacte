@@ -10,24 +10,10 @@
     --color-orange: oklch(64.6% 0.222 41.116);
     --color-blue: oklch(54.6% 0.245 262.881);
     --color-accent-hover: #e68a2e;
-    --color-violet: #2d1b69;
     --color-black: #0f172a;
     --color-white: #ffffff;
     --color-white-smoke: #fffffe;
     --color-gray: oklch(44.6% 0.03 256.802);
-
-    /* Couleurs primary (legacy) */
-    --color-primary-50: #eff6ff;
-    --color-primary-100: #dbeafe;
-    --color-primary-200: #bfdbfe;
-    --color-primary-300: #93c5fd;
-    --color-primary-400: #60a5fa;
-    --color-primary-500: #3b82f6;
-    --color-primary-600: #2563eb;
-    --color-primary-700: #1d4ed8;
-    --color-primary-800: #1e40af;
-    --color-primary-900: #1e3a8a;
-    --color-primary: #3b82f6;
 
     /* Typographie */
     --font-ui: "Inter", "Space Grotesk", system-ui, sans-serif;
@@ -59,29 +45,6 @@ body {
     color: var(--color-black);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-/* A supprimer (ainsi que dans @media plus bas*/
-/* .container-custom {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-} */
-
-@media (min-width: 640px) {
-    .container-custom {
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .container-custom {
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
 }
 
 /* Styles pour les pages légales */

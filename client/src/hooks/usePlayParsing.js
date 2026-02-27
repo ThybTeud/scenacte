@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { PlayParser } from "../utils/playParser";
-import { astToHTML, extractStructure } from "../utils/playTransformers";
-import { calculateStatsFromAST } from "../utils/playStatistics";
+import { PlayParser } from "@/utils/playParser";
+import { astToHTML, extractStructure } from "@/utils/playTransformers";
+import { calculateStatsFromAST } from "@/utils/playStatistics";
 
 /**
  * Hook qui parse le contenu de la pièce et retourne l'AST, la structure, les statistiques et le HTML
