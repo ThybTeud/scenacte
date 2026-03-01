@@ -18,7 +18,7 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { shadowPreviewCSS, adaptPresetForShadow } from "@/utils/pdfExport";
+import { shadowPreviewCSS, adaptForShadow } from "@/utils/pdfExport";
 import { generatePresetCSS, getPreset } from "@/config/template-presets";
 import ShadowPreview from "@/components/ShadowPreview";
 import {
@@ -661,7 +661,7 @@ export default function EditorPage() {
                     </Button>
                   </div>
                   <ShadowPreview
-                    css={`${shadowPreviewCSS}\n${adaptPresetForShadow(generatePresetCSS(preset))}`}
+                    css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
                     htmlContent={htmlContent}
                     layout={preset.layout}
                     className="h-full w-full bg-white overflow-auto"

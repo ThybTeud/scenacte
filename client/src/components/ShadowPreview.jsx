@@ -20,8 +20,8 @@ export default function ShadowPreview({ css, htmlContent, layout, className }) {
 
     shadow.innerHTML = `
       <style>
-        :host { padding: 1rem; }
         ${css}
+        :host { padding: 1rem; }
       </style>
       <div class="play-root" data-layout="${layout || ""}">
         ${htmlContent || ""}

@@ -10,25 +10,17 @@ export { baseCSS };
 
 /**
  * Adapte un CSS pour le rendu dans un Shadow DOM :
- * - :root / body → :host (les CSS variables et styles de base s'appliquent au shadow host)
+ * - :root / body → :host
  * - visibility: hidden supprimé (réservé à PagedJS)
  */
-function adaptForShadow(raw) {
+export function adaptForShadow(raw) {
   return raw
     .replace(/visibility\s*:\s*hidden\s*;?\s*/g, '')
     .replace(/:root\s*\{/g, ':host {')
     .replace(/\bbody\s*\{/g, ':host {');
 }
 
-/** baseCSS adapté pour le shadow DOM preview */
 export const shadowPreviewCSS = adaptForShadow(baseCSS);
-
-/** Adapte un CSS dynamique (preset) pour le shadow DOM */
-export function adaptPresetForShadow(css) {
-  return css
-    .replace(/:root\s*\{/g, ':host {')
-    .replace(/\bbody\s*\{/g, ':host {');
-}
 
 /**
  * Mapping des polices pour les imports Google Fonts
