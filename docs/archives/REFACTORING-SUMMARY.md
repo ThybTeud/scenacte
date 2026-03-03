@@ -63,7 +63,7 @@ root
 | `extractStructure()` | ✅ Compatible | Aucune |
 | `calculatePlayStatistics()` | ✅ Compatible | Aucune |
 | `PlayEditor.jsx` | ✅ Compatible | Aucune |
-| `PlayPreview.jsx` | ✅ Compatible | Optionnel: ajouter styles CSS |
+| ~~`PlayPreview.jsx`~~ → `ShadowPreview.jsx` | ✅ Remplacé | Preview via Shadow DOM (CSS isolé) |
 
 ### Performance
 - Parsing de 40 900 caractères : **3ms**
@@ -99,7 +99,7 @@ root
 ### Immédiat
 1. ✅ Supprimer les fichiers de test (optionnel)
 2. ⚠️ Tester dans le navigateur avec l'application React complète
-3. ⚠️ Vérifier le rendu visuel dans `PlayPreview`
+3. ⚠️ Vérifier le rendu visuel dans `ShadowPreview`
 
 ### Court terme
 1. Ajouter des styles CSS pour les containers si nécessaire
