@@ -18,9 +18,9 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { shadowPreviewCSS, adaptForShadow } from "@/utils/pdfExport";
+import { shadowPreviewCSS, adaptForShadow } from "@/utils/shadowPreview";
 import { generatePresetCSS, getPreset } from "@/config/template-presets";
-import ShadowPreview from "@/components/ShadowPreview";
+import ShadowPreview from "@/components/editors/ShadowPreview";
 import {
   PanelRightClose,
   PanelRightOpen,
