@@ -77,8 +77,6 @@ export default function EditorPage() {
 
   // Settings de mise en page
   const [paperSize, setPaperSize] = useState("A5");
-  const [templateId, setTemplateId] = useState(null);
-  const [template, setTemplate] = useState(null);
   const [presetId, setPresetId] = useState('classique');
 
   // Preset actif pour la preview et le CSS
@@ -126,8 +124,6 @@ export default function EditorPage() {
 
       // Charger les settings de mise en page
       setPaperSize(response.play.paperSize || "A5");
-      setTemplateId(response.play.templateId || null);
-      setTemplate(response.play.template || null);
 
       // Charger le presetId depuis localStorage (en attendant la migration BDD)
       const savedPresetId = localStorage.getItem(`scenacte_preset_${id}`);
@@ -468,15 +464,12 @@ export default function EditorPage() {
     async (newSettings) => {
       // Mettre a jour les etats locaux
       setPaperSize(newSettings.paperSize);
-      setTemplateId(newSettings.templateId);
-      setTemplate(newSettings.template);
       setPresetId(newSettings.presetId || null);
 
       // Sauvegarder sur le serveur
       try {
         await storageService.updatePlaySettings(id, {
           paperSize: newSettings.paperSize,
-          templateId: newSettings.templateId,
           // presetId sera persisté dans une future migration BDD
         });
 
@@ -714,7 +707,6 @@ export default function EditorPage() {
         playTitle={play?.title}
         playSubtitle={play?.subtitle}
         pageFormat={paperSize}
-        template={template}
         presetId={presetId}
         onOpenLayoutModal={handleOpenLayoutModal}
       />
