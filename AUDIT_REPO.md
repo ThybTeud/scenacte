@@ -177,7 +177,6 @@ Ces fichiers sont des tests de développement qui n'ont pas leur place en produc
 | `pages/plays/PlaysList.jsx` | 105 | `console.error` | 🔴 Supprimer | Erreur générique sans contexte |
 | `pages/plays/PlayEditor.jsx` | 118, 152 | `console.error` | 🔴 Supprimer | Erreurs génériques sans contexte |
 | `hooks/usePlayParsing.js` | 43 | `console.error` | 🟢 Garder | Erreur de parsing - utile |
-| `components/editors/PlayPreview.jsx` | 28 | `console.error` | 🟢 Garder | Erreur de parsing - utile |
 | `components/editors/CodeMirrorEditor.jsx` | 274, 360 | `console.error` | 🟢 Garder | Erreurs scroll - utile pour debug |
 | `components/plays/VersionsSidebar.jsx` | 34 | `console.error` | 🔴 Supprimer | Erreur générique sans contexte |
 | `components/ErrorBoundary.jsx` | 27 | `console.error` | 🟢 Garder | ErrorBoundary - obligatoire |

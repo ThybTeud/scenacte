@@ -57,9 +57,11 @@ Pour visualiser la hiérarchie pendant le développement :
 }
 ```
 
-## Styles existants dans PlayPreview.jsx
+## Styles dans ShadowPreview.jsx
 
-Les styles actuels (lignes 87-145) restent compatibles :
+> **Note** : `PlayPreview.jsx` a été supprimé et remplacé par `ShadowPreview.jsx`, qui utilise le Shadow DOM pour isoler complètement le CSS de la preview.
+
+Les classes CSS restent compatibles :
 - `.play-root` ✓
 - `.acte` ✓
 - `.scene` ✓
@@ -68,7 +70,7 @@ Les styles actuels (lignes 87-145) restent compatibles :
 - `.dialogue` ✓
 - `.text` ✓
 
-Aucune modification requise pour les styles existants.
+Le CSS est injecté dans le Shadow DOM via `shadowPreview.js` (`adaptForShadow`).
 
 ## Recommandation finale
 

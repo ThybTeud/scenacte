@@ -18,8 +18,9 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import ExportModal from "@/components/modals/ExportModal";
 import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
-import { previewCSS, scopeForPreview } from "@/utils/pdfExport";
+import { shadowPreviewCSS, adaptForShadow } from "@/utils/shadowPreview";
 import { generatePresetCSS, getPreset } from "@/config/template-presets";
+import ShadowPreview from "@/components/editors/ShadowPreview";
 import {
   PanelRightClose,
   PanelRightOpen,
@@ -76,8 +77,6 @@ export default function EditorPage() {
 
   // Settings de mise en page
   const [paperSize, setPaperSize] = useState("A5");
-  const [templateId, setTemplateId] = useState(null);
-  const [template, setTemplate] = useState(null);
   const [presetId, setPresetId] = useState('classique');
 
   // Preset actif pour la preview et le CSS
@@ -125,8 +124,6 @@ export default function EditorPage() {
 
       // Charger les settings de mise en page
       setPaperSize(response.play.paperSize || "A5");
-      setTemplateId(response.play.templateId || null);
-      setTemplate(response.play.template || null);
 
       // Charger le presetId depuis localStorage (en attendant la migration BDD)
       const savedPresetId = localStorage.getItem(`scenacte_preset_${id}`);
@@ -467,15 +464,12 @@ export default function EditorPage() {
     async (newSettings) => {
       // Mettre a jour les etats locaux
       setPaperSize(newSettings.paperSize);
-      setTemplateId(newSettings.templateId);
-      setTemplate(newSettings.template);
       setPresetId(newSettings.presetId || null);
 
       // Sauvegarder sur le serveur
       try {
         await storageService.updatePlaySettings(id, {
           paperSize: newSettings.paperSize,
-          templateId: newSettings.templateId,
           // presetId sera persisté dans une future migration BDD
         });
 
@@ -659,16 +653,28 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <style>{previewCSS}</style>
-                  <style>{scopeForPreview(generatePresetCSS(preset))}</style>
-                  <div className="preview-content h-full w-full bg-white overflow-auto p-4">
-                    <div
-                      className="play-root"
-                      data-layout={preset.layout}
-                      dangerouslySetInnerHTML={{
-                        __html: htmlContent,
-                      }}
-                    />
+                  <div className="overflow-auto flex-1 bg-white">
+                    <div className="grid grid-cols-[1rem_1fr_1rem] grid-rows-[1rem_auto_1rem] min-h-full">
+                      {/* Marge haute */}
+                      <div className="border-b-2 border-r-2 border-dashed border-gray-300" />
+                      <div className="border-b-2 border-dashed border-gray-300" />
+                      <div className="border-b-2 border-l-2 border-dashed border-gray-300" />
+
+                      <div className="border-r-2 border-dashed border-gray-300" />
+
+                      <ShadowPreview
+                        css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
+                        htmlContent={htmlContent}
+                        layout={preset.layout}
+                        className="w-full bg-white overflow-auto px-8 py-2"
+                      />
+                      <div className="border-l-2 border-dashed border-gray-300" />
+
+                      {/* Marge basse */}
+                      <div className="border-t-2 border-r-2 border-dashed border-gray-300" />
+                      <div className="border-t-2 border-dashed border-gray-300" />
+                      <div className="border-t-2 border-l-2 border-dashed border-gray-300" />
+                    </div>
                   </div>
                 </div>
               )}
@@ -701,7 +707,6 @@ export default function EditorPage() {
         playTitle={play?.title}
         playSubtitle={play?.subtitle}
         pageFormat={paperSize}
-        template={template}
         presetId={presetId}
         onOpenLayoutModal={handleOpenLayoutModal}
       />
