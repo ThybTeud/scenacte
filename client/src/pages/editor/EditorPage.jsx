@@ -660,12 +660,29 @@ export default function EditorPage() {
                       <PanelRightClose className="fill-white" />
                     </Button>
                   </div>
-                  <ShadowPreview
-                    css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
-                    htmlContent={htmlContent}
-                    layout={preset.layout}
-                    className="h-full w-full bg-white overflow-auto"
-                  />
+                  <div className="overflow-auto flex-1 bg-white">
+                    <div className="grid grid-cols-[1rem_1fr_1rem] grid-rows-[1rem_auto_1rem] min-h-full">
+                      {/* Marge haute */}
+                      <div className="border-b-2 border-r-2 border-dashed border-gray-300" />
+                      <div className="border-b-2 border-dashed border-gray-300" />
+                      <div className="border-b-2 border-l-2 border-dashed border-gray-300" />
+
+                      <div className="border-r-2 border-dashed border-gray-300" />
+
+                      <ShadowPreview
+                        css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
+                        htmlContent={htmlContent}
+                        layout={preset.layout}
+                        className="w-full bg-white overflow-auto px-8 py-2"
+                      />
+                      <div className="border-l-2 border-dashed border-gray-300" />
+
+                      {/* Marge basse */}
+                      <div className="border-t-2 border-r-2 border-dashed border-gray-300" />
+                      <div className="border-t-2 border-dashed border-gray-300" />
+                      <div className="border-t-2 border-l-2 border-dashed border-gray-300" />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
