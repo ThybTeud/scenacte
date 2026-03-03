@@ -26,7 +26,11 @@ export function EditorStructurePanel({
               <div key={acteIndex} className="space-y-1">
                 <button
                   className={`w-full text-left px-2 py-1 rounded hover:bg-pink-100 clamp-1 ${
-                    activeActeIndex === acteIndex ? "bg-rose-200 font-semibold" : ""
+                    activeActeIndex === acteIndex
+                      ? activeSceneIndex === -1
+                        ? "bg-rose-400 text-white font-semibold"
+                        : "bg-rose-200 font-semibold"
+                      : ""
                   }`}
                   onClick={() => onSectionClick(acte.position)}
                 >
