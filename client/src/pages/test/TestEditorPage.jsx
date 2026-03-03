@@ -26,7 +26,7 @@ export default function TestEditorPage() {
   const [showPageSettingsModal, setShowPageSettingsModal] = useState(false);
 
   const editorRef = useRef(null);
-  const [currentLine, setCurrentLine] = useState(0);
+  const [currentLine, setCurrentLine] = useState(null);
 
   const debouncedContent = useDebouncedValue(content, 300);
 
@@ -41,7 +41,7 @@ export default function TestEditorPage() {
   const characters = useMemo(() => structure?.personnages || [], [structure?.personnages]);
 
   const { activeActeIndex, activeSceneIndex } = useMemo(() => {
-    if (!structure?.items || currentLine === 0) {
+    if (!structure?.items || currentLine === null) {
       return { activeActeIndex: -1, activeSceneIndex: -1 };
     }
 

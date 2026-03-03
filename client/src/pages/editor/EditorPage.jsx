@@ -33,7 +33,7 @@ export default function EditorPage() {
   // Référence à l'éditeur CodeMirror pour l'insertion de texte
   const editorRef = useRef(null);
 
-  const [currentLine, setCurrentLine] = useState(0);
+  const [currentLine, setCurrentLine] = useState(null);
 
   // Timeout de sauvegarde automatique
   const saveTimeoutRef = useRef(null);
@@ -181,7 +181,7 @@ export default function EditorPage() {
 
   // Calculer l'acte et la scène actifs basés sur la position du curseur
   const { activeActeIndex, activeSceneIndex } = useMemo(() => {
-    if (!structure?.items || currentLine === 0) {
+    if (!structure?.items || currentLine === null) {
       return { activeActeIndex: -1, activeSceneIndex: -1 };
     }
 
