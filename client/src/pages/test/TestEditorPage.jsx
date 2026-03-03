@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SAMPLE_PLAY } from "@/config/sample-play";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -27,6 +27,14 @@ export default function TestEditorPage() {
 
   const editorRef = useRef(null);
   const [currentLine, setCurrentLine] = useState(null);
+
+  // Auto-focus sur l'éditeur au montage
+  useEffect(() => {
+    if (editorRef.current?.focus) {
+      editorRef.current.focus();
+      setCurrentLine(0);
+    }
+  }, []);
 
   const debouncedContent = useDebouncedValue(content, 300);
 

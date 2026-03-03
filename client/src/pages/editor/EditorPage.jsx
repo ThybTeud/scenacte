@@ -101,6 +101,14 @@ export default function EditorPage() {
     fetchPlay();
   }, [id]);
 
+  // Auto-focus sur l'éditeur après chargement
+  useEffect(() => {
+    if (!isLoading && editorRef.current?.focus) {
+      editorRef.current.focus();
+      setCurrentLine(0);
+    }
+  }, [isLoading]);
+
   const fetchPlay = async () => {
     setIsLoading(true);
     try {
