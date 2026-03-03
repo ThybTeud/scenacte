@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
@@ -17,11 +17,12 @@ import LegalPage from './pages/legal/LegalPage';
 import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
 import TemplateLab from './pages/dev/TemplateLab';
+import TestEditorPage from './pages/test/TestEditorPage';
 
 function RootRedirect() {
-  const { user, guestMode } = useAuth();
+  const { user } = useAuth();
 
-  if (user || guestMode) {
+  if (user) {
     return <Navigate to="/library" replace />;
   }
   return <Navigate to="/login" replace />;
@@ -35,6 +36,14 @@ function PlayIdRedirect() {
 
 function App() {
   const [serverReady, setServerReady] = useState(false);
+
+  // Nettoyage des données du mode invité supprimé
+  // TODO: Supprimer ce bloc après quelques mois (ajouté le 2026-03-03)
+  useEffect(() => {
+    localStorage.removeItem('scenacte_guest_mode');
+    localStorage.removeItem('scenacte_guest_data');
+    localStorage.removeItem('scenacte_page_settings');
+  }, []);
 
   return (
     <>
@@ -55,6 +64,9 @@ function App() {
               <Route path="/register" element={<AuthPage />} />
               <Route path="/forgot-password" element={<AuthPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+              {/* Mode test — public, sans auth */}
+              <Route path="/test" element={<TestEditorPage />} />
 
               {/* DEV only */}
               {import.meta.env.DEV && (
@@ -87,7 +99,7 @@ function App() {
               <Route
                 path="/profile"
                 element={
-                  <PrivateRoute requireAuth>
+                  <PrivateRoute>
                     <ProfilePage />
                   </PrivateRoute>
                 }

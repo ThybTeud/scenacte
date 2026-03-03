@@ -31,7 +31,7 @@ import {
 export default function EditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, logout, isGuest } = useAuth();
+  const { user, logout } = useAuth();
 
   const [play, setPlay] = useState(null);
   const [lastSavedContent, setLastSavedContent] = useState("");
@@ -93,13 +93,13 @@ export default function EditorPage() {
     handlePreviewScroll,
   } = useSyncScroll();
 
-  // Hook versioning (désactivé en mode guest)
+  // Hook versioning
   const {
     trackChanges,
     createVersion,
     hasUnsavedChanges: hasUnsavedVersionChanges,
     charsSinceLastVersion,
-  } = useVersioning(id, !isGuest);
+  } = useVersioning(id, true);
 
   // Hook parsing (utilise le contenu debouncé pour optimiser les performances)
   const { structure, statistics, htmlContent } = usePlayParsing(
@@ -326,7 +326,7 @@ export default function EditorPage() {
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       // Utilise la ref au lieu du state (évite les dépendances)
-      if (hasUnsavedVersionChangesRef.current && !isGuest) {
+      if (hasUnsavedVersionChangesRef.current) {
         // Utiliser sendBeacon pour envoyer la requête de manière asynchrone
         // Note: sendBeacon est plus fiable que fetch avec keepalive pour beforeunload
         const data = JSON.stringify({
@@ -369,7 +369,7 @@ export default function EditorPage() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [id, isGuest]); // hasUnsavedVersionChanges retiré → utilise la ref
+  }, [id]); // hasUnsavedVersionChanges retiré → utilise la ref
 
   /**
    * Sauvegarde automatique après 2 secondes d'inactivité
@@ -511,7 +511,7 @@ export default function EditorPage() {
           onSave={handleManualSave}
           onCreateVersion={handleCreateManualVersion}
           hasUnsavedChanges={hasUnsavedVersionChanges}
-          isOnline={!isGuest}
+          isOnline={true}
           onUndo={handleUndo}
           onRedo={handleRedo}
           canUndo={canUndo}
