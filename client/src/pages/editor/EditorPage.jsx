@@ -180,9 +180,9 @@ export default function EditorPage() {
   );
 
   // Calculer l'acte et la scène actifs basés sur la position du curseur
-  const { activeActeIndex, activeSceneIndex } = useMemo(() => {
+  const { activeActeIndex, activeSceneIndex, isBeforeStructure } = useMemo(() => {
     if (!structure?.items || currentLine === null) {
-      return { activeActeIndex: -1, activeSceneIndex: -1 };
+      return { activeActeIndex: -1, activeSceneIndex: -1, isBeforeStructure: false };
     }
 
     let foundActeIndex = -1;
@@ -219,6 +219,7 @@ export default function EditorPage() {
     return {
       activeActeIndex: foundActeIndex,
       activeSceneIndex: foundSceneIndex,
+      isBeforeStructure: foundActeIndex === -1,
     };
   }, [structure?.items, currentLine]);
 
@@ -514,6 +515,7 @@ export default function EditorPage() {
           characters={characters}
           activeActeIndex={activeActeIndex}
           activeSceneIndex={activeSceneIndex}
+          isBeforeStructure={isBeforeStructure}
           onSectionClick={handleSectionClick}
           onCharacterClick={handleCharacterClick}
           editorRef={editorRef}

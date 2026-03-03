@@ -40,7 +40,7 @@ export default function TestEditorPage() {
 
   const characters = useMemo(() => structure?.personnages || [], [structure?.personnages]);
 
-  const { activeActeIndex, activeSceneIndex } = useMemo(() => {
+  const { activeActeIndex, activeSceneIndex, isBeforeStructure } = useMemo(() => {
     if (!structure?.items || currentLine === null) {
       return { activeActeIndex: -1, activeSceneIndex: -1 };
     }
@@ -72,7 +72,7 @@ export default function TestEditorPage() {
       }
     }
 
-    return { activeActeIndex: foundActeIndex, activeSceneIndex: foundSceneIndex };
+    return { activeActeIndex: foundActeIndex, activeSceneIndex: foundSceneIndex, isBeforeStructure: foundActeIndex === -1 };
   }, [structure?.items, currentLine]);
 
   const handleContentChange = useCallback((newContent) => {
@@ -174,6 +174,7 @@ export default function TestEditorPage() {
           characters={characters}
           activeActeIndex={activeActeIndex}
           activeSceneIndex={activeSceneIndex}
+          isBeforeStructure={isBeforeStructure}
           onSectionClick={handleSectionClick}
           onCharacterClick={handleCharacterClick}
           editorRef={editorRef}

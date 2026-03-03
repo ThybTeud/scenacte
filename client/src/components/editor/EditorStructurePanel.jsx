@@ -6,6 +6,7 @@ export function EditorStructurePanel({
   characters,
   activeActeIndex,
   activeSceneIndex,
+  isBeforeStructure,
   onSectionClick,
   onCharacterClick,
   onClose,
@@ -22,6 +23,9 @@ export function EditorStructurePanel({
         <div className="mb-4">
           <div className="font-semibold uppercase text-sm mb-2">Sommaire</div>
           <div className="space-y-2 text-xs">
+            {isBeforeStructure && (
+              <div className="h-0.5 bg-rose-400 rounded-full" />
+            )}
             {structure?.items?.map((acte, acteIndex) => (
               <div key={acteIndex} className="space-y-1">
                 <button

@@ -10,6 +10,7 @@ export function EditorWorkspace({
   characters,
   activeActeIndex,
   activeSceneIndex,
+  isBeforeStructure,
   onSectionClick,
   onCharacterClick,
   editorRef,
@@ -54,6 +55,7 @@ export function EditorWorkspace({
               characters={characters}
               activeActeIndex={activeActeIndex}
               activeSceneIndex={activeSceneIndex}
+              isBeforeStructure={isBeforeStructure}
               onSectionClick={onSectionClick}
               onCharacterClick={onCharacterClick}
               onClose={() => setShowEditorHelp(false)}
