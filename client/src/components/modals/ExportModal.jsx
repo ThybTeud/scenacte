@@ -22,8 +22,7 @@ import { getPreset } from "@/config/template-presets";
  * @param {string} props.playTitle - Titre de la piece
  * @param {string} [props.playSubtitle] - Sous-titre de la piece
  * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
- * @param {Object} [props.template] - Objet template avec name et settings
- * @param {string} [props.presetId] - ID du preset à utiliser (nouveau système)
+ * @param {string} props.presetId - ID du preset à utiliser
  * @param {Function} [props.onOpenLayoutModal] - Callback pour ouvrir le modal de mise en page
  */
 export default function ExportModal({
@@ -33,7 +32,6 @@ export default function ExportModal({
     playTitle,
     playSubtitle,
     pageFormat = "A5",
-    template = null,
     presetId,
     onOpenLayoutModal,
 }) {
@@ -51,10 +49,7 @@ export default function ExportModal({
         // ExportModal se mettra à jour automatiquement quand le preset change
     };
 
-    // Afficher le nom du preset (nouveau système) ou du template BDD (ancien système)
-    const templateLabel = presetId
-        ? getPreset(presetId).name
-        : (template?.name || "Par défaut");
+    const templateLabel = presetId ? getPreset(presetId).name : "Par défaut";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,7 +132,6 @@ export default function ExportModal({
                                 htmlContent={htmlContent}
                                 playTitle={playTitle}
                                 playSubtitle={playSubtitle}
-                                template={template}
                                 pageFormat={pageFormat}
                                 presetId={presetId}
                                 onPagesRendered={setPageCount}

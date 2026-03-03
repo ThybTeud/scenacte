@@ -12,7 +12,7 @@
  * Mesure : 1000 itérations, performance.now() ; affiche moyenne et P95.
  */
 
-import { PlayParser } from '../playParser.js';
+import { PlayParser } from '@/utils/playParser.js';
 import { performance } from 'node:perf_hooks';
 
 // ---------------------------------------------------------------------------

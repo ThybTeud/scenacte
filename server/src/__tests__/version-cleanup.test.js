@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { pool } from '../config/database.js';
-import { cleanupOldVersions } from '../services/version-cleanup.service.js';
+import { cleanupOldVersions } from '../services/versionCleanup.service.js';
 
 /**
  * Tests pour le service de cleanup des versions
