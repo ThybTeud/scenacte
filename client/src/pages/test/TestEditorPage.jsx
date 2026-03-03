@@ -40,40 +40,65 @@ export default function TestEditorPage() {
 
   const characters = useMemo(() => structure?.personnages || [], [structure?.personnages]);
 
-  const { activeActeIndex, activeSceneIndex, isBeforeStructure } = useMemo(() => {
+  const { activeActeIndex, activeSceneIndex, activeOrphanSceneIndex, isBeforeStructure } = useMemo(() => {
     if (!structure?.items || currentLine === null) {
-      return { activeActeIndex: -1, activeSceneIndex: -1 };
+      return { activeActeIndex: -1, activeSceneIndex: -1, activeOrphanSceneIndex: -1, isBeforeStructure: false };
     }
 
     let foundActeIndex = -1;
     let foundSceneIndex = -1;
+    let foundOrphanSceneIndex = -1;
 
-    for (let i = 0; i < structure.items.length; i++) {
-      const acte = structure.items[i];
-      const acteStart = acte.position?.start ?? 0;
-      const nextActe = structure.items[i + 1];
-      const acteEnd = nextActe ? nextActe.position?.start : Infinity;
+    // Chercher dans les scènes orphelines (avant le premier acte)
+    const orphanScenes = structure.orphanScenes || [];
+    const firstActeStart = structure.items[0]?.position?.start ?? Infinity;
 
-      if (currentLine >= acteStart && currentLine < acteEnd) {
-        foundActeIndex = i;
-        if (acte.scenes) {
-          for (let j = 0; j < acte.scenes.length; j++) {
-            const scene = acte.scenes[j];
-            const sceneStart = scene.position?.start ?? 0;
-            const nextScene = acte.scenes[j + 1];
-            const sceneEnd = nextScene ? nextScene.position?.start : acteEnd;
-            if (currentLine >= sceneStart && currentLine < sceneEnd) {
-              foundSceneIndex = j;
-              break;
-            }
-          }
-        }
+    for (let i = 0; i < orphanScenes.length; i++) {
+      const scene = orphanScenes[i];
+      const sceneStart = scene.position?.start ?? 0;
+      const nextScene = orphanScenes[i + 1];
+      const sceneEnd = nextScene ? nextScene.position?.start : firstActeStart;
+
+      if (currentLine >= sceneStart && currentLine < sceneEnd) {
+        foundOrphanSceneIndex = i;
         break;
       }
     }
 
-    return { activeActeIndex: foundActeIndex, activeSceneIndex: foundSceneIndex, isBeforeStructure: foundActeIndex === -1 };
-  }, [structure?.items, currentLine]);
+    // Parcourir les actes pour trouver celui qui contient la ligne actuelle
+    if (foundOrphanSceneIndex === -1) {
+      for (let i = 0; i < structure.items.length; i++) {
+        const acte = structure.items[i];
+        const acteStart = acte.position?.start ?? 0;
+        const nextActe = structure.items[i + 1];
+        const acteEnd = nextActe ? nextActe.position?.start : Infinity;
+
+        if (currentLine >= acteStart && currentLine < acteEnd) {
+          foundActeIndex = i;
+          if (acte.scenes) {
+            for (let j = 0; j < acte.scenes.length; j++) {
+              const scene = acte.scenes[j];
+              const sceneStart = scene.position?.start ?? 0;
+              const nextScene = acte.scenes[j + 1];
+              const sceneEnd = nextScene ? nextScene.position?.start : acteEnd;
+              if (currentLine >= sceneStart && currentLine < sceneEnd) {
+                foundSceneIndex = j;
+                break;
+              }
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    return {
+      activeActeIndex: foundActeIndex,
+      activeSceneIndex: foundSceneIndex,
+      activeOrphanSceneIndex: foundOrphanSceneIndex,
+      isBeforeStructure: foundActeIndex === -1 && foundOrphanSceneIndex === -1,
+    };
+  }, [structure?.items, structure?.orphanScenes, currentLine]);
 
   const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
@@ -174,6 +199,7 @@ export default function TestEditorPage() {
           characters={characters}
           activeActeIndex={activeActeIndex}
           activeSceneIndex={activeSceneIndex}
+          activeOrphanSceneIndex={activeOrphanSceneIndex}
           isBeforeStructure={isBeforeStructure}
           onSectionClick={handleSectionClick}
           onCharacterClick={handleCharacterClick}

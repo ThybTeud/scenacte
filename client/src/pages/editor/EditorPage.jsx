@@ -180,48 +180,68 @@ export default function EditorPage() {
   );
 
   // Calculer l'acte et la scène actifs basés sur la position du curseur
-  const { activeActeIndex, activeSceneIndex, isBeforeStructure } = useMemo(() => {
+  const { activeActeIndex, activeSceneIndex, activeOrphanSceneIndex, isBeforeStructure } = useMemo(() => {
     if (!structure?.items || currentLine === null) {
-      return { activeActeIndex: -1, activeSceneIndex: -1, isBeforeStructure: false };
+      return { activeActeIndex: -1, activeSceneIndex: -1, activeOrphanSceneIndex: -1, isBeforeStructure: false };
     }
 
     let foundActeIndex = -1;
     let foundSceneIndex = -1;
+    let foundOrphanSceneIndex = -1;
+
+    // Chercher dans les scènes orphelines (avant le premier acte)
+    const orphanScenes = structure.orphanScenes || [];
+    const firstActeStart = structure.items[0]?.position?.start ?? Infinity;
+
+    for (let i = 0; i < orphanScenes.length; i++) {
+      const scene = orphanScenes[i];
+      const sceneStart = scene.position?.start ?? 0;
+      const nextScene = orphanScenes[i + 1];
+      const sceneEnd = nextScene ? nextScene.position?.start : firstActeStart;
+
+      if (currentLine >= sceneStart && currentLine < sceneEnd) {
+        foundOrphanSceneIndex = i;
+        break;
+      }
+    }
 
     // Parcourir les actes pour trouver celui qui contient la ligne actuelle
-    for (let i = 0; i < structure.items.length; i++) {
-      const acte = structure.items[i];
-      const acteStart = acte.position?.start ?? 0;
-      const nextActe = structure.items[i + 1];
-      const acteEnd = nextActe ? nextActe.position?.start : Infinity;
+    if (foundOrphanSceneIndex === -1) {
+      for (let i = 0; i < structure.items.length; i++) {
+        const acte = structure.items[i];
+        const acteStart = acte.position?.start ?? 0;
+        const nextActe = structure.items[i + 1];
+        const acteEnd = nextActe ? nextActe.position?.start : Infinity;
 
-      if (currentLine >= acteStart && currentLine < acteEnd) {
-        foundActeIndex = i;
+        if (currentLine >= acteStart && currentLine < acteEnd) {
+          foundActeIndex = i;
 
-        // Chercher la scène active dans cet acte
-        if (acte.scenes) {
-          for (let j = 0; j < acte.scenes.length; j++) {
-            const scene = acte.scenes[j];
-            const sceneStart = scene.position?.start ?? 0;
-            const nextScene = acte.scenes[j + 1];
-            const sceneEnd = nextScene ? nextScene.position?.start : acteEnd;
+          // Chercher la scène active dans cet acte
+          if (acte.scenes) {
+            for (let j = 0; j < acte.scenes.length; j++) {
+              const scene = acte.scenes[j];
+              const sceneStart = scene.position?.start ?? 0;
+              const nextScene = acte.scenes[j + 1];
+              const sceneEnd = nextScene ? nextScene.position?.start : acteEnd;
 
-            if (currentLine >= sceneStart && currentLine < sceneEnd) {
-              foundSceneIndex = j;
-              break;
+              if (currentLine >= sceneStart && currentLine < sceneEnd) {
+                foundSceneIndex = j;
+                break;
+              }
             }
           }
+          break;
         }
-        break;
       }
     }
 
     return {
       activeActeIndex: foundActeIndex,
       activeSceneIndex: foundSceneIndex,
-      isBeforeStructure: foundActeIndex === -1,
+      activeOrphanSceneIndex: foundOrphanSceneIndex,
+      isBeforeStructure: foundActeIndex === -1 && foundOrphanSceneIndex === -1,
     };
-  }, [structure?.items, currentLine]);
+  }, [structure?.items, structure?.orphanScenes, currentLine]);
 
   /**
    * Gère le changement de contenu dans l'éditeur
@@ -515,6 +535,7 @@ export default function EditorPage() {
           characters={characters}
           activeActeIndex={activeActeIndex}
           activeSceneIndex={activeSceneIndex}
+          activeOrphanSceneIndex={activeOrphanSceneIndex}
           isBeforeStructure={isBeforeStructure}
           onSectionClick={handleSectionClick}
           onCharacterClick={handleCharacterClick}

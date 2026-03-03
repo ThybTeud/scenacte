@@ -6,6 +6,7 @@ export function EditorStructurePanel({
   characters,
   activeActeIndex,
   activeSceneIndex,
+  activeOrphanSceneIndex,
   isBeforeStructure,
   onSectionClick,
   onCharacterClick,
@@ -26,6 +27,19 @@ export function EditorStructurePanel({
             {isBeforeStructure && (
               <div className="h-0.5 bg-rose-400 rounded-full" />
             )}
+            {structure?.orphanScenes?.map((scene, sceneIndex) => (
+              <button
+                key={`orphan-${sceneIndex}`}
+                className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-pink-100 hover:text-gray-900 ${
+                  activeOrphanSceneIndex === sceneIndex
+                    ? "bg-rose-400 text-white font-semibold"
+                    : ""
+                }`}
+                onClick={() => onSectionClick(scene.position)}
+              >
+                {scene.value || `Scène ${sceneIndex + 1}`}
+              </button>
+            ))}
             {structure?.items?.map((acte, acteIndex) => (
               <div key={acteIndex} className="space-y-1">
                 <button

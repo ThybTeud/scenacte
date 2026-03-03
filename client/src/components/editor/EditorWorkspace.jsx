@@ -10,6 +10,7 @@ export function EditorWorkspace({
   characters,
   activeActeIndex,
   activeSceneIndex,
+  activeOrphanSceneIndex,
   isBeforeStructure,
   onSectionClick,
   onCharacterClick,
@@ -55,6 +56,7 @@ export function EditorWorkspace({
               characters={characters}
               activeActeIndex={activeActeIndex}
               activeSceneIndex={activeSceneIndex}
+              activeOrphanSceneIndex={activeOrphanSceneIndex}
               isBeforeStructure={isBeforeStructure}
               onSectionClick={onSectionClick}
               onCharacterClick={onCharacterClick}
