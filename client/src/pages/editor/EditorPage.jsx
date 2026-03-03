@@ -527,7 +527,7 @@ export default function EditorPage() {
           onTogglePreview={() => setShowPreview((prev) => !prev)}
         />
 
-        <main className="flex-1 overflow-hidden p-1 sm:p-4 min-h-0 bg-gray-400">
+        <main className="flex-1 overflow-hidden p-4 min-h-0 bg-gray-400">
           <div className="flex justify-center relative w-full h-full">
             {/* Bouton flottant pour ouvrir l'aide éditeur */}
             {!showEditorHelp && (
@@ -553,7 +553,7 @@ export default function EditorPage() {
               </Button>
             )}
 
-            <div className="flex justify-center gap-1 sm:gap-4 h-full w-full max-w-6xl">
+            <div className="flex justify-center gap-4 h-full w-full max-w-6xl">
               {/* Panneau Aide Editeur - masqué sous md */}
               {showEditorHelp && (
                 <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
@@ -633,7 +633,7 @@ export default function EditorPage() {
               {/* Colonne éditeur */}
               <div className="flex-1 flex flex-col min-w-0 max-w-3xl h-full">
                 <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-gray-900 rounded-lg shadow-brutal">
-                  <div className="hidden sm:flex px-4 items-center h-12 sm:h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
+                  <div className="hidden sm:flex px-6 items-center h-16 shrink-0 bg-gray-200 border-b-2 border-gray-900 font-bold uppercase">
                     Éditeur
                   </div>
                   <CodeMirrorEditor
@@ -673,7 +673,7 @@ export default function EditorPage() {
                         css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
                         htmlContent={htmlContent}
                         layout={preset.layout}
-                        className="w-full bg-white overflow-auto px-4 md:px-8 py-2"
+                        className="w-full bg-white overflow-auto px-8 py-2"
                       />
                       <div className="border-l-2 border-dashed border-gray-300" />
 
