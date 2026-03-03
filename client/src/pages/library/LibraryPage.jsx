@@ -8,7 +8,6 @@ import {
     SidebarInset,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,10 +18,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { GuestModeBanner } from "@/components/ui/GuestModeBanner";
 import { PlaysPagination } from "@/components/ui/Pagination";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, Plus, CheckCircle2, X } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { LibrarySidebar } from "@/components/sidebar";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
@@ -31,7 +28,7 @@ import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 
 export default function LibraryPage() {
     const navigate = useNavigate();
-    const { user, logout, isGuest } = useAuth();
+    const { user } = useAuth();
 
     const [plays, setPlays] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -58,18 +55,6 @@ export default function LibraryPage() {
     const [exportHtmlContent, setExportHtmlContent] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const menuRef = useRef(null);
-
-    // Message d'import des pièces invité
-    const [importSuccessCount, setImportSuccessCount] = useState(null);
-
-    // Vérifier si des pièces ont été importées (depuis inscription)
-    useEffect(() => {
-        const count = sessionStorage.getItem('scenacte_import_success');
-        if (count) {
-            setImportSuccessCount(parseInt(count, 10));
-            sessionStorage.removeItem('scenacte_import_success');
-        }
-    }, []);
 
     // Debounce search term
     useEffect(() => {
@@ -208,28 +193,6 @@ export default function LibraryPage() {
                     <h1 className="text-2xl font-semibold mb-6 hidden">
                         Bibliothèque
                     </h1>
-
-                    {/* Import Success Alert */}
-                    {importSuccessCount && (
-                        <Alert variant="success" className="mb-4">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <AlertDescription className="flex items-center justify-between">
-                                <span>
-                                    Vos {importSuccessCount} pièce{importSuccessCount > 1 ? 's ont' : ' a'} été importée{importSuccessCount > 1 ? 's' : ''}.
-                                </span>
-                                <button
-                                    onClick={() => setImportSuccessCount(null)}
-                                    className="text-black/60 hover:text-black transition-colors ml-4"
-                                    aria-label="Fermer"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                    {/* Guest Mode Banner */}
-                    {isGuest && <GuestModeBanner />}
 
                     {/* Actions row */}
                     <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
