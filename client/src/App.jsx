@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
-import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import ServerWakeUp from './components/ServerWakeUp';
 
@@ -14,19 +13,11 @@ import LibraryPage from './pages/library/LibraryPage';
 import EditorPage from './pages/editor/EditorPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import LegalPage from './pages/legal/LegalPage';
+import LandingPage from './pages/landing/LandingPage';
 import { NotFound } from './pages/NotFound';
 import DevPlayground from './pages/DevPlayground';
 import TemplateLab from './pages/dev/TemplateLab';
 import TestEditorPage from './pages/test/TestEditorPage';
-
-function RootRedirect() {
-  const { user } = useAuth();
-
-  if (user) {
-    return <Navigate to="/library" replace />;
-  }
-  return <Navigate to="/login" replace />;
-}
 
 // Redirection legacy /plays/:id vers /editor/:id
 function PlayIdRedirect() {
@@ -57,7 +48,7 @@ function App() {
             <Toaster />
 
             <Routes>
-              <Route path="/" element={<RootRedirect />} />
+              <Route path="/" element={<LandingPage />} />
 
               {/* Auth routes */}
               <Route path="/login" element={<AuthPage />} />
