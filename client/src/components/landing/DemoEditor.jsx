@@ -192,10 +192,10 @@ export default function DemoEditor() {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
+    <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg md:mx-32">
       <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
         {/* CodeMirror editor */}
-        <div className="relative h-72 overflow-hidden md:h-96">
+        <div className="relative h-72 overflow-hidden md:h-108">
           <div ref={editorRef} className="h-full w-full" />
           {typingDone && (
             <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">

@@ -10,11 +10,11 @@ import { motion } from 'framer-motion';
  */
 
 const FEATURES = [
-  { label: 'Syntaxe simplifiée', desc: 'Un @ pour un personnage, un # pour un acte.' },
-  { label: 'Preview temps réel', desc: 'Votre texte se met en forme au fil de la frappe.' },
-  { label: 'Templates', desc: 'Un modèle de mise en page adapté à votre style.' },
-  { label: 'Export PDF', desc: 'Un clic, un PDF aux normes éditoriales.' },
-  { label: 'Versioning', desc: 'Chaque version sauvegardée automatiquement.' },
+  { label: 'Syntaxe simplifiée', desc: 'Un @ pour un personnage, un # pour un acte.', align: 'right' },
+  { label: 'Aperçu en temps réel', desc: 'Votre texte se met en forme au fil de la frappe.', align: 'left' },
+  { label: 'Templates', desc: 'Un modèle de mise en page adapté à votre style.', align: 'left' },
+  { label: 'Export PDF', desc: 'Un clic, un PDF aux normes éditoriales.', align: 'left' },
+  { label: 'Sauvegarde automatique', desc: 'Votre travail est sauvegardé automatiquement pour ne rien perdre.', align: 'right' },
 ];
 
 // Trait rectiligne (SVG) : part du texte, traverse le gap, entre dans la démo.
@@ -50,7 +50,7 @@ const POSITION_STYLES = [
 export default function FeatureAnnotations({ visibleCount }) {
   return (
     <>
-      {FEATURES.map(({ label, desc }, index) => {
+      {FEATURES.map(({ label, desc, align }, index) => {
         const isVisible = index < visibleCount;
         const age = visibleCount - 1 - index;
         const baseOpacity = isVisible ? Math.max(0.3, 1 - age * 0.2) : 0;
@@ -60,6 +60,7 @@ export default function FeatureAnnotations({ visibleCount }) {
             key={label}
             label={label}
             desc={desc}
+            align={align}
             isVisible={isVisible}
             baseOpacity={baseOpacity}
             lineConfig={LINE_CONFIGS[index]}
@@ -72,7 +73,7 @@ export default function FeatureAnnotations({ visibleCount }) {
   );
 }
 
-function AnnotationLabel({ label, desc, isVisible, baseOpacity, lineConfig, posStyle, index }) {
+function AnnotationLabel({ label, desc, align, isVisible, baseOpacity, lineConfig, posStyle, index }) {
   const [hovered, setHovered] = useState(false);
   const opacity = hovered && isVisible ? 1 : baseOpacity;
 
@@ -93,10 +94,10 @@ function AnnotationLabel({ label, desc, isVisible, baseOpacity, lineConfig, posS
       onMouseLeave={() => setHovered(false)}
     >
       {/* Texte */}
-      <div className="relative whitespace-nowrap select-none">
+      <div className={`relative whitespace-nowrap select-none ${align === 'right' ? 'text-right' : 'text-left'}`}>
         <p className="text-sm font-bold text-primary">{label}</p>
         {hovered && (
-          <p className="text-xs text-primary/70">{desc}</p>
+          <p className={`absolute text-xs text-primary/70 ${align === 'right' ? 'right-0' : 'left-0'}`}>{desc}</p>
         )}
 
         {/* Trait rectiligne + point rond */}
