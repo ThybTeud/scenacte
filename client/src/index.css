@@ -6,7 +6,7 @@
 
 @theme {
     /* Couleurs du design system */
-    --color-cream: #f8f5f2;
+    /* --color-cream: #f8f5f2; */
     --color-blue: oklch(54.6% 0.245 262.881);
     --color-black: #0f172a;
     --color-white: #ffffff;
