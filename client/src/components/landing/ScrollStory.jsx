@@ -1,17 +1,17 @@
 import { useRef, useState, useEffect } from 'react';
-import { useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import DemoEditor from '@/components/landing/DemoEditor';
 import FeatureOverlay from '@/components/landing/FeatureOverlay';
 
 /**
- * ScrollStory — orchestrates the scroll-driven narrative:
+ * ScrollStory — orchestrateur scroll-driven :
  *
- * Phase 1:  Title visible in normal flow, demo below
- * Phase 2:  Title scrolls away naturally, demo sticks centered vertically
- * Phase 3:  Demo sticky, feature overlays appear cumulatively
- * Phase 4:  Demo unpins, scrolls away
+ * Étape 1 (0–10%)  : Splash — titre + démo visibles ensemble (h-screen)
+ * Étape 2 (10–20%) : Titre fade out (opacité → 0), démo reste sticky centrée
+ * Étape 3 (20–80%) : Démo sticky, 5 légendes features en overlay cumulatif
+ * Étape 4 (80–100%): Démo se libère du sticky, scroll hors écran
  *
- * The tall container (500vh) creates scroll runway for the sticky behavior.
+ * Hauteur 500vh ≈ 100vh par étape, crée la piste de scroll pour le sticky.
  */
 export default function ScrollStory() {
   const containerRef = useRef(null);
@@ -21,28 +21,37 @@ export default function ScrollStory() {
     offset: ['start start', 'end end'],
   });
 
+  // Titre : opacité 1 → 0 entre 0% et 12% du scroll
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
+
+  // Seuils d'apparition des 5 légendes features
   const featureThresholds = [0.2, 0.32, 0.44, 0.56, 0.68];
 
   return (
+    // 500vh ≈ 100vh par étape (splash, fade, 3×features scroll, unpin)
     <div ref={containerRef} className="relative" style={{ height: '500vh' }}>
-      {/* Title — in normal flow, scrolls out naturally */}
-      <div className="px-4 pt-24 pb-8 sm:px-6 md:pt-32 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-[Space_Grotesk] text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            L'éditeur pensé pour{" "}
-            <span className="text-primary">l'écriture théâtrale.</span>
-          </h1>
-        </div>
-      </div>
+      {/* Sticky wrapper — occupe tout le viewport, se fixe pendant le scroll */}
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="flex h-full flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+          {/* Titre — fade out lié au scroll progress */}
+          <motion.div
+            className="mb-6 max-w-3xl text-center"
+            style={{ opacity: titleOpacity }}
+          >
+            <h1 className="font-[Space_Grotesk] text-3xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              L'éditeur pensé pour{" "}
+              <span className="text-primary">l'écriture théâtrale.</span>
+            </h1>
+          </motion.div>
 
-      {/* Sticky demo — pins and centers vertically once title scrolls away */}
-      <div className="sticky top-0 z-10 flex h-screen items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-5xl">
-          <FeatureOverlayController
-            scrollYProgress={scrollYProgress}
-            thresholds={featureThresholds}
-          />
-          <DemoEditor />
+          {/* Démo + overlays features */}
+          <div className="relative w-full max-w-5xl">
+            <FeatureOverlayController
+              scrollYProgress={scrollYProgress}
+              thresholds={featureThresholds}
+            />
+            <DemoEditor />
+          </div>
         </div>
       </div>
     </div>
