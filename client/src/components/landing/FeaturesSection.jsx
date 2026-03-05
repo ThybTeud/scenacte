@@ -5,6 +5,7 @@ const FEATURES = [
     icon: Code,
     title: 'Syntaxe simplifiée',
     description: 'Un @ pour un personnage, un # pour un acte. Écrivez, Scenacte structure.',
+    primary: true,
   },
   {
     icon: Eye,
@@ -25,23 +26,31 @@ const FEATURES = [
 
 export default function FeaturesSection() {
   return (
-    <section className="bg-white/60 px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+    <section className="px-4 py-16 sm:px-6 md:py-24 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-12 text-center font-[Space_Grotesk] text-2xl font-bold text-black sm:text-3xl">
+        <h2 className="mb-12 text-center font-[Space_Grotesk] text-2xl font-bold text-foreground sm:text-3xl">
           Tout ce qu'il faut pour écrire du théâtre
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          {FEATURES.map(({ icon: Icon, title, description }) => (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, description, primary }) => (
             <div
               key={title}
-              className="rounded-sm border-2 border-black bg-white p-6 shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active"
+              className={`rounded-sm border-2 border-border bg-card shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active ${
+                primary ? 'sm:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col justify-center p-8' : 'p-6'
+              }`}
             >
-              <div className="mb-4 flex size-11 items-center justify-center rounded-sm border-2 border-black bg-primary/10">
-                <Icon className="size-5 text-primary" />
+              <div className={`mb-4 flex items-center justify-center rounded-sm border-2 border-border bg-primary/10 ${
+                primary ? 'size-14' : 'size-11'
+              }`}>
+                <Icon className={primary ? 'size-7 text-primary' : 'size-5 text-primary'} />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-black">{title}</h3>
-              <p className="text-sm leading-relaxed text-black/70">{description}</p>
+              <h3 className={`mb-2 font-semibold text-foreground ${primary ? 'text-xl' : 'text-lg'}`}>
+                {title}
+              </h3>
+              <p className={`leading-relaxed text-muted-foreground ${primary ? 'text-base' : 'text-sm'}`}>
+                {description}
+              </p>
             </div>
           ))}
         </div>

@@ -20,23 +20,22 @@ const TARGETS = [
 
 export default function TargetsSection() {
   return (
-    <section className="bg-white/60 px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+    <section className="border-y-2 border-border bg-muted/50 px-4 py-16 sm:px-6 md:py-24 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-12 text-center font-[Space_Grotesk] text-2xl font-bold text-black sm:text-3xl">
+        <h2 className="mb-12 text-center font-[Space_Grotesk] text-2xl font-bold text-foreground sm:text-3xl">
           Pensé pour tous les gens de théâtre
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="flex flex-col gap-8 sm:flex-row sm:gap-12">
           {TARGETS.map(({ icon: Icon, label, description }) => (
-            <div
-              key={label}
-              className="flex flex-col items-center gap-3 rounded-sm border-2 border-black bg-white p-6 text-center shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active"
-            >
-              <div className="flex size-12 items-center justify-center rounded-sm border-2 border-black bg-primary/10">
-                <Icon className="size-6 text-primary" />
+            <div key={label} className="flex flex-1 items-start gap-4">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <Icon className="size-5 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold text-black">{label}</h3>
-              <p className="text-sm leading-relaxed text-black/70">{description}</p>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">{label}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+              </div>
             </div>
           ))}
         </div>

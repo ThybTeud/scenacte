@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { EditorState } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { RangeSetBuilder } from '@codemirror/state';
-import { RotateCcw } from 'lucide-react';
+import { ArrowRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { PlayParser, astToHTML } from '@/utils/playParser';
 import ShadowPreview from '@/components/editors/ShadowPreview';
 import { shadowPreviewCSS } from '@/utils/shadowPreview';
@@ -18,9 +20,6 @@ const DEMO_TEXT = `#Acte I
 @THOMAS
 Peut-être. Mais pas ce soir.`;
 
-/**
- * Creates a lightweight CodeMirror play extension (highlighting only, no autocomplete)
- */
 function createPlayHighlighter() {
   const lineHighlighter = ViewPlugin.fromClass(class {
     constructor(view) {
@@ -72,15 +71,15 @@ function createPlayHighlighter() {
       height: '100%',
       fontSize: '13px',
       fontFamily: '"Source Code Pro", "Fira Code", ui-monospace, monospace',
-      backgroundColor: '#ffffff',
+      backgroundColor: 'transparent',
     },
     '.cm-scroller': { overflow: 'auto', fontFamily: 'inherit' },
     '.cm-content': { padding: '16px', paddingLeft: '0', minHeight: '100%' },
     '.cm-line': { padding: '0 4px', lineHeight: '1.6' },
     '.cm-gutters': {
-      backgroundColor: '#fafafa',
+      backgroundColor: 'hsl(0 0% 98%)',
       color: '#9ca3af',
-      borderRight: '1px solid #e5e5e5',
+      borderRight: '1px solid hsl(0 0% 90%)',
     },
     '.cm-act': { color: 'oklch(58.6% 0.253 17.585)', fontWeight: '600' },
     '.cm-scene': { color: 'oklch(58.6% 0.253 17.585)', fontWeight: '600' },
@@ -93,42 +92,21 @@ function createPlayHighlighter() {
 
 const parser = new PlayParser();
 
-export default function DemoSection() {
+export default function HeroDemoSection() {
+  const { isAuthenticated } = useAuth();
   const [content, setContent] = useState(DEMO_TEXT);
   const editorRef = useRef(null);
   const viewRef = useRef(null);
-  const containerRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
   const hasAnimatedRef = useRef(false);
 
-  // Parse content to HTML for preview
   const previewHTML = useMemo(() => {
     const ast = parser.parse(content);
     return astToHTML(ast);
   }, [content]);
 
-  // Intersection Observer to detect visibility
+  // Initialize CodeMirror on mount
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Initialize CodeMirror when visible
-  useEffect(() => {
-    if (!isVisible || !editorRef.current || viewRef.current) return;
+    if (!editorRef.current || viewRef.current) return;
 
     const extensions = createPlayHighlighter();
 
@@ -155,10 +133,9 @@ export default function DemoSection() {
 
     viewRef.current = view;
 
-    // Typing animation
+    // Typing animation on mount
     if (!hasAnimatedRef.current) {
       hasAnimatedRef.current = true;
-      // Set empty doc, then type it character by character
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: '' },
       });
@@ -181,7 +158,7 @@ export default function DemoSection() {
       view.destroy();
       viewRef.current = null;
     };
-  }, [isVisible]);
+  }, []);
 
   const handleReset = useCallback(() => {
     if (!viewRef.current) return;
@@ -192,30 +169,59 @@ export default function DemoSection() {
   }, []);
 
   return (
-    <section ref={containerRef} className="px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+    <section className="px-4 pt-28 pb-16 sm:px-6 md:pt-36 md:pb-24 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-4 text-center font-[Space_Grotesk] text-2xl font-bold text-black sm:text-3xl">
-          Essayez par vous-même
-        </h2>
-        <p className="mx-auto mb-10 max-w-xl text-center text-sm text-black/60 sm:text-base">
-          Tapez à gauche avec la syntaxe Scenacte — la mise en forme apparaît à droite en temps réel.
-        </p>
+        {/* Hero text */}
+        <div className="mx-auto max-w-3xl text-center">
+          <h1 className="font-[Space_Grotesk] text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            L'éditeur pensé pour{' '}
+            <span className="text-primary">l'écriture théâtrale.</span>
+          </h1>
 
-        {isVisible ? (
-          <div className="rounded-sm border-2 border-black bg-white shadow-brutal-lg overflow-hidden">
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            Scenacte est le premier éditeur dédié à l'écriture dramatique en français.
+            Syntaxe simplifiée, mise en page automatique, export PDF professionnel.
+          </p>
+
+          <div className="mt-10">
+            {isAuthenticated ? (
+              <Button asChild size="lg" className="h-12 px-8 text-base shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active">
+                <Link to="/library">
+                  Aller à ma bibliothèque
+                  <ArrowRight className="ml-2 size-5" />
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="h-12 px-8 text-base shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active">
+                <Link to="/register">
+                  Créer ma première pièce
+                  <ArrowRight className="ml-2 size-5" />
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Interactive demo */}
+        <div className="mt-14">
+          <p className="mb-4 text-center text-sm text-muted-foreground">
+            Tapez à gauche avec la syntaxe Scenacte — la mise en forme apparaît à droite en temps réel.
+          </p>
+
+          <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
             {/* Title bar */}
-            <div className="flex items-center justify-between border-b-2 border-black bg-cream px-4 py-2">
+            <div className="flex items-center justify-between border-b-2 border-border bg-muted px-4 py-2">
               <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full border-2 border-black bg-primary" />
-                <div className="h-3 w-3 rounded-full border-2 border-black bg-yellow-400" />
-                <div className="h-3 w-3 rounded-full border-2 border-black bg-green-400" />
-                <span className="ml-2 font-mono text-xs text-black/50">démo interactive</span>
+                <div className="h-3 w-3 rounded-full border-2 border-border bg-primary" />
+                <div className="h-3 w-3 rounded-full border-2 border-border bg-yellow-400" />
+                <div className="h-3 w-3 rounded-full border-2 border-border bg-green-400" />
+                <span className="ml-2 font-mono text-xs text-muted-foreground">démo interactive</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
-                className="h-7 gap-1.5 text-xs text-black/60 hover:text-black"
+                className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
               >
                 <RotateCcw className="size-3.5" />
                 Réinitialiser
@@ -223,14 +229,14 @@ export default function DemoSection() {
             </div>
 
             {/* Split editor / preview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-black">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border">
               {/* CodeMirror editor */}
-              <div className="h-72 md:h-80 overflow-hidden">
+              <div className="h-72 overflow-hidden md:h-80">
                 <div ref={editorRef} className="h-full w-full" />
               </div>
 
               {/* Preview */}
-              <div className="border-t-2 border-black md:border-t-0 h-72 md:h-80 overflow-auto">
+              <div className="h-72 overflow-auto border-t-2 border-border md:h-80 md:border-t-0">
                 <ShadowPreview
                   css={shadowPreviewCSS}
                   htmlContent={previewHTML}
@@ -240,10 +246,7 @@ export default function DemoSection() {
               </div>
             </div>
           </div>
-        ) : (
-          // Placeholder while not visible
-          <div className="h-96 rounded-sm border-2 border-black/20 bg-white/50" />
-        )}
+        </div>
       </div>
     </section>
   );
