@@ -20,31 +20,30 @@ const FEATURES = [
 // Trait rectiligne (SVG) : part du texte, traverse le gap, entre dans la démo.
 // Le gap entre texte et bord de démo = 40px. Le trait fait 60px (20px dans la démo).
 const LINE_CONFIGS = [
-  // Syntaxe — vertical vers le bas, point en bas (dans la démo)
-  { svgClass: 'left-2 top-full', w: 10, h: 60, line: 'M5 0 V60', dot: [5, 57] },
-  // Preview — vertical vers le bas, point en bas
-  { svgClass: 'right-2 top-full', w: 10, h: 60, line: 'M5 0 V60', dot: [5, 57] },
+  // Syntaxe — horizontal puis diagonale, point en bas (dans la démo)
+  { svgClass: '', line: 'M132 -9 H 192 L 250 41', dot: [250, 41] },
+  // Preview — horizontale, point à gauche (dans la démo)
+  { svgClass: '', line: 'M-4 -9 H-100', dot: [-100, -9] },
   // Templates — horizontal vers la droite, point à droite (dans la démo)
-  { svgClass: 'top-1/2 left-full -translate-y-1/2', w: 60, h: 10, line: 'M0 5 H60', dot: [57, 5] },
+  { svgClass: '', line: 'M-4 -9 H-270 L -300 21', dot: [-300, 21] },
   // Export PDF — vertical vers le haut, point en haut (dans la démo)
-  { svgClass: 'left-2 bottom-full', w: 10, h: 60, line: 'M5 60 V0', dot: [5, 3] },
+  { svgClass: '', line: 'M-4 -9 H-80 L -120 -31', dot: [-120, -31] },
   // Versioning — vertical vers le haut, point en haut
-  { svgClass: 'right-2 bottom-full', w: 10, h: 60, line: 'M5 60 V0', dot: [5, 3] },
+  { svgClass: '', line: 'M180 -9 H 340 L 380 -31', dot: [380, -31] },
 ];
 
 // Position du groupe annotation (texte + trait) par rapport au conteneur de la démo.
-// Le texte est à 40px du bord de la démo (espace visible clair).
 const POSITION_STYLES = [
   // Syntaxe simplifiée — au-dessus à gauche
-  { top: 0, left: '24px', transform: 'translateY(calc(-100% - 40px))' },
+  { top: '-10%', left: '0'},
   // Preview temps réel — au-dessus à droite
-  { top: 0, right: '24px', transform: 'translateY(calc(-100% - 40px))' },
+  { top: '50%', right: '-10%'},
   // Templates — à gauche, centré verticalement
-  { top: '50%', left: 0, transform: 'translate(calc(-100% - 40px), -50%)' },
+  { top: '-15%', right: '5%'},
   // Export PDF — en dessous à gauche
-  { bottom: 0, left: '24px', transform: 'translateY(calc(100% + 40px))' },
+  { bottom: '-15%', right: '-5%'},
   // Versioning — en dessous à droite
-  { bottom: 0, right: '24px', transform: 'translateY(calc(100% + 40px))' },
+  { bottom: '-15%', left: '24px'},
 ];
 
 export default function FeatureAnnotations({ visibleCount }) {
