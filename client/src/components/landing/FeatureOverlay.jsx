@@ -120,11 +120,13 @@ function FeatureLabel({ label, desc, isVisible, baseOpacity, lineConfig, posStyl
       onMouseLeave={() => setHovered(false)}
     >
       {/* Texte */}
-      <div className="relative whitespace-nowrap">
+      <div className="relative whitespace-nowrap select-none">
         <p className="text-sm font-bold text-primary">{label}</p>
-        <p className="text-xs text-primary/70">{desc}</p>
+        {hovered && (
+          <p className="text-xs text-primary/70">{desc}</p>
+        )}
 
-        {/* Trait rectiligne + point */}
+        {/* Trait rectiligne + point rond */}
         <svg
           className={`absolute ${lineConfig.svgClass} text-primary`}
           width={lineConfig.w}
