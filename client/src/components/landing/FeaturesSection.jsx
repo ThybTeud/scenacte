@@ -26,18 +26,18 @@ const FEATURES = [
 
 export default function FeaturesSection() {
   return (
-    <section className="px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+    <section className="px-4 py-12 sm:px-6 md:py-16 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <h2 className="mb-12 text-center font-[Space_Grotesk] text-2xl font-bold text-foreground sm:text-3xl">
           Tout ce qu'il faut pour écrire du théâtre
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2">
           {FEATURES.map(({ icon: Icon, title, description, primary }) => (
             <div
               key={title}
               className={`rounded-sm border-2 border-border bg-card shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active ${
-                primary ? 'sm:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col justify-center p-8' : 'p-6'
+                primary ? 'sm:col-span-2 p-8' : 'p-6'
               }`}
             >
               <div className={`mb-4 flex items-center justify-center rounded-sm border-2 border-border bg-primary/10 ${

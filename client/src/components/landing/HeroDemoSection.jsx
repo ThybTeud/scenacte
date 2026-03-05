@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { EditorState } from '@codemirror/state';
 import { EditorView, Decoration, ViewPlugin, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { RangeSetBuilder } from '@codemirror/state';
-import { ArrowRight, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
 import { PlayParser, astToHTML } from '@/utils/playParser';
 import ShadowPreview from '@/components/editors/ShadowPreview';
 import { shadowPreviewCSS } from '@/utils/shadowPreview';
@@ -93,11 +91,9 @@ function createPlayHighlighter() {
 const parser = new PlayParser();
 
 export default function HeroDemoSection() {
-  const { isAuthenticated } = useAuth();
   const [content, setContent] = useState(DEMO_TEXT);
   const editorRef = useRef(null);
   const viewRef = useRef(null);
-  const hasAnimatedRef = useRef(false);
 
   const previewHTML = useMemo(() => {
     const ast = parser.parse(content);
@@ -106,12 +102,12 @@ export default function HeroDemoSection() {
 
   // Initialize CodeMirror on mount
   useEffect(() => {
-    if (!editorRef.current || viewRef.current) return;
+    if (!editorRef.current) return;
 
     const extensions = createPlayHighlighter();
 
     const startState = EditorState.create({
-      doc: DEMO_TEXT,
+      doc: '',
       extensions: [
         lineNumbers(),
         history(),
@@ -133,28 +129,22 @@ export default function HeroDemoSection() {
 
     viewRef.current = view;
 
-    // Typing animation on mount
-    if (!hasAnimatedRef.current) {
-      hasAnimatedRef.current = true;
+    // Typing animation — cancelled flag handles StrictMode double-mount
+    let cancelled = false;
+    let i = 0;
+    const typeChar = () => {
+      if (cancelled || i >= DEMO_TEXT.length) return;
       view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: '' },
+        changes: { from: i, to: i, insert: DEMO_TEXT[i] },
       });
-
-      let i = 0;
-      const typeChar = () => {
-        if (i < DEMO_TEXT.length && viewRef.current) {
-          viewRef.current.dispatch({
-            changes: { from: i, to: i, insert: DEMO_TEXT[i] },
-          });
-          i++;
-          const delay = DEMO_TEXT[i - 1] === '\n' ? 120 : 25;
-          setTimeout(typeChar, delay);
-        }
-      };
-      setTimeout(typeChar, 400);
-    }
+      i++;
+      const delay = DEMO_TEXT[i - 1] === '\n' ? 120 : 25;
+      setTimeout(typeChar, delay);
+    };
+    setTimeout(typeChar, 400);
 
     return () => {
+      cancelled = true;
       view.destroy();
       viewRef.current = null;
     };
@@ -169,7 +159,7 @@ export default function HeroDemoSection() {
   }, []);
 
   return (
-    <section className="px-4 pt-28 pb-16 sm:px-6 md:pt-36 md:pb-24 lg:px-8">
+    <section className="px-4 pt-24 pb-8 sm:px-6 md:pt-32 md:pb-12 lg:px-8">
       <div className="mx-auto max-w-5xl">
         {/* Hero text */}
         <div className="mx-auto max-w-3xl text-center">
@@ -177,33 +167,10 @@ export default function HeroDemoSection() {
             L'éditeur pensé pour{' '}
             <span className="text-primary">l'écriture théâtrale.</span>
           </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-            Scenacte est le premier éditeur dédié à l'écriture dramatique en français.
-            Syntaxe simplifiée, mise en page automatique, export PDF professionnel.
-          </p>
-
-          <div className="mt-10">
-            {isAuthenticated ? (
-              <Button asChild size="lg" className="h-12 px-8 text-base shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active">
-                <Link to="/library">
-                  Aller à ma bibliothèque
-                  <ArrowRight className="ml-2 size-5" />
-                </Link>
-              </Button>
-            ) : (
-              <Button asChild size="lg" className="h-12 px-8 text-base shadow-brutal transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-active">
-                <Link to="/register">
-                  Créer ma première pièce
-                  <ArrowRight className="ml-2 size-5" />
-                </Link>
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* Interactive demo */}
-        <div className="mt-14">
+        <div className="mt-10">
           <p className="mb-4 text-center text-sm text-muted-foreground">
             Tapez à gauche avec la syntaxe Scenacte — la mise en forme apparaît à droite en temps réel.
           </p>
