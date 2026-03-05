@@ -31,7 +31,7 @@ export default function ScrollStory() {
     // 500vh ≈ 100vh par étape (splash, fade, 3×features scroll, unpin)
     <div ref={containerRef} className="relative" style={{ height: '500vh' }}>
       {/* Sticky wrapper — occupe tout le viewport, se fixe pendant le scroll */}
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-screen overflow-x-clip">
         <div className="flex h-full flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
           {/* Titre — fade out lié au scroll progress */}
           <motion.div
