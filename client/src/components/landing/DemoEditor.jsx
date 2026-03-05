@@ -45,29 +45,13 @@ function createPlayHighlighter() {
           const text = line.text;
 
           if (/^##\s*/.test(text)) {
-            builder.add(
-              line.from,
-              line.from,
-              Decoration.line({ class: "cm-scene" }),
-            );
+            builder.add(line.from, line.from, Decoration.line({ class: "cm-scene" }));
           } else if (/^#(?!#)\s*/.test(text)) {
-            builder.add(
-              line.from,
-              line.from,
-              Decoration.line({ class: "cm-act" }),
-            );
+            builder.add(line.from, line.from, Decoration.line({ class: "cm-act" }));
           } else if (/^@\s*/.test(text)) {
-            builder.add(
-              line.from,
-              line.from,
-              Decoration.line({ class: "cm-character" }),
-            );
+            builder.add(line.from, line.from, Decoration.line({ class: "cm-character" }));
           } else if (/^\([^)]*\)\s*$/.test(text)) {
-            builder.add(
-              line.from,
-              line.from,
-              Decoration.line({ class: "cm-didascalie" }),
-            );
+            builder.add(line.from, line.from, Decoration.line({ class: "cm-didascalie" }));
           } else {
             const regex = /\([^)]+\)/g;
             let match;
@@ -108,18 +92,9 @@ function createPlayHighlighter() {
       },
       ".cm-act": { color: "oklch(58.6% 0.253 17.585)", fontWeight: "600" },
       ".cm-scene": { color: "oklch(58.6% 0.253 17.585)", fontWeight: "600" },
-      ".cm-character": {
-        color: "oklch(54.6% 0.245 262.881)",
-        fontWeight: "600",
-      },
-      ".cm-didascalie": {
-        color: "oklch(44.6% 0.03 256.802)",
-        fontStyle: "italic",
-      },
-      ".cm-didascalie-inline": {
-        color: "oklch(44.6% 0.03 256.802)",
-        fontStyle: "italic",
-      },
+      ".cm-character": { color: "oklch(54.6% 0.245 262.881)", fontWeight: "600" },
+      ".cm-didascalie": { color: "oklch(44.6% 0.03 256.802)", fontStyle: "italic" },
+      ".cm-didascalie-inline": { color: "oklch(44.6% 0.03 256.802)", fontStyle: "italic" },
       "&.cm-focused": { outline: "none" },
     }),
   ];
@@ -127,7 +102,7 @@ function createPlayHighlighter() {
 
 const parser = new PlayParser();
 
-export default function HeroDemoSection() {
+export default function DemoEditor() {
   const [content, setContent] = useState(DEMO_TEXT);
   const [typingDone, setTypingDone] = useState(false);
   const editorRef = useRef(null);
@@ -139,7 +114,6 @@ export default function HeroDemoSection() {
     return astToHTML(ast);
   }, [content]);
 
-  // Initialize CodeMirror on mount
   useEffect(() => {
     if (!editorRef.current) return;
 
@@ -168,7 +142,6 @@ export default function HeroDemoSection() {
 
     viewRef.current = view;
 
-    // Typing animation — cancelled flag handles StrictMode double-mount
     let cancelled = false;
     cancelRef.current = () => { cancelled = true; };
     let i = 0;
@@ -194,15 +167,12 @@ export default function HeroDemoSection() {
   const handleReset = useCallback(() => {
     const view = viewRef.current;
     if (!view) return;
-    // Cancel any running animation
     cancelRef.current?.();
-    // Clear editor
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: "" },
     });
     setContent("");
     setTypingDone(false);
-    // Restart typing animation
     let cancelled = false;
     cancelRef.current = () => { cancelled = true; };
     let i = 0;
@@ -222,74 +192,35 @@ export default function HeroDemoSection() {
   }, []);
 
   return (
-    <section className="px-4 pt-24 pb-8 sm:px-6 md:pt-32 md:pb-12 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        {/* Hero text */}
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="font-[Space_Grotesk] text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            L'éditeur pensé pour{" "}
-            <span className="text-primary">l'écriture théâtrale.</span>
-          </h1>
-        </div>
-
-        {/* Interactive demo */}
-        <div className="mt-10">
-          {/* <p className="mb-4 text-center text-sm text-muted-foreground">
-            Tapez à gauche avec la syntaxe Scenacte — la mise en forme apparaît à droite en temps réel.
-          </p> */}
-
-          <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
-            {/* Title bar */}
-            {/* <div className="flex items-center justify-between border-b-2 border-border bg-muted px-4 py-2">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full border-2 border-border bg-primary" />
-                <div className="h-3 w-3 rounded-full border-2 border-border bg-yellow-400" />
-                <div className="h-3 w-3 rounded-full border-2 border-border bg-green-400" />
-                <span className="ml-2 font-mono text-xs text-muted-foreground">démo interactive</span>
-              </div>
+    <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
+        {/* CodeMirror editor */}
+        <div className="relative h-72 overflow-hidden md:h-96">
+          <div ref={editorRef} className="h-full w-full" />
+          {typingDone && (
+            <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
-                className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                className="text-primary bg-primary/10 hover:text-white hover:bg-primary"
               >
-                <RotateCcw className="size-3.5" />
-                Réinitialiser
+                <RotateCcw className="stroke-3" />
               </Button>
-            </div> */}
-
-            {/* Split editor / preview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
-              {/* CodeMirror editor */}
-              <div className="relative h-72 overflow-hidden md:h-96 ">
-                <div ref={editorRef} className="h-full w-full" />
-                {typingDone && (
-                  <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleReset}
-                      className="text-primary bg-primary/10 hover:text-white hover:bg-primary"
-                    >
-                      <RotateCcw className="stroke-3"/>
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Preview */}
-              <div className="h-72 overflow-auto border-t-2 border-border md:h-96 md:border-t-0">
-                <ShadowPreview
-                  css={shadowPreviewCSS}
-                  htmlContent={previewHTML}
-                  layout="centered"
-                  className="h-full p-4 sm:p-6"
-                />
-              </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Preview */}
+        <div className="h-72 overflow-auto border-t-2 border-border md:h-96 md:border-t-0">
+          <ShadowPreview
+            css={shadowPreviewCSS}
+            htmlContent={previewHTML}
+            layout="centered"
+            className="h-full p-4 sm:p-6"
+          />
         </div>
       </div>
-    </section>
+    </div>
   );
 }

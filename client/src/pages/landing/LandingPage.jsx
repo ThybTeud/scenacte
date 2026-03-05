@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import LandingNavbar from '@/components/landing/LandingNavbar';
-import HeroDemoSection from '@/components/landing/HeroDemoSection';
-import FeaturesSection from '@/components/landing/FeaturesSection';
-import TargetsSection from '@/components/landing/TargetsSection';
+import ScrollStory from '@/components/landing/ScrollStory';
+import TargetsIllustration from '@/components/landing/TargetsIllustration';
 import CtaFooterSection from '@/components/landing/CtaFooterSection';
 
 export default function LandingPage() {
@@ -13,9 +12,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <LandingNavbar />
-      <HeroDemoSection />
-      <FeaturesSection />
-      <TargetsSection />
+      <ScrollStory />
+      <TargetsIllustration />
       <CtaFooterSection />
     </div>
   );
