@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useArrows } from '@/hooks/useArrows';
 import ArrowOverlay from '@/components/landing/ArrowOverlay';
@@ -63,7 +63,16 @@ const ARROWS = FEATURES.map(({ id, arrowTo, align }) => ({
 
 export default function FeatureAnnotations({ visibleCount, containerRef }) {
   const [hoveredIndex, setHoveredIndex] = useState(-1);
-  const { paths } = useArrows(ARROWS, containerRef);
+  const [calcTrigger, setCalcTrigger] = useState(0);
+
+  // Recalcule les traits quand un label anime vers sa position finale.
+  // Le délai 420ms correspond à la durée d'animation (400ms) + marge.
+  useEffect(() => {
+    const timer = setTimeout(() => setCalcTrigger((t) => t + 1), 420);
+    return () => clearTimeout(timer);
+  }, [visibleCount]);
+
+  const { paths } = useArrows(ARROWS, containerRef, calcTrigger);
 
   const arrowStyles = FEATURES.map((_, index) => {
     const isVisible = index < visibleCount;
