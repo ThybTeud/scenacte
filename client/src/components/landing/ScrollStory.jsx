@@ -15,6 +15,7 @@ import FeatureAnnotations from '@/components/landing/FeatureAnnotations';
  */
 export default function ScrollStory() {
   const containerRef = useRef(null);
+  const demoContainerRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -49,12 +50,14 @@ export default function ScrollStory() {
         {/* Démo + annotations — centrée verticalement, pull-up au scroll */}
         <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center px-4 sm:px-6 lg:px-8">
           <motion.div
+            ref={demoContainerRef}
             className="relative w-full max-w-5xl"
             style={{ y: demoOffset }}
           >
             <FeatureAnnotationsController
               scrollYProgress={scrollYProgress}
               thresholds={featureThresholds}
+              containerRef={demoContainerRef}
             />
             <DemoEditor />
           </motion.div>
@@ -64,9 +67,9 @@ export default function ScrollStory() {
   );
 }
 
-function FeatureAnnotationsController({ scrollYProgress, thresholds }) {
+function FeatureAnnotationsController({ scrollYProgress, thresholds, containerRef }) {
   const visibleCount = useVisibleCount(scrollYProgress, thresholds);
-  return <FeatureAnnotations visibleCount={visibleCount} />;
+  return <FeatureAnnotations visibleCount={visibleCount} containerRef={containerRef} />;
 }
 
 function useVisibleCount(scrollYProgress, thresholds) {

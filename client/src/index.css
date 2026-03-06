@@ -45,6 +45,18 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Animation du point pulsant sur les annotations features */
+@keyframes arrow-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.8); }
+}
+
+.arrow-pulse {
+  animation: arrow-pulse 0.8s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
 /* Styles pour les pages légales */
 .legal-content {
     font-family: var(--font-ui);

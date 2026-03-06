@@ -203,7 +203,7 @@ export default function DemoEditor() {
   return (
     <div className="md:mx-32">
       {/* Bookmark tabs — outside the demo box */}
-      <div className="hidden md:flex justify-end pr-1 -mb-[2px] relative z-10">
+      <div id="demo-preset-tabs" className="hidden md:flex justify-end pr-1 -mb-[2px] relative z-10">
         {Object.entries(DEFAULT_PRESETS).map(([id, p]) => (
           <button
             key={id}
@@ -223,7 +223,7 @@ export default function DemoEditor() {
       <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
           {/* CodeMirror editor */}
-          <div className="relative h-72 overflow-hidden md:h-108">
+          <div id="demo-editor-panel" className="relative h-72 overflow-hidden md:h-108">
             <div ref={editorRef} className="h-full w-full" />
             {typingDone && (
               <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
@@ -240,7 +240,7 @@ export default function DemoEditor() {
           </div>
 
           {/* Preview */}
-          <div className="h-72 overflow-auto border-t-2 border-border md:h-108 md:border-t-0">
+          <div id="demo-preview-panel" className="h-72 overflow-auto border-t-2 border-border md:h-108 md:border-t-0">
             {/* Mobile preset toggle */}
             <div className="flex md:hidden border-b-2 border-border">
               {Object.entries(DEFAULT_PRESETS).map(([id, p]) => (
