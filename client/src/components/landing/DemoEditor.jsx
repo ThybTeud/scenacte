@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import { EditorState } from "@codemirror/state";
 import {
   EditorView,
@@ -9,7 +10,7 @@ import {
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { RangeSetBuilder } from "@codemirror/state";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Printer, Save, AlignCenter, AlignLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlayParser, astToHTML } from "@/utils/playParser";
 import ShadowPreview from "@/components/editors/ShadowPreview";
@@ -103,7 +104,12 @@ function createPlayHighlighter() {
 
 const parser = new PlayParser();
 
-export default function DemoEditor() {
+const PRESET_ICONS = {
+  classique: AlignCenter,
+  moderne: AlignLeft,
+};
+
+export default function DemoEditor({ tabsVisible = false }) {
   const [content, setContent] = useState(DEMO_TEXT);
   const [typingDone, setTypingDone] = useState(false);
   const [presetId, setPresetId] = useState("classique");
@@ -202,31 +208,47 @@ export default function DemoEditor() {
 
   return (
     <div className="md:mx-32">
-      {/* Bookmark tabs — outside the demo box */}
-      <div id="demo-preset-tabs" className="hidden md:flex justify-end pr-1 -mb-[2px] relative z-10">
-        {Object.entries(DEFAULT_PRESETS).map(([id, p]) => (
-          <button
-            key={id}
-            onClick={() => setPresetId(id)}
-            className={[
-              "px-3 py-1.5 text-xs font-medium border-2 border-border border-b-0 rounded-t-sm transition-colors",
-              presetId === id
-                ? "bg-white text-foreground"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
-            ].join(" ")}
+      {/* Bookmark tabs — outside the demo box, above preview */}
+      <div className="hidden md:grid grid-cols-2 -mb-[2px] relative z-10 overflow-hidden">
+        <div aria-hidden="true" />
+        <div className="flex justify-start pl-1 overflow-hidden">
+          <motion.div
+            id="demo-preset-tabs"
+            className="flex"
+            initial={{ y: "100%" }}
+            animate={{ y: tabsVisible ? 0 : "100%" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            {p.name}
-          </button>
-        ))}
+            {Object.entries(DEFAULT_PRESETS).map(([id], index) => {
+              const Icon = PRESET_ICONS[id];
+              return (
+                <button
+                  key={id}
+                  id={index === 0 ? "demo-tab-templates" : undefined}
+                  onClick={() => setPresetId(id)}
+                  className={[
+                    "size-10 flex items-center justify-center border-2 border-border border-b-0 rounded-t-sm transition-colors",
+                    presetId === id
+                      ? "bg-white text-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-white hover:text-foreground",
+                  ].join(" ")}
+                >
+                  <Icon className="size-5" />
+                </button>
+              );
+            })}
+          </motion.div>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
           {/* CodeMirror editor */}
           <div id="demo-editor-panel" className="relative h-72 overflow-hidden md:h-108">
+            <span id="demo-first-line" className="absolute top-3 left-1/3 w-0 h-4" aria-hidden="true" />
             <div ref={editorRef} className="h-full w-full" />
             {typingDone && (
-              <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
+              <div className="absolute left-8 bottom-4 animate-in fade-in duration-1000">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -265,6 +287,32 @@ export default function DemoEditor() {
               className="h-full p-4 sm:p-6"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Bookmark tabs — bottom, outside the demo box */}
+      <div className="hidden md:grid grid-cols-2 -mt-[2px] relative z-10 overflow-hidden">
+        <div className="flex justify-end pr-1 overflow-hidden">
+          <motion.button
+            id="demo-tab-save"
+            className="size-10 flex items-center justify-center border-2 border-border border-t-0 rounded-b-sm bg-white text-foreground hover:bg-muted transition-colors"
+            initial={{ y: "-100%" }}
+            animate={{ y: tabsVisible ? 0 : "-100%" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Save className="size-5" />
+          </motion.button>
+        </div>
+        <div className="flex justify-end pr-1 overflow-hidden">
+          <motion.button
+            id="demo-tab-print"
+            className="size-10 flex items-center justify-center border-2 border-border border-t-0 rounded-b-sm bg-white text-foreground hover:bg-muted transition-colors"
+            initial={{ y: "-100%" }}
+            animate={{ y: tabsVisible ? 0 : "-100%" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          >
+            <Printer className="size-5" />
+          </motion.button>
         </div>
       </div>
     </div>

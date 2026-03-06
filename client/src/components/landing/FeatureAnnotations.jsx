@@ -18,7 +18,7 @@ const FEATURES = [
     desc: 'Un @ pour un personnage, un # pour un acte.',
     align: 'right',
     posStyle: { top: '-10%', left: '0' },
-    arrowTo: 'demo-editor-panel',
+    arrowTo: 'demo-first-line',
   },
   {
     id: 'legend-preview',
@@ -34,7 +34,7 @@ const FEATURES = [
     desc: 'Un modèle de mise en page adapté à votre style.',
     align: 'left',
     posStyle: { top: '-15%', right: '5%' },
-    arrowTo: 'demo-preset-tabs',
+    arrowTo: 'demo-tab-templates',
   },
   {
     id: 'legend-export',
@@ -42,7 +42,7 @@ const FEATURES = [
     desc: 'Un clic, un PDF aux normes éditoriales.',
     align: 'left',
     posStyle: { bottom: '-15%', right: '-5%' },
-    arrowTo: 'demo-preview-panel',
+    arrowTo: 'demo-tab-print',
   },
   {
     id: 'legend-autosave',
@@ -50,7 +50,7 @@ const FEATURES = [
     desc: 'Votre travail est sauvegardé automatiquement pour ne rien perdre.',
     align: 'right',
     posStyle: { bottom: '-15%', left: '24px' },
-    arrowTo: 'demo-editor-panel',
+    arrowTo: 'demo-tab-save',
   },
 ];
 
@@ -91,10 +91,7 @@ export default function FeatureAnnotations({ visibleCount, containerRef }) {
         const baseOpacity = isVisible ? Math.max(0.3, 1 - age * 0.2) : 0;
         const opacity = hoveredIndex === index && isVisible ? 1 : baseOpacity;
 
-        const isBottom = index >= 3;
-        const isLeft = index === 2;
-        const initialY = isLeft ? 0 : isBottom ? 10 : -10;
-        const initialX = isLeft ? -10 : 0;
+        const initialX = align === 'right' ? 10 : -10;
 
         return (
           <motion.div
@@ -102,8 +99,8 @@ export default function FeatureAnnotations({ visibleCount, containerRef }) {
             id={id}
             className="absolute z-10"
             style={{ ...posStyle, pointerEvents: isVisible ? 'auto' : 'none' }}
-            initial={{ opacity: 0, x: initialX, y: initialY }}
-            animate={{ opacity, x: isVisible ? 0 : initialX, y: isVisible ? 0 : initialY }}
+            initial={{ opacity: 0, x: initialX }}
+            animate={{ opacity, x: isVisible ? 0 : initialX }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(-1)}

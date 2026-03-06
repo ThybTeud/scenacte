@@ -16,15 +16,8 @@ export default function ArrowOverlay({ paths, arrowStyles }) {
   return (
     <svg
       aria-hidden="true"
-      className="hidden md:block pointer-events-none"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        overflow: 'visible',
-      }}
+      className="hidden md:block absolute inset-0 w-full h-full pointer-events-none"
+      style={{ overflow: 'visible' }}
     >
       {paths.map((path, i) => {
         if (!path) return null;

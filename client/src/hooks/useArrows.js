@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
  * @param {React.RefObject<HTMLElement>} containerRef
  * @returns {{ paths: Array<{points: Array<{x,y}>, end: {x,y}}|null> }}
  */
-export function useArrows(arrows, containerRef, trigger) {
+export function useArrows(arrows, containerRef, invalidate) {
   const [paths, setPaths] = useState([]);
   const arrowsRef = useRef(arrows);
   arrowsRef.current = arrows;
@@ -18,7 +18,7 @@ export function useArrows(arrows, containerRef, trigger) {
     if (!container) return;
     setPaths(computePaths(arrowsRef.current, container));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(arrows), containerRef, trigger]);
+  }, [JSON.stringify(arrows), containerRef, invalidate]);
 
   useEffect(() => {
     const container = containerRef.current;

@@ -28,8 +28,12 @@ export default function ScrollStory() {
   // Démo : pull-up de +80px → 0 entre 0% et 18% du scroll
   const demoOffset = useTransform(scrollYProgress, [0, 0.18], [80, 0]);
 
+  // Seuil d'apparition des onglets (avant les annotations)
+  const tabsThreshold = 0.18;
+  const tabsVisible = useScrollFlag(scrollYProgress, tabsThreshold);
+
   // Seuils d'apparition des 5 annotations features
-  const featureThresholds = [0.2, 0.32, 0.44, 0.56, 0.68];
+  const featureThresholds = [0.28, 0.40, 0.52, 0.64, 0.76];
 
   return (
     // 500vh ≈ 100vh par étape (splash, fade, 3×features scroll, unpin)
@@ -59,7 +63,7 @@ export default function ScrollStory() {
               thresholds={featureThresholds}
               containerRef={demoContainerRef}
             />
-            <DemoEditor />
+            <DemoEditor tabsVisible={tabsVisible} />
           </motion.div>
         </div>
       </div>
@@ -70,6 +74,18 @@ export default function ScrollStory() {
 function FeatureAnnotationsController({ scrollYProgress, thresholds, containerRef }) {
   const visibleCount = useVisibleCount(scrollYProgress, thresholds);
   return <FeatureAnnotations visibleCount={visibleCount} containerRef={containerRef} />;
+}
+
+function useScrollFlag(scrollYProgress, threshold) {
+  const flag = useTransform(scrollYProgress, (p) => p >= threshold);
+  const [value, setValue] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = flag.on('change', (v) => setValue(v));
+    return unsubscribe;
+  }, [flag]);
+
+  return value;
 }
 
 function useVisibleCount(scrollYProgress, thresholds) {
