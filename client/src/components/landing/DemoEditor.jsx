@@ -13,7 +13,8 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlayParser, astToHTML } from "@/utils/playParser";
 import ShadowPreview from "@/components/editors/ShadowPreview";
-import { shadowPreviewCSS } from "@/utils/shadowPreview";
+import { shadowPreviewCSS, adaptForShadow } from "@/utils/shadowPreview";
+import { DEFAULT_PRESETS, generatePresetCSS } from "@/config/template-presets";
 
 const DEMO_TEXT = `#Acte I
 ##Scène 1
@@ -105,14 +106,22 @@ const parser = new PlayParser();
 export default function DemoEditor() {
   const [content, setContent] = useState(DEMO_TEXT);
   const [typingDone, setTypingDone] = useState(false);
+  const [presetId, setPresetId] = useState("classique");
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const cancelRef = useRef(null);
+
+  const preset = DEFAULT_PRESETS[presetId];
 
   const previewHTML = useMemo(() => {
     const ast = parser.parse(content);
     return astToHTML(ast);
   }, [content]);
+
+  const fullCSS = useMemo(() => {
+    const overrides = adaptForShadow(generatePresetCSS(preset));
+    return shadowPreviewCSS + "\n" + overrides;
+  }, [preset]);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -192,33 +201,70 @@ export default function DemoEditor() {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg md:mx-32">
-      <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
-        {/* CodeMirror editor */}
-        <div className="relative h-72 overflow-hidden md:h-108">
-          <div ref={editorRef} className="h-full w-full" />
-          {typingDone && (
-            <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="text-primary bg-primary/10 hover:text-white hover:bg-primary"
-              >
-                <RotateCcw className="stroke-3" />
-              </Button>
-            </div>
-          )}
-        </div>
+    <div className="md:mx-32">
+      {/* Bookmark tabs — outside the demo box */}
+      <div className="hidden md:flex justify-end pr-1 -mb-[2px] relative z-10">
+        {Object.entries(DEFAULT_PRESETS).map(([id, p]) => (
+          <button
+            key={id}
+            onClick={() => setPresetId(id)}
+            className={[
+              "px-3 py-1.5 text-xs font-medium border-2 border-border border-b-0 rounded-t-sm transition-colors",
+              presetId === id
+                ? "bg-white text-foreground"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+            ].join(" ")}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
 
-        {/* Preview */}
-        <div className="h-72 overflow-auto border-t-2 border-border md:h-96 md:border-t-0">
-          <ShadowPreview
-            css={shadowPreviewCSS}
-            htmlContent={previewHTML}
-            layout="centered"
-            className="h-full p-4 sm:p-6"
-          />
+      <div className="overflow-hidden rounded-sm border-2 border-border bg-card shadow-brutal-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x-2 md:divide-border bg-white">
+          {/* CodeMirror editor */}
+          <div className="relative h-72 overflow-hidden md:h-108">
+            <div ref={editorRef} className="h-full w-full" />
+            {typingDone && (
+              <div className="absolute right-4 bottom-4 animate-in fade-in duration-1000">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleReset}
+                  className="text-primary bg-primary/10 hover:text-white hover:bg-primary"
+                >
+                  <RotateCcw className="stroke-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Preview */}
+          <div className="h-72 overflow-auto border-t-2 border-border md:h-108 md:border-t-0">
+            {/* Mobile preset toggle */}
+            <div className="flex md:hidden border-b-2 border-border">
+              {Object.entries(DEFAULT_PRESETS).map(([id, p]) => (
+                <button
+                  key={id}
+                  onClick={() => setPresetId(id)}
+                  className={[
+                    "flex-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                    presetId === id
+                      ? "bg-white text-foreground"
+                      : "bg-muted/60 text-muted-foreground",
+                  ].join(" ")}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+            <ShadowPreview
+              css={fullCSS}
+              htmlContent={previewHTML}
+              layout={preset.layout}
+              className="h-full p-4 sm:p-6"
+            />
+          </div>
         </div>
       </div>
     </div>
