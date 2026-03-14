@@ -179,13 +179,13 @@ export default function LibraryPage() {
     const showCreateCard = !isSearching && (isLastPage && isGridIncomplete)
 
     return (
-        <SidebarProvider className="bg-gray-200">
+        <SidebarProvider className="bg-surface-muted">
             <LibrarySidebar />
-            <SidebarInset className="bg-gray-200">
-                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-gray-900 bg-sidebar overflow-hidden">
+            <SidebarInset className="bg-surface-muted">
+                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-border bg-sidebar overflow-hidden">
                     <SidebarTrigger />
                     {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
-                    <h1 className="text-lg font-semibold">Bibliothèque</h1>
+                    <h1 className="text-xl font-bold font-heading">Bibliothèque</h1>
                 </header>
 
                 <main className="flex-1 p-6">

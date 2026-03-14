@@ -17,9 +17,9 @@ export function PlayCard({ play, onOpen, onExport, onRename, onDelete, onVersion
   const { title, subtitle, updatedAt, charactersCount, scenesCount, repliquesCount } = play
 
   return (
-    <Card className="flex flex-col h-53 gap-0 p-2 rounded-sm">
+    <Card className="flex flex-col h-53 gap-0 p-2 rounded-sm border-border shadow-brutal">
       <CardHeader className="flex-1 gap-0 p-2">
-        <CardTitle className="text-lg font-semibold line-clamp-2">{title}</CardTitle>
+        <CardTitle className="text-base font-semibold line-clamp-2">{title}</CardTitle>
         {subtitle && (
           <CardDescription className="line-clamp-1">{subtitle}</CardDescription>
         )}
@@ -31,15 +31,15 @@ export function PlayCard({ play, onOpen, onExport, onRename, onDelete, onVersion
         {/* Stats */}
         <div className="flex justify-between py-2">
           <div className="text-center">
-            <p className="text-xl font-semibold text-rose-600">{scenesCount ?? 0}</p>
+            <p className="text-xl font-semibold text-act">{scenesCount ?? 0}</p>
             <p className="text-xs text-muted-foreground">Scènes</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-semibold text-gray-600">{repliquesCount ?? 0}</p>
-            <p className="text-xs ">Répliques</p>
+            <p className="text-xl font-semibold text-muted-foreground">{repliquesCount ?? 0}</p>
+            <p className="text-xs text-muted-foreground">Répliques</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-semibold text-blue-600">{charactersCount ?? 0}</p>
+            <p className="text-xl font-semibold text-character">{charactersCount ?? 0}</p>
             <p className="text-xs text-muted-foreground">Personnages</p>
           </div>
         </div>

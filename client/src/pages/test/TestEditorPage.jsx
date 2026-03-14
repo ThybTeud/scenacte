@@ -134,9 +134,9 @@ export default function TestEditorPage() {
   }, []);
 
   return (
-    <SidebarProvider className="h-dvh bg-gray-400">
+    <SidebarProvider className="h-dvh bg-surface-strong">
       {/* Sidebar */}
-      <Sidebar collapsible="icon" className="border-r-2 border-gray-900 overflow-hidden">
+      <Sidebar collapsible="icon" className="border-r-2 border-border overflow-hidden">
         <SidebarLogo />
 
         <SidebarContent>
@@ -185,7 +185,7 @@ export default function TestEditorPage() {
         </SidebarContent>
 
         {/* CTA footer */}
-        <SidebarFooter className="border-t-2 border-gray-900 p-4">
+        <SidebarFooter className="border-t-2 border-border p-4">
           <p className="text-sm text-muted-foreground mb-2">
             Mode test — votre travail ne sera pas sauvegardé.
           </p>
@@ -195,9 +195,9 @@ export default function TestEditorPage() {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col h-full overflow-hidden bg-gray-400">
+      <SidebarInset className="flex flex-col h-full overflow-hidden bg-surface-strong">
         {/* Header */}
-        <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-gray-900 bg-sidebar overflow-hidden">
+        <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-border bg-sidebar overflow-hidden">
           <SidebarTrigger />
           <span className="font-semibold text-muted-foreground">Mode test</span>
         </header>
