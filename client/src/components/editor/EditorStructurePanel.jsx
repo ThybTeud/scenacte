@@ -9,14 +9,11 @@ export function EditorStructurePanel({
   isBeforeStructure,
   onSectionClick,
   onCharacterClick,
-  onClose,
 }) {
   return (
     <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-border rounded-sm shadow-brutal">
       <div className="px-6 h-16 bg-surface-muted border-b-2 border-border flex items-center justify-between">
         <div className="font-bold uppercase font-heading">Structure</div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-        </Button>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-white">
         <div className="mb-4">

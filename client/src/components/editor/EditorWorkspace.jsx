@@ -21,7 +21,7 @@ export function EditorWorkspace({
   preset,
   htmlContent,
 }) {
-  // const [showEditorHelp, setShowEditorHelp] = useState(true);
+  const [showEditorHelp, setShowEditorHelp] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
 
   return (
@@ -37,12 +37,11 @@ export function EditorWorkspace({
             isBeforeStructure={isBeforeStructure}
             onSectionClick={onSectionClick}
             onCharacterClick={onCharacterClick}
-            onClose={() => setShowEditorHelp(false)}
           />
 
-          <div className="flex-1 flex flex-col md:flex-row min-w-0 max-w-3xl h-full md:border-2 md:border-border md:rounded-xl md:shadow-brutal md:overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row min-w-0 max-w-3xl h-full md:border-2 md:border-border md:rounded-sm md:shadow-brutal md:overflow-hidden">
             <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-border rounded-sm shadow-brutal md:border-0 md:rounded-none md:shadow-none">
-              <div className="hidden sm:flex px-6 items-center justify-between h-16 shrink-0 bg-surface-muted border-b-2 border-border">
+              <div className="hidden md:flex px-6 items-center justify-between h-16 shrink-0 bg-surface-muted border-b-2 border-border">
                 <span className="font-bold uppercase font-heading">Éditeur</span>
                 {!showPreview && (
                   <Button
