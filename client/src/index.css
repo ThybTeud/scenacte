@@ -10,26 +10,35 @@
     --color-blue: oklch(54.6% 0.245 262.881);
     --color-black: #0f172a;
     --color-white: #ffffff;
-    --color-white-smoke: #fffffe;
     --color-gray: oklch(44.6% 0.03 256.802);
 
     /* Typographie */
-    --font-ui: "Inter", "Space Grotesk", system-ui, sans-serif;
+    --font-ui: "Inter", system-ui, sans-serif;
+    --font-heading: "Space Grotesk", "Inter", system-ui, sans-serif;
     --font-theater: "Crimson Text", Georgia, serif;
     --font-editor: ui-monospace, "Source Code Pro", "Fira Code",  monospace;
 
     /* Ombres brutales */
     --shadow-brutal: 4px 4px 0 oklch(21% 0.034 264.665);
     --shadow-brutal-sm: 2px 2px 0 #0f172a;
-    --shadow-brutal-lg: 6px 6px 0 #0f172a;
     --shadow-brutal-hover: 6px 6px 0 #0f172a;
     --shadow-brutal-active: 2px 2px 0 #0f172a;
+
+    /* Couleurs semantiques editeur */
+    --color-act: oklch(71.2% 0.194 13.428);
+    --color-act-light: oklch(85% 0.1 13.428);
+    --color-act-muted: oklch(92% 0.05 13.428);
+    --color-character: oklch(54.6% 0.245 262.881);
+    --color-character-muted: oklch(95% 0.02 262.881);
+
+    /* Surfaces (fonds de page) */
+    --color-surface-muted: oklch(92.2% 0.004 264.695);
+    --color-surface-base: oklch(87.2% 0.01 258.338);
+    --color-surface-strong: oklch(82.1% 0.014 252.894);
 
     /* Border radius */
     --radius-brutal: 4px;
 
-    /* Spacing */
-    --spacing-brutal-offset: 2px;
 }
 
 * {

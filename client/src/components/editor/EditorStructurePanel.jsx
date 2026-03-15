@@ -13,9 +13,9 @@ export function EditorStructurePanel({
   onClose,
 }) {
   return (
-    <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-gray-900 rounded-lg shadow-brutal">
-      <div className="px-6 h-16 bg-gray-200 border-b-2 border-gray-900 flex items-center justify-between">
-        <div className="font-bold uppercase">Structure</div>
+    <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-border rounded-sm shadow-brutal">
+      <div className="px-6 h-16 bg-surface-muted border-b-2 border-border flex items-center justify-between">
+        <div className="font-bold uppercase font-heading">Structure</div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <PanelLeftClose className="fill-white" />
         </Button>
@@ -25,14 +25,14 @@ export function EditorStructurePanel({
           <div className="font-semibold uppercase text-sm mb-2">Sommaire</div>
           <div className="space-y-2 text-xs">
             {isBeforeStructure && (
-              <div className="h-0.5 bg-rose-400 rounded-full" />
+              <div className="h-0.5 bg-act rounded-full" />
             )}
             {structure?.orphanScenes?.map((scene, sceneIndex) => (
               <button
                 key={`orphan-${sceneIndex}`}
-                className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-pink-100 hover:text-gray-900 ${
+                className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-act-muted ${
                   activeOrphanSceneIndex === sceneIndex
-                    ? "bg-rose-400 text-white font-semibold"
+                    ? "bg-act text-white font-semibold"
                     : ""
                 }`}
                 onClick={() => onSectionClick(scene.position)}
@@ -43,11 +43,11 @@ export function EditorStructurePanel({
             {structure?.items?.map((acte, acteIndex) => (
               <div key={acteIndex} className="space-y-1">
                 <button
-                  className={`w-full text-left px-2 py-1 rounded hover:bg-pink-100 clamp-1 ${
+                  className={`w-full text-left px-2 py-1 rounded hover:bg-act-muted clamp-1 ${
                     activeActeIndex === acteIndex
                       ? activeSceneIndex === -1
-                        ? "bg-rose-400 text-white font-semibold"
-                        : "bg-rose-200 font-semibold"
+                        ? "bg-act text-white font-semibold"
+                        : "bg-act-light font-semibold"
                       : ""
                   }`}
                   onClick={() => onSectionClick(acte.position)}
@@ -58,9 +58,9 @@ export function EditorStructurePanel({
                   {acte.scenes?.map((scene, sceneIndex) => (
                     <button
                       key={sceneIndex}
-                      className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-pink-100 hover:text-gray-900 ${
+                      className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-act-muted ${
                         activeActeIndex === acteIndex && activeSceneIndex === sceneIndex
-                          ? "bg-rose-400 text-white font-semibold"
+                          ? "bg-act text-white font-semibold"
                           : ""
                       }`}
                       onClick={() => onSectionClick(scene.position)}
@@ -80,7 +80,7 @@ export function EditorStructurePanel({
             {characters.map((character, index) => (
               <button
                 key={character || index}
-                className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-blue-600 hover:bg-blue-50 rounded"
+                className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-character hover:bg-character-muted rounded"
                 onClick={() => onCharacterClick(character)}
               >
                 @{character}

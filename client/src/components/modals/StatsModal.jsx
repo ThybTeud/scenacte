@@ -16,8 +16,8 @@ import {
 
 const statItems = [
   { key: 'totalActs', label: 'Actes', icon: Theater, color: 'text-amber-600' },
-  { key: 'totalScenes', label: 'Scènes', icon: Clapperboard, color: 'text-rose-600' },
-  { key: 'totalCharacters', label: 'Personnages', icon: Users, color: 'text-blue-600' },
+  { key: 'totalScenes', label: 'Scènes', icon: Clapperboard, color: 'text-act' },
+  { key: 'totalCharacters', label: 'Personnages', icon: Users, color: 'text-character' },
   { key: 'totalRepliques', label: 'Répliques', icon: MessageSquare, color: 'text-emerald-600' },
   { key: 'wordCount', label: 'Mots', icon: Type, color: 'text-violet-600' },
   { key: 'estimatedDurationMinutes', label: 'Durée estimée', icon: Clock, color: 'text-orange-600', suffix: ' min' },
@@ -48,7 +48,7 @@ export default function StatsModal({ isOpen, onClose, statistics, playTitle }) {
           {statItems.map(({ key, label, icon: Icon, color, suffix }) => (
             <div
               key={key}
-              className="flex items-center gap-3 rounded-lg border-2 border-gray-900 p-3"
+              className="flex items-center gap-3 rounded-sm border-2 border-border p-3"
             >
               <Icon className={`h-5 w-5 shrink-0 ${color}`} />
               <div className="min-w-0">

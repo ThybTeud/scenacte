@@ -15,7 +15,7 @@ export default function AppLayout({ title, children }) {
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
                     {title && (
-                        <h1 className="text-lg font-semibold">{title}</h1>
+                        <h1 className="text-xl font-bold font-heading">{title}</h1>
                     )}
                 </header>
 

@@ -184,8 +184,8 @@ export default function AuthPage() {
 
   // Main Auth View
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-300">
-      <Card className="w-full max-w-md border-gray-900 shadow-brutal">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-surface-base">
+      <Card className="w-full max-w-md border-border shadow-brutal">
         <CardHeader className="text-center">
           <CardTitle>
             <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />

@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 
 export function NotFound() {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-primary mb-4">404</h1>
-        <h2 className="text-3xl font-semibold text-foreground mb-4">
+    <div className="min-h-screen bg-surface-muted flex flex-col items-center justify-center px-4">
+      <div className="text-center border-2 border-border shadow-brutal bg-card p-12 rounded-sm">
+        <h1 className="text-6xl font-bold font-heading text-primary mb-4">404</h1>
+        <h2 className="text-2xl font-semibold font-heading text-foreground mb-4">
           Page non trouvée
         </h2>
         <p className="text-muted-foreground mb-8 max-w-md">
