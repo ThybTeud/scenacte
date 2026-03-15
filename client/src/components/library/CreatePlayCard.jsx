@@ -5,7 +5,7 @@ import { Plus } from "lucide-react"
 export function CreatePlayCard({ onClick }) {
   return (
     <Card
-      className="flex flex-col h-48 border-dashed hover:border-primary hover:bg-muted/50 transition-colors cursor-pointer"
+      className="flex flex-col h-48 border-dashed border-border hover:border-primary hover:bg-muted/50 transition-colors cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="flex flex-col items-center justify-center flex-1 gap-3">

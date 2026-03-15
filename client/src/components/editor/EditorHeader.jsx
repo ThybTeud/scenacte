@@ -21,7 +21,7 @@ export function EditorHeader({
   onTogglePreview,
 }) {
   return (
-    <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-gray-900 bg-sidebar overflow-hidden">
+    <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-border bg-sidebar overflow-hidden">
       {/* Left section */}
       <SidebarTrigger />
       {/* <Separator orientation="vertical" className="h-4" /> */}
@@ -30,14 +30,14 @@ export function EditorHeader({
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className="max-w-sm h-9 bg-white border-2 border-gray-900 rounded-sm"
+          className="max-w-sm h-9 bg-white"
           placeholder="Titre de la pièce"
         />
         {isSaving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
         ) : hasUnsavedChanges ? (
           <div
-            className="h-2 w-2 rounded-full bg-rose-600 shrink-0"
+            className="h-2 w-2 rounded-full bg-primary shrink-0"
             title="Modifications non versionnées"
           />
         ) : null}

@@ -35,7 +35,7 @@ export function EditorSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r-2 border-gray-900 overflow-hidden"
+      className="border-r-2 border-border overflow-hidden"
     >
       <SidebarLogo />
 

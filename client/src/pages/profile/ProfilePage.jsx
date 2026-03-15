@@ -130,7 +130,7 @@ export default function ProfilePage() {
         <AppLayout title="Profil">
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Informations du compte */}
-                <Card>
+                <Card className="shadow-brutal">
                     <CardHeader>
                         <CardTitle>Informations du compte</CardTitle>
                         <CardDescription>
@@ -162,7 +162,7 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Modifier le mot de passe */}
-                <Card>
+                <Card className="shadow-brutal">
                     <CardHeader>
                         <CardTitle>Modifier le mot de passe</CardTitle>
                     </CardHeader>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Export et suppression */}
-                <Card>
+                <Card className="shadow-brutal">
                     <CardHeader>
                         <CardTitle>Données et compte</CardTitle>
                     </CardHeader>

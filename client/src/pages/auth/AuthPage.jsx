@@ -11,16 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Info, Dot } from "lucide-react";
+import { Eye, EyeOff, Dot } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/auth.service";
-import { storageService } from "@/services/storage.service";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register, enableGuestMode } = useAuth();
+  const { login, register } = useAuth();
 
   // Détecter le mode depuis l'URL
   const isForgotPasswordMode = location.pathname === "/forgot-password";
@@ -43,21 +41,12 @@ export default function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
 
-  // Compteur de pièces invité pour l'inscription
-  const [guestPlaysCount, setGuestPlaysCount] = useState(0);
-
   // Déterminer l'onglet initial selon l'URL
   const getInitialTab = () => {
     if (location.pathname === "/register") return "register";
     return "login";
   };
   const [activeTab, setActiveTab] = useState(getInitialTab);
-
-  // Charger le compteur de pièces invité au mount
-  useEffect(() => {
-    const count = storageService.getGuestPlaysCount();
-    setGuestPlaysCount(count);
-  }, []);
 
   // Mettre à jour le tab si l'URL change
   useEffect(() => {
@@ -117,11 +106,6 @@ export default function AuthPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleGuestMode = () => {
-    enableGuestMode();
-    navigate("/library");
   };
 
   // Forgot Password View (via state ou via URL directe)
@@ -200,8 +184,8 @@ export default function AuthPage() {
 
   // Main Auth View
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-300">
-      <Card className="w-full max-w-md border-gray-900 shadow-brutal">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-surface-base">
+      <Card className="w-full max-w-md border-border shadow-brutal">
         <CardHeader className="text-center">
           <CardTitle>
             <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
@@ -268,18 +252,12 @@ export default function AuthPage() {
                   Mot de passe oublié ?
                 </button>
               </form>
-              {/* Guest Mode */}
-              <div className="mt-6 pt-6 border-t">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleGuestMode}
-                >
-                  Continuer sans compte
-                </Button>
-                <p className="mt-2 text-xs text-center text-muted-foreground">
-                  Vos pièces seront sauvegardées localement
-                </p>
+
+              {/* Lien mode test */}
+              <div className="text-center mt-4">
+                <Link to="/test" className="text-sm text-muted-foreground hover:text-primary underline">
+                  Essayer sans compte
+                </Link>
               </div>
             </TabsContent>
 
@@ -337,17 +315,6 @@ export default function AuthPage() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Inscription..." : "S'inscrire"}
                 </Button>
-
-                {guestPlaysCount > 0 && (
-                  <Alert variant="warning">
-                    <Info className="w-4 h-4" />
-                    <AlertDescription>
-                      {guestPlaysCount > 1
-                        ? `Vos ${guestPlaysCount} pièces locales seront importées.`
-                        : "Votre pièce locale sera importée."}
-                    </AlertDescription>
-                  </Alert>
-                )}
               </form>
             </TabsContent>
           </Tabs>
