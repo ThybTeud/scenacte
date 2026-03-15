@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CodeMirrorEditor } from "@/components/editors/CodeMirrorEditor";
 import { EditorStructurePanel } from "@/components/editor/EditorStructurePanel";
 import { EditorPreviewPanel } from "@/components/editor/EditorPreviewPanel";
-import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
+import { Eye } from "lucide-react";
 
 export function EditorWorkspace({
   structure,
@@ -27,47 +27,32 @@ export function EditorWorkspace({
   return (
     <main className="flex-1 overflow-hidden p-4 min-h-0 bg-surface-strong">
       <div className="flex justify-center relative w-full h-full">
-        {!showEditorHelp && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="hidden md:flex absolute left-0 top-4 bg-surface-muted border-2 border-border rounded-sm shadow-brutal-sm hover:bg-surface-base z-10"
-            onClick={() => setShowEditorHelp(true)}
-          >
-            <PanelLeftOpen className="fill-white" />
-          </Button>
-        )}
-
-        {!showPreview && (
-          <Button
-            variant="secondary"
-            size="icon"
-            className="hidden md:flex absolute right-0 top-4 bg-surface-muted border-2 border-border rounded-sm shadow-brutal-sm hover:bg-surface-base z-10"
-            onClick={() => setShowPreview(true)}
-          >
-            <PanelRightOpen className="fill-white" />
-          </Button>
-        )}
-
         <div className="flex justify-center gap-4 h-full w-full max-w-6xl">
-          {showEditorHelp && (
-            <EditorStructurePanel
-              structure={structure}
-              characters={characters}
-              activeActeIndex={activeActeIndex}
-              activeSceneIndex={activeSceneIndex}
-              activeOrphanSceneIndex={activeOrphanSceneIndex}
-              isBeforeStructure={isBeforeStructure}
-              onSectionClick={onSectionClick}
-              onCharacterClick={onCharacterClick}
-              onClose={() => setShowEditorHelp(false)}
-            />
-          )}
+          <EditorStructurePanel
+            structure={structure}
+            characters={characters}
+            activeActeIndex={activeActeIndex}
+            activeSceneIndex={activeSceneIndex}
+            activeOrphanSceneIndex={activeOrphanSceneIndex}
+            isBeforeStructure={isBeforeStructure}
+            onSectionClick={onSectionClick}
+            onCharacterClick={onCharacterClick}
+          />
 
-          <div className="flex-1 flex flex-col min-w-0 max-w-3xl h-full">
-            <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-border rounded-sm shadow-brutal">
-              <div className="hidden sm:flex px-6 items-center h-16 shrink-0 bg-surface-muted border-b-2 border-border font-bold uppercase font-heading">
-                Éditeur
+          <div className="flex-1 flex flex-col md:flex-row min-w-0 max-w-3xl h-full md:border-2 md:border-border md:rounded-sm md:shadow-brutal md:overflow-hidden">
+            <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden min-h-0 border-2 border-border rounded-sm shadow-brutal md:border-0 md:rounded-none md:shadow-none">
+              <div className="hidden md:flex px-6 items-center justify-between h-16 shrink-0 bg-surface-muted border-b-2 border-border">
+                <span className="font-bold uppercase font-heading">Éditeur</span>
+                {!showPreview && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hidden md:flex"
+                    onClick={() => setShowPreview(true)}
+                  >
+                    <Eye />
+                  </Button>
+                )}
               </div>
               <CodeMirrorEditor
                 ref={editorRef}
@@ -77,8 +62,6 @@ export function EditorWorkspace({
                 characters={characters}
               />
             </div>
-          </div>
-
           {showPreview && (
             <EditorPreviewPanel
               preset={preset}
@@ -86,6 +69,8 @@ export function EditorWorkspace({
               onClose={() => setShowPreview(false)}
             />
           )}
+          </div>
+
         </div>
       </div>
     </main>
