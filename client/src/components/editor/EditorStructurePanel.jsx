@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { PanelLeftClose } from "lucide-react";
 
 export function EditorStructurePanel({
   structure,
@@ -17,7 +16,6 @@ export function EditorStructurePanel({
       <div className="px-6 h-16 bg-surface-muted border-b-2 border-border flex items-center justify-between">
         <div className="font-bold uppercase font-heading">Structure</div>
         <Button variant="ghost" size="icon" onClick={onClose}>
-          <PanelLeftClose className="fill-white" />
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-4 bg-white">

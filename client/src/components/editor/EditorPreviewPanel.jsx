@@ -6,7 +6,7 @@ import { generatePresetCSS } from "@/config/template-presets";
 
 export function EditorPreviewPanel({ preset, htmlContent, onClose }) {
   return (
-    <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-2 border-border rounded-sm shadow-brutal">
+    <div className="hidden md:flex md:flex-col flex-1 min-w-0 max-w-lg h-full overflow-hidden border-l-2 border-border">
       <div className="px-6 h-16 shrink-0 bg-surface-muted border-b-2 border-border flex items-center justify-between">
         <div className="font-bold uppercase font-heading">Aperçu</div>
         <Button variant="ghost" size="icon" onClick={onClose}>
