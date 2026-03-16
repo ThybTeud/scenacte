@@ -1,115 +1,103 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import Logo from './ui/Logo';
+import { useServerStatus } from '@/hooks/useServerStatus';
 
-const MESSAGES = [
-  "Réveil du serveur...",
-  "Préparation de l'éditeur...",
-  "Encore quelques secondes..."
-];
+const EXPECTED_DURATION = 45; // secondes estimées pour un cold start
 
-const PING_INTERVAL = 2000; // 2 secondes
-const MESSAGE_ROTATION_INTERVAL = 5000; // 5 secondes
-const INITIAL_DELAY = 2000; // 2 secondes avant d'afficher l'écran
+function getMessage(elapsed) {
+  if (elapsed < 5) return "Réveil du serveur en cours...";
+  if (elapsed < 15) return "Hébergement éco-responsable — le serveur dort quand personne ne l'utilise";
+  if (elapsed < 30) return "Encore quelques secondes... (~30s au total)";
+  return "Plus long que d'habitude, merci de patienter";
+}
 
-export default function ServerWakeUp({ onReady }) {
+function getProgress(elapsed) {
+  // Progression asymptotique : rapide au début, ralentit vers 90%
+  // Formule : 90 * (1 - e^(-elapsed/20))
+  return Math.min(90, 90 * (1 - Math.exp(-elapsed / 20)));
+}
+
+export default function ServerWakeUp() {
+  const { isServerReady, startTime } = useServerStatus();
   const [isVisible, setIsVisible] = useState(false);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [serverReady, setServerReady] = useState(false);
-  const onReadyRef = useRef(onReady);
+  const [elapsed, setElapsed] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-  // Garder la ref à jour sans déclencher l'effet
+  // Afficher après 2s si serveur pas prêt
   useEffect(() => {
-    onReadyRef.current = onReady;
-  }, [onReady]);
+    if (isServerReady) return;
 
+    const timer = setTimeout(() => setIsVisible(true), 2000);
+    return () => clearTimeout(timer);
+  }, [isServerReady]);
+
+  // Mise à jour du compteur et de la progression
   useEffect(() => {
-    let mounted = true;
-    let visibilityTimer = null;
-    let pingInterval = null;
-    let messageInterval = null;
+    if (isServerReady) {
+      setProgress(100);
+      return;
+    }
+    if (!isVisible) return;
 
-    // Fonction pour vérifier le health check
-    const checkHealth = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-        const response = await fetch(`${apiUrl}/health`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    const interval = setInterval(() => {
+      const secs = Math.floor((Date.now() - startTime) / 1000);
+      setElapsed(secs);
+      setProgress(getProgress(secs));
+    }, 500);
 
-        if (response.ok && mounted) {
-          setServerReady(true);
-          clearTimeout(visibilityTimer);
-          clearInterval(pingInterval);
-          clearInterval(messageInterval);
+    return () => clearInterval(interval);
+  }, [isServerReady, isVisible, startTime]);
 
-          // Notifier le parent que le serveur est prêt
-          onReadyRef.current?.();
-          return true;
-        }
-      } catch (error) {
-        // Le serveur n'est pas encore prêt
-        return false;
-      }
-      return false;
-    };
+  // Animation de sortie : laisser la barre atteindre 100% puis disparaître
+  useEffect(() => {
+    if (!isServerReady || !isVisible) return;
 
-    // Démarrer le timer de visibilité immédiatement,
-    // sans attendre la résolution du premier fetch
-    visibilityTimer = setTimeout(() => {
-      if (mounted) {
-        setIsVisible(true);
-      }
-    }, INITIAL_DELAY);
+    const timer = setTimeout(() => setIsVisible(false), 600);
+    return () => clearTimeout(timer);
+  }, [isServerReady, isVisible]);
 
-    // Premier ping immédiat
-    checkHealth();
-
-    // Démarrer le ping toutes les 2 secondes
-    pingInterval = setInterval(checkHealth, PING_INTERVAL);
-
-    // Démarrer la rotation des messages toutes les 5 secondes
-    messageInterval = setInterval(() => {
-      if (mounted) {
-        setCurrentMessageIndex(prev => (prev + 1) % MESSAGES.length);
-      }
-    }, MESSAGE_ROTATION_INTERVAL);
-
-    // Cleanup
-    return () => {
-      mounted = false;
-      clearTimeout(visibilityTimer);
-      clearInterval(pingInterval);
-      clearInterval(messageInterval);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Ne rien afficher si le serveur est prêt ou si on n'a pas dépassé les 2 sec
-  if (serverReady || !isVisible) {
-    return null;
-  }
+  if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-opacity duration-300 ${isServerReady ? 'opacity-0' : 'opacity-100'}`}>
       <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6 pb-6 flex flex-col items-center gap-6">
+        <CardContent className="pt-6 pb-6 flex flex-col items-center gap-5">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Logo size={40} />
+          <Logo size={40} />
+
+          {/* Message contextuel */}
+          <div className="text-center space-y-1">
+            <p className="text-muted-foreground text-sm">
+              {getMessage(elapsed)}
+            </p>
+            {elapsed >= 3 && !isServerReady && (
+              <p className="text-muted-foreground/60 text-xs">
+                {elapsed}s écoulées · estimation ~{EXPECTED_DURATION}s
+              </p>
+            )}
           </div>
 
-          {/* Message rotatif */}
-          <p className="text-center text-muted-foreground animate-pulse">
-            {MESSAGES[currentMessageIndex]}
-          </p>
-
-          {/* Barre de progression indéterminée */}
+          {/* Barre de progression déterminée */}
           <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-            <div className="h-full w-1/3 bg-primary rounded-full animate-loading-bar" />
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
+
+          {/* Lien vers le mode test */}
+          {elapsed >= 8 && !isServerReady && (
+            <p className="text-xs text-muted-foreground/70 text-center">
+              Envie d'essayer l'éditeur en attendant ?{' '}
+              <a
+                href="/test"
+                className="text-primary underline underline-offset-2 hover:text-primary/80"
+              >
+                Mode test
+              </a>
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
