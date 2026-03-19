@@ -105,7 +105,7 @@ export function EditorHeader({
                 size="icon"
                 onClick={onUndo}
                 disabled={!canUndo}
-                className="rounded-r-none border-r-0"
+                className="rounded-r-none border-r"
               >
                 <Undo2 className="h-4 w-4" />
               </Button>
@@ -120,7 +120,7 @@ export function EditorHeader({
                 size="icon"
                 onClick={onRedo}
                 disabled={!canRedo}
-                className="rounded-l-none"
+                className="rounded-l-none border-l"
               >
                 <Redo2 className="h-4 w-4" />
               </Button>
