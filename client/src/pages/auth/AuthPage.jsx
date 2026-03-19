@@ -111,10 +111,12 @@ export default function AuthPage() {
   // Forgot Password View (via state ou via URL directe)
   if (showForgotPassword || isForgotPasswordMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Mot de passe oublié</CardTitle>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
+        <Card className="w-full max-w-md border-border shadow-brutal">
+          <CardHeader className="text-center">
+            <CardTitle>
+              <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
+            </CardTitle>
             <CardDescription>
               Entrez votre email pour recevoir un lien de réinitialisation
             </CardDescription>
@@ -184,7 +186,7 @@ export default function AuthPage() {
 
   // Main Auth View
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-surface-base">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
       <Card className="w-full max-w-md border-border shadow-brutal">
         <CardHeader className="text-center">
           <CardTitle>
@@ -252,13 +254,6 @@ export default function AuthPage() {
                   Mot de passe oublié ?
                 </button>
               </form>
-
-              {/* Lien mode test */}
-              <div className="text-center mt-4">
-                <Link to="/test" className="text-sm text-muted-foreground hover:text-primary underline">
-                  Essayer sans compte
-                </Link>
-              </div>
             </TabsContent>
 
             {/* Register Tab */}
@@ -287,7 +282,8 @@ export default function AuthPage() {
                       required
                       minLength={12}
                     />
-                    <button tabIndex={-1}
+                    <button
+                      tabIndex={-1}
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setShowPassword(!showPassword)}
@@ -346,6 +342,15 @@ export default function AuthPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Lien mode test */}
+      <Button className="text-center mt-8 w-full max-w-md shadow-brutal" >
+        <Link
+          to="/test"
+        >
+          Essayer sans compte
+        </Link>
+      </Button>
     </div>
   );
 }

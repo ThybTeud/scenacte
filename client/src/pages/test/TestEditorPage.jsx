@@ -16,7 +16,7 @@ import PageSettingsModal from "@/components/modals/PageSettingsModal";
 import { Download, FileText, ChartPie } from "lucide-react";
 
 export default function TestEditorPage() {
-  document.title = "Scenacte — Essai gratuit";
+  document.title = "Scenacte — Mode test";
 
   const [content, setContent] = useState(SAMPLE_PLAY);
   const [presetId, setPresetId] = useState("classique");
