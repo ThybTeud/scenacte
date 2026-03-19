@@ -3,11 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { storageService } from "@/services/storage.service";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import {
-    SidebarProvider,
-    SidebarInset,
-    SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { PlaysPagination } from "@/components/ui/Pagination";
 import { Search, Plus } from "lucide-react";
-import { LibrarySidebar } from "@/components/sidebar";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { AppFooter } from "@/components/layout/AppFooter";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
 import { CreatePlayModal, DeletePlayModal, RenamePlayModal, ExportModal } from "@/components/modals";
@@ -179,21 +175,9 @@ export default function LibraryPage() {
     const showCreateCard = !isSearching && (isLastPage && isGridIncomplete)
 
     return (
-        <SidebarProvider className="bg-surface-muted">
-            <LibrarySidebar />
-            <SidebarInset className="bg-surface-muted">
-                <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-border bg-sidebar overflow-hidden">
-                    <SidebarTrigger />
-                    {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
-                    <h1 className="text-xl font-bold font-heading">Bibliothèque</h1>
-                </header>
-
-                <main className="flex-1 p-6">
-                    {/* Suppression de sm:block pour tester le même affichage dans toutes les tailles d'écran */}
-                    <h1 className="text-2xl font-semibold mb-6 hidden">
-                        Bibliothèque
-                    </h1>
-
+        <div className="flex flex-col min-h-dvh bg-surface-muted">
+            <AppHeader />
+            <main className="flex-1 p-6">
                     {/* Actions row */}
                     <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
                         {/* Recherche + Filtres */}
@@ -322,7 +306,7 @@ export default function LibraryPage() {
                         </>
                     )}
                 </main>
-            </SidebarInset>
+            <AppFooter />
 
             <CreatePlayModal
                 isOpen={showCreateModal}
@@ -376,6 +360,6 @@ export default function LibraryPage() {
                 playTitle={playToExport?.title}
                 playSubtitle={playToExport?.subtitle}
             />
-        </SidebarProvider>
+        </div>
     );
 }

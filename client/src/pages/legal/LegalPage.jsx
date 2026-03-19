@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { marked } from "marked";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -43,14 +43,14 @@ export default function LegalPage() {
 
     if (!doc) {
         return (
-            <AppLayout title="Document non trouvé">
+            <AppLayout>
                 <p>Ce document n'existe pas.</p>
             </AppLayout>
         );
     }
 
     return (
-        <AppLayout title={doc.title}>
+        <AppLayout>
             <div className="max-w-3xl mx-auto">
                 {loading ? (
                     <p className="text-muted-foreground">Chargement...</p>
@@ -60,29 +60,6 @@ export default function LegalPage() {
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
                 )}
-
-                <footer className="mt-16 pt-6 border-t">
-                    <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <Link
-                            to="/legal/legal"
-                            className="hover:text-foreground"
-                        >
-                            Mentions légales
-                        </Link>
-                        <Link
-                            to="/legal/privacy"
-                            className="hover:text-foreground"
-                        >
-                            Confidentialité
-                        </Link>
-                        <Link
-                            to="/legal/terms"
-                            className="hover:text-foreground"
-                        >
-                            CGU
-                        </Link>
-                    </nav>
-                </footer>
             </div>
         </AppLayout>
     );

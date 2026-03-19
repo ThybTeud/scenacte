@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from './contexts/AuthContext';
+import { ServerStatusProvider } from './contexts/ServerStatusContext';
 import { PrivateRoute } from './components/routing/PrivateRoute';
 import { useAuth } from './hooks/useAuth';
 import ErrorBoundary from './components/ErrorBoundary';
 import ServerWakeUp from './components/ServerWakeUp';
+import ServerStatusBanner from './components/ServerStatusBanner';
 
 // Pages
 import AuthPage from './pages/auth/AuthPage';
@@ -35,8 +37,6 @@ function PlayIdRedirect() {
 }
 
 function App() {
-  const [serverReady, setServerReady] = useState(false);
-
   // Nettoyage des données du mode invité supprimé
   // TODO: Supprimer ce bloc après quelques mois (ajouté le 2026-03-03)
   useEffect(() => {
@@ -46,26 +46,25 @@ function App() {
   }, []);
 
   return (
-    <>
-      {/* Écran de chargement au démarrage */}
-      <ServerWakeUp onReady={() => setServerReady(true)} />
-
-      {/* Application principale - s'affiche en arrière-plan */}
+    <ServerStatusProvider>
       <BrowserRouter>
         <AuthProvider>
           <ErrorBoundary>
             <Toaster />
 
+            {/* Bandeau discret pour les pages publiques */}
+            <ServerStatusBanner />
+
             <Routes>
               <Route path="/" element={<RootRedirect />} />
 
-              {/* Auth routes */}
+              {/* Auth routes — accessibles pendant le cold start */}
               <Route path="/login" element={<AuthPage />} />
               <Route path="/register" element={<AuthPage />} />
               <Route path="/forgot-password" element={<AuthPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-              {/* Mode test — public, sans auth */}
+              {/* Mode test — public, sans auth, 100% client-side */}
               <Route path="/test" element={<TestEditorPage />} />
 
               {/* DEV only */}
@@ -79,11 +78,12 @@ function App() {
               {/* Legal routes */}
               <Route path="/legal/:docType" element={<LegalPage />} />
 
-              {/* Protected routes */}
+              {/* Protected routes — overlay bloquant si serveur pas prêt */}
               <Route
                 path="/library"
                 element={
                   <PrivateRoute>
+                    <ServerWakeUp />
                     <LibraryPage />
                   </PrivateRoute>
                 }
@@ -92,6 +92,7 @@ function App() {
                 path="/editor/:id"
                 element={
                   <PrivateRoute>
+                    <ServerWakeUp />
                     <EditorPage />
                   </PrivateRoute>
                 }
@@ -100,6 +101,7 @@ function App() {
                 path="/profile"
                 element={
                   <PrivateRoute>
+                    <ServerWakeUp />
                     <ProfilePage />
                   </PrivateRoute>
                 }
@@ -111,7 +113,7 @@ function App() {
           </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
-    </>
+    </ServerStatusProvider>
   );
 }
 

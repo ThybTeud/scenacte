@@ -6,8 +6,6 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
 import { useVersioning } from "@/hooks/useVersioning";
 import { toast } from "sonner";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { EditorSidebar } from "@/components/sidebar";
 import { EditorHeader } from "@/components/editor/EditorHeader";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
@@ -18,6 +16,7 @@ import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
 import { getPreset } from "@/config/template-presets";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
+import { SyntaxBar } from "@/components/editor/SyntaxBar";
 
 export default function EditorPage() {
   const { id } = useParams();
@@ -295,6 +294,17 @@ export default function EditorPage() {
   }, [updateUndoRedoState]);
 
   /**
+   * Handler pour toggle format (syntaxe mobile)
+   */
+  const handleToggleFormat = useCallback(
+    (formatType) => {
+      editorRef.current?.toggleLineFormat(formatType);
+      updateUndoRedoState();
+    },
+    [updateUndoRedoState],
+  );
+
+  /**
    * Gère le changement de titre
    */
   const handleTitleChange = useCallback((newTitle) => {
@@ -508,53 +518,54 @@ export default function EditorPage() {
   );
 
   return (
-    <SidebarProvider className="h-dvh bg-surface-strong">
-      <EditorSidebar
-        structure={structure}
-        characters={structure?.personnages || []}
-        onSectionClick={handleSectionClick}
-        onCharacterClick={handleCharacterClick}
-        onOpenExport={handleOpenExport}
-        onOpenEditorSettings={handleOpenEditorSettings}
-        onOpenPageSettings={handleOpenLayoutModal}
-        onVersionsClick={handleOpenVersions}
+    <div className="flex flex-col h-dvh bg-surface-strong">
+      <EditorHeader
+        title={play?.title || ""}
+        onTitleChange={handleTitleChange}
+        isSaving={isSaving}
+        onCreateVersion={handleCreateManualVersion}
+        hasUnsavedChanges={hasUnsavedVersionChanges}
+        isOnline={true}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onOpenStats={handleOpenStats}
+        onOpenVersions={handleOpenVersions}
+        onOpenPageSettings={handleOpenLayoutModal}
+        onOpenExport={handleOpenExport}
+        user={user}
+        onLogout={logout}
       />
 
-      <SidebarInset className="flex flex-col h-full overflow-hidden bg-surface-strong">
-        <EditorHeader
-          title={play?.title || ""}
-          onTitleChange={handleTitleChange}
-          isSaving={isSaving}
-          onSave={handleManualSave}
-          onCreateVersion={handleCreateManualVersion}
-          hasUnsavedChanges={hasUnsavedVersionChanges}
-          isOnline={true}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          // showPreview={showPreview}
-          // onTogglePreview={() => setShowPreview((prev) => !prev)}
-        />
+      <EditorWorkspace
+        structure={structure}
+        characters={characters}
+        activeActeIndex={activeActeIndex}
+        activeSceneIndex={activeSceneIndex}
+        activeOrphanSceneIndex={activeOrphanSceneIndex}
+        isBeforeStructure={isBeforeStructure}
+        onSectionClick={handleSectionClick}
+        onCharacterClick={handleCharacterClick}
+        editorRef={editorRef}
+        content={content}
+        onContentChange={handleContentChange}
+        onCursorChange={handleCursorChange}
+        preset={preset}
+        htmlContent={htmlContent}
+      />
 
-        <EditorWorkspace
-          structure={structure}
-          characters={characters}
-          activeActeIndex={activeActeIndex}
-          activeSceneIndex={activeSceneIndex}
-          activeOrphanSceneIndex={activeOrphanSceneIndex}
-          isBeforeStructure={isBeforeStructure}
-          onSectionClick={handleSectionClick}
-          onCharacterClick={handleCharacterClick}
-          editorRef={editorRef}
-          content={content}
-          onContentChange={handleContentChange}
-          onCursorChange={handleCursorChange}
-          preset={preset}
-          htmlContent={htmlContent}
-        />
-      </SidebarInset>
+      <SyntaxBar
+        onToggleFormat={handleToggleFormat}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onOpenStats={handleOpenStats}
+        onOpenVersions={handleOpenVersions}
+        onOpenPageSettings={handleOpenLayoutModal}
+        onOpenExport={handleOpenExport}
+      />
 
       {/* Modal Editeur */}
       <EditorSettingsModal
@@ -599,6 +610,6 @@ export default function EditorPage() {
         play={play}
         onRestore={fetchPlay}
       />
-    </SidebarProvider>
+    </div>
   );
 }

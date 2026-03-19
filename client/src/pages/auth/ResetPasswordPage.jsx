@@ -83,10 +83,12 @@ export default function ResetPasswordPage() {
     // Pas de token = erreur
     if (!resetToken || tokenError) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Lien invalide</CardTitle>
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
+                <Card className="w-full max-w-md border-border shadow-brutal">
+                    <CardHeader className="text-center">
+                        <CardTitle>
+                            <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
+                        </CardTitle>
                         <CardDescription>
                             Le lien de réinitialisation est invalide ou a expiré
                         </CardDescription>
@@ -118,12 +120,14 @@ export default function ResetPasswordPage() {
     // En cours de validation
     if (isValidating) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Vérification du lien...</CardTitle>
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
+                <Card className="w-full max-w-md border-border shadow-brutal">
+                    <CardHeader className="text-center">
+                        <CardTitle>
+                            <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
+                        </CardTitle>
                         <CardDescription>
-                            Veuillez patienter
+                            Vérification du lien en cours…
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -134,10 +138,12 @@ export default function ResetPasswordPage() {
     // Succès
     if (resetSuccess) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader>
-                        <CardTitle>Mot de passe réinitialisé</CardTitle>
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
+                <Card className="w-full max-w-md border-border shadow-brutal">
+                    <CardHeader className="text-center">
+                        <CardTitle>
+                            <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
+                        </CardTitle>
                         <CardDescription>
                             Votre mot de passe a été modifié avec succès
                         </CardDescription>
@@ -157,10 +163,12 @@ export default function ResetPasswordPage() {
 
     // Formulaire reset
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Nouveau mot de passe</CardTitle>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
+            <Card className="w-full max-w-md border-border shadow-brutal">
+                <CardHeader className="text-center">
+                    <CardTitle>
+                        <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
+                    </CardTitle>
                     <CardDescription>
                         Entrez votre nouveau mot de passe
                     </CardDescription>
