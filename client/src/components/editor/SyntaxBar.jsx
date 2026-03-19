@@ -1,61 +1,121 @@
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Undo2, Redo2 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Undo2,
+  Redo2,
+  MoreVertical,
+  ChartPie,
+  History,
+  BookCheck,
+  Download,
+} from "lucide-react";
 
 const syntaxButtons = [
-  { label: '#Acte', short: '#', syntax: '#', tooltip: 'Insérer un acte' },
-  { label: '##Scène', short: '##', syntax: '##', tooltip: 'Insérer une scène' },
-  { label: '@Personnage', short: '@', syntax: '@', tooltip: 'Insérer un personnage' },
-  { label: '(Didascalie)', short: '()', syntax: '(', tooltip: 'Insérer une didascalie' },
-  { label: 'Dialogue', short: 'D', syntax: '', tooltip: 'Insérer un dialogue' },
-]
+  {
+    label: "#",
+    formatType: "heading1",
+    className:
+      "bg-primary font-bold hover:bg-primary/90 border-2 border-border",
+  },
+  {
+    label: "@",
+    formatType: "personnage",
+    className:
+      "bg-blue-600 font-bold hover:bg-blue-700 border-2 border-border",
+  },
+  {
+    label: "()",
+    formatType: "didascalie",
+    className:
+      "bg-gray-600 italic hover:bg-gray-700 border-2 border-border",
+  },
+];
 
-export function SyntaxBar({ onInsert, onUndo, onRedo, canUndo = true, canRedo = false }) {
+export function SyntaxBar({
+  onToggleFormat,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  onOpenStats,
+  onOpenVersions,
+  onOpenPageSettings,
+  onOpenExport,
+}) {
   return (
-    <div className="flex items-center gap-1 sm:gap-2 p-2">
+    <div className="flex items-center justify-between px-4 pb-4 md:hidden shrink-0">
       {/* Boutons syntaxe */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-1">
+      <div className="flex items-center gap-2">
         {syntaxButtons.map((btn) => (
           <Button
-            key={btn.label}
-            variant="outline"
-            size="sm"
-            onClick={() => onInsert(btn.syntax)}
-            title={btn.tooltip}
-            className="flex-1 h-9 px-2 md:px-3 text-xs md:text-sm"
+            key={btn.formatType}
+            variant="secondary"
+            size="icon"
+            onClick={() => onToggleFormat(btn.formatType)}
+            className={`text-primary-foreground text-sm shadow-brutal ${btn.className}`}
           >
-            {/* Mobile/Tablet : raccourci */}
-            <span className="md:hidden">{btn.short}</span>
-            {/* Desktop : label complet */}
-            <span className="hidden md:inline">{btn.label}</span>
+            {btn.label}
           </Button>
         ))}
       </div>
 
-      {/* Undo/Redo - visible uniquement sur mobile/tablet */}
-      <div className="flex items-center gap-1 md:hidden shrink-0">
-        <Separator orientation="vertical" className="h-6 mx-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Annuler"
-          className="h-9 w-9"
-        >
-          <Undo2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Rétablir"
-          className="h-9 w-9"
-        >
-          <Redo2 className="h-4 w-4" />
-        </Button>
+      {/* Undo / Redo / More */}
+      <div className="flex items-center gap-2">
+        <div className="">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="border-2 border-border rounded-r-none border-r shadow-brutal"
+          >
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="border-2 border-border rounded-l-none border-l shadow-brutal"
+          >
+            <Redo2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="border-2 border-border shadow-brutal"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top">
+            <DropdownMenuItem onClick={onOpenStats}>
+              <ChartPie className="h-4 w-4 mr-2" />
+              Statistiques
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenVersions}>
+              <History className="h-4 w-4 mr-2" />
+              Historique
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenPageSettings}>
+              <BookCheck className="h-4 w-4 mr-2" />
+              Mise en page
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
-  )
+  );
 }

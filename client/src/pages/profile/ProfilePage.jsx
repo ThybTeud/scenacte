@@ -127,7 +127,7 @@ export default function ProfilePage() {
     };
 
     return (
-        <AppLayout title="Profil">
+        <AppLayout>
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Informations du compte */}
                 <Card className="shadow-brutal">
