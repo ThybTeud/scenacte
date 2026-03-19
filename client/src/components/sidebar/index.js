@@ -1,5 +1,4 @@
 export { SidebarLogo } from './SidebarLogo'
 export { SidebarUserFooter } from './SidebarUserFooter'
 export { LibrarySidebar } from './LibrarySidebar'
-export { EditorSidebar } from './EditorSidebar'
 export { CollapsibleSection } from './CollapsibleSection'
