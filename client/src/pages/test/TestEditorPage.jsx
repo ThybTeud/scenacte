@@ -1,5 +1,4 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { SAMPLE_PLAY } from "@/config/sample-play";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useSyncScroll } from "@/hooks/useSyncScroll";
@@ -7,13 +6,18 @@ import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
 import { getPreset } from "@/config/template-presets";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger, SidebarProvider, SidebarInset, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
-import { SidebarLogo } from "@/components/sidebar/SidebarLogo";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { BaseHeader } from "@/components/layout/BaseHeader";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
-import ExportModal from "@/components/modals/ExportModal";
+import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import StatsModal from "@/components/modals/StatsModal";
 import PageSettingsModal from "@/components/modals/PageSettingsModal";
-import { Download, FileText, ChartPie } from "lucide-react";
+import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
 
 export default function TestEditorPage() {
   document.title = "Scenacte — Mode test";
@@ -21,12 +25,13 @@ export default function TestEditorPage() {
   const [content, setContent] = useState(SAMPLE_PLAY);
   const [presetId, setPresetId] = useState("classique");
   const [paperSize, setPaperSize] = useState("A5");
-  const [showExportModal, setShowExportModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showPageSettingsModal, setShowPageSettingsModal] = useState(false);
 
   const editorRef = useRef(null);
   const [currentLine, setCurrentLine] = useState(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   // Auto-focus sur l'éditeur au montage
   useEffect(() => {
@@ -108,9 +113,17 @@ export default function TestEditorPage() {
     };
   }, [structure?.items, structure?.orphanScenes, currentLine]);
 
+  const updateUndoRedoState = useCallback(() => {
+    if (editorRef.current) {
+      setCanUndo(editorRef.current.canUndo?.() ?? false);
+      setCanRedo(editorRef.current.canRedo?.() ?? false);
+    }
+  }, []);
+
   const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
-  }, []);
+    updateUndoRedoState();
+  }, [updateUndoRedoState]);
 
   const handleCursorChange = useCallback((line) => {
     setCurrentLine(line);
@@ -128,97 +141,101 @@ export default function TestEditorPage() {
     editorRef.current.insertText(`@${characterName}\n`);
   }, []);
 
+  const handleUndo = useCallback(() => {
+    if (editorRef.current?.undo) {
+      editorRef.current.undo();
+      updateUndoRedoState();
+    }
+  }, [updateUndoRedoState]);
+
+  const handleRedo = useCallback(() => {
+    if (editorRef.current?.redo) {
+      editorRef.current.redo();
+      updateUndoRedoState();
+    }
+  }, [updateUndoRedoState]);
+
+  const handleToggleFormat = useCallback((formatType) => {
+    editorRef.current?.toggleLineFormat(formatType);
+    updateUndoRedoState();
+  }, [updateUndoRedoState]);
+
   const handleSettingsChange = useCallback(({ paperSize: newPaperSize, presetId: newPresetId }) => {
     if (newPaperSize) setPaperSize(newPaperSize);
     if (newPresetId) setPresetId(newPresetId);
   }, []);
 
   return (
-    <SidebarProvider className="h-dvh bg-surface-strong">
-      {/* Sidebar */}
-      <Sidebar collapsible="icon" className="border-r-2 border-border overflow-hidden">
-        <SidebarLogo />
+    <div className="flex flex-col h-dvh bg-surface-strong">
+      <BaseHeader user={null} onLogout={null} compactLogo>
+        <Dot className="h-6 w-6 shrink-0" />
+        <Badge variant="secondary" className="text-xs shrink-0">
+          Mode test
+        </Badge>
 
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel className="uppercase">Outils</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {/* Statistiques */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    tooltip="Statistiques"
-                    className="cursor-pointer"
-                    onClick={() => setShowStatsModal(true)}
-                  >
-                    <ChartPie className="h-4 w-4" />
-                    <span>Stats</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+        <div className="flex-1" />
 
-                {/* Mise en page */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    tooltip="Mise en page"
-                    className="cursor-pointer"
-                    onClick={() => setShowPageSettingsModal(true)}
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span>Mise en page</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+        <div className="hidden md:flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="secondary" size="icon" onClick={() => setShowStatsModal(true)}>
+                <ChartPie className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Statistiques</TooltipContent>
+          </Tooltip>
 
-                {/* Export */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    tooltip="Exporter"
-                    className="cursor-pointer"
-                    onClick={() => setShowExportModal(true)}
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Export</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="secondary" size="icon" onClick={() => setShowPageSettingsModal(true)}>
+                <BookCheck className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Mise en page</TooltipContent>
+          </Tooltip>
 
-        {/* CTA footer */}
-        <SidebarFooter className="border-t-2 border-border p-4">
-          <p className="text-sm text-muted-foreground mb-2">
-            Mode test — votre travail ne sera pas sauvegardé.
-          </p>
-          <Button asChild variant="default" className="w-full">
-            <Link to="/register">Créer un compte</Link>
-          </Button>
-        </SidebarFooter>
-      </Sidebar>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="default" disabled>
+                <Download className="h-4 w-4" />
+                Exporter
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Créez un compte pour exporter</TooltipContent>
+          </Tooltip>
 
-      <SidebarInset className="flex flex-col h-full overflow-hidden bg-surface-strong">
-        {/* Header */}
-        <header className="flex h-20 shrink-0 items-center gap-4 px-4 border-b-2 border-border bg-sidebar overflow-hidden">
-          <SidebarTrigger />
-          <span className="font-semibold text-muted-foreground">Mode test</span>
-        </header>
+          <Minus className="h-6 w-6 shrink-0 rotate-90" />
+        </div>
+      </BaseHeader>
 
-        <EditorWorkspace
-          structure={structure}
-          characters={characters}
-          activeActeIndex={activeActeIndex}
-          activeSceneIndex={activeSceneIndex}
-          activeOrphanSceneIndex={activeOrphanSceneIndex}
-          isBeforeStructure={isBeforeStructure}
-          onSectionClick={handleSectionClick}
-          onCharacterClick={handleCharacterClick}
-          editorRef={editorRef}
-          content={content}
-          onContentChange={handleContentChange}
-          onCursorChange={handleCursorChange}
-          preset={preset}
-          htmlContent={htmlContent}
-        />
-      </SidebarInset>
+      <EditorWorkspace
+        structure={structure}
+        characters={characters}
+        activeActeIndex={activeActeIndex}
+        activeSceneIndex={activeSceneIndex}
+        activeOrphanSceneIndex={activeOrphanSceneIndex}
+        isBeforeStructure={isBeforeStructure}
+        onSectionClick={handleSectionClick}
+        onCharacterClick={handleCharacterClick}
+        editorRef={editorRef}
+        content={content}
+        onContentChange={handleContentChange}
+        onCursorChange={handleCursorChange}
+        preset={preset}
+        htmlContent={htmlContent}
+      />
+
+      <SyntaxBar
+        onToggleFormat={handleToggleFormat}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onOpenStats={() => setShowStatsModal(true)}
+        onOpenVersions={null}
+        onOpenPageSettings={() => setShowPageSettingsModal(true)}
+        onOpenExport={null}
+      />
 
       {/* Modals */}
       <PageSettingsModal
@@ -229,21 +246,12 @@ export default function TestEditorPage() {
         onSettingsChange={handleSettingsChange}
       />
 
-      <ExportModal
-        open={showExportModal}
-        onOpenChange={setShowExportModal}
-        htmlContent={htmlContent}
-        playTitle="Essai"
-        pageFormat={paperSize}
-        presetId={presetId}
-      />
-
       <StatsModal
         isOpen={showStatsModal}
         onClose={() => setShowStatsModal(false)}
         statistics={statistics}
         playTitle="Essai"
       />
-    </SidebarProvider>
+    </div>
   );
 }
