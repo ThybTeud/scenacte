@@ -16,6 +16,7 @@ import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
 import StatsModal from "@/components/modals/StatsModal";
 import { getPreset } from "@/config/template-presets";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
+import { SyntaxBar } from "@/components/editor/SyntaxBar";
 
 export default function EditorPage() {
   const { id } = useParams();
@@ -293,6 +294,17 @@ export default function EditorPage() {
   }, [updateUndoRedoState]);
 
   /**
+   * Handler pour toggle format (syntaxe mobile)
+   */
+  const handleToggleFormat = useCallback(
+    (formatType) => {
+      editorRef.current?.toggleLineFormat(formatType);
+      updateUndoRedoState();
+    },
+    [updateUndoRedoState],
+  );
+
+  /**
    * Gère le changement de titre
    */
   const handleTitleChange = useCallback((newTitle) => {
@@ -541,6 +553,18 @@ export default function EditorPage() {
         onCursorChange={handleCursorChange}
         preset={preset}
         htmlContent={htmlContent}
+      />
+
+      <SyntaxBar
+        onToggleFormat={handleToggleFormat}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onOpenStats={handleOpenStats}
+        onOpenVersions={handleOpenVersions}
+        onOpenPageSettings={handleOpenLayoutModal}
+        onOpenExport={handleOpenExport}
       />
 
       {/* Modal Editeur */}
