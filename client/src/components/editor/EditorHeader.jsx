@@ -16,7 +16,7 @@ import {
   WifiOff,
   ChartPie,
   History,
-  FileText,
+  BookCheck,
   Download,
   Dot,
   Minus,
@@ -75,15 +75,11 @@ export function EditorHeader({
       </div>
 
       {/* Boutons édition */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={onCreateVersion}
-              >
+              <Button variant="secondary" size="icon" onClick={onCreateVersion}>
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -101,7 +97,7 @@ export function EditorHeader({
           <TooltipContent>Sauvegarder</TooltipContent>
         </Tooltip>
 
-        <div className="hidden sm:flex items-center">
+        <div className="hidden md:flex items-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -128,8 +124,8 @@ export function EditorHeader({
               >
                 <Redo2 className="h-4 w-4" />
               </Button>
-          </TooltipTrigger>
-          <TooltipContent>Rétablir</TooltipContent>
+            </TooltipTrigger>
+            <TooltipContent>Rétablir</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -138,7 +134,7 @@ export function EditorHeader({
       <div className="flex-1" />
 
       {/* Boutons outils */}
-      <div className="flex items-center gap-1">
+      <div className="hidden md:flex items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="secondary" size="icon" onClick={onOpenStats}>
@@ -159,8 +155,12 @@ export function EditorHeader({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="secondary" size="icon" onClick={onOpenPageSettings}>
-              <FileText className="h-4 w-4" />
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={onOpenPageSettings}
+            >
+              <BookCheck className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Mise en page</TooltipContent>
@@ -169,14 +169,14 @@ export function EditorHeader({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="default" onClick={onOpenExport}>
-              <Download className="h-4 w-4" />Exporter
+              <Download className="h-4 w-4" />
+              Exporter
             </Button>
           </TooltipTrigger>
           <TooltipContent>Exporter</TooltipContent>
         </Tooltip>
+        <Minus className="h-6 w-6 shrink-0 rotate-90" />
       </div>
-
-      <Minus className="h-6 w-6 shrink-0 rotate-90" />
 
       {/* Avatar utilisateur */}
       <HeaderUserMenu user={user} onLogout={onLogout} />
