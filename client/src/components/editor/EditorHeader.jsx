@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +19,7 @@ import {
   Dot,
   Minus,
 } from "lucide-react";
-import { HeaderUserMenu } from "@/components/editor/HeaderUserMenu";
+import { BaseHeader } from "@/components/layout/BaseHeader";
 
 export function EditorHeader({
   title,
@@ -42,24 +40,11 @@ export function EditorHeader({
   onLogout,
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 px-4 border-b-2 border-border bg-sidebar">
-      {/* Logo + séparateur */}
-      <Link to="/library" className="shrink-0">
-        <img
-          src="/logo_long.png"
-          alt="Scenacte"
-          className="h-7 w-auto object-contain hidden md:block"
-        />
-        <img
-          src="/logo_short.png"
-          alt="Scenacte"
-          className="h-7 w-auto object-contain md:hidden"
-        />
-      </Link>
+    <BaseHeader user={user} onLogout={onLogout} compactLogo>
       <Dot className="h-6 w-6 shrink-0" />
 
       {/* Titre + indicateurs */}
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-1 md:gap-2 min-w-0">
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
@@ -177,9 +162,6 @@ export function EditorHeader({
         </Tooltip>
         <Minus className="h-6 w-6 shrink-0 rotate-90" />
       </div>
-
-      {/* Avatar utilisateur */}
-      <HeaderUserMenu user={user} onLogout={onLogout} />
-    </header>
+    </BaseHeader>
   );
 }
