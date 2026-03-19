@@ -101,18 +101,27 @@ export function SyntaxBar({
               <ChartPie className="h-4 w-4 mr-2" />
               Statistiques
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onOpenVersions}>
-              <History className="h-4 w-4 mr-2" />
-              Historique
-            </DropdownMenuItem>
+            {onOpenVersions && (
+              <DropdownMenuItem onClick={onOpenVersions}>
+                <History className="h-4 w-4 mr-2" />
+                Historique
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onOpenPageSettings}>
               <BookCheck className="h-4 w-4 mr-2" />
               Mise en page
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onOpenExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </DropdownMenuItem>
+            {onOpenExport ? (
+              <DropdownMenuItem onClick={onOpenExport}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem disabled>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter (compte requis)
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
