@@ -161,7 +161,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
                             </Badge>
                           )}
                           <Badge
-                            variant="outline"
+                            variant="secondary"
                           >
                             {version.versionType === 'manual' ? 'Manuel' : 'Auto'}
                           </Badge>
@@ -186,7 +186,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
 
                     {!isCurrentVersion(version) && (
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         className="w-full"
                         onClick={() => openRestoreDialog(version)}

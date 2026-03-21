@@ -8,13 +8,13 @@ export function BaseHeader({ children, user, onLogout, compactLogo = false }) {
         <img
           src="/logo_long.png"
           alt="Scenacte"
-          className={`h-7 w-auto object-contain ${compactLogo ? "hidden md:block" : ""}`}
+          className={`h-8 w-auto object-contain ${compactLogo ? "hidden md:block" : ""}`}
         />
         {compactLogo && (
           <img
             src="/logo_short.png"
             alt="Scenacte"
-            className="h-7 w-auto object-contain md:hidden"
+            className="h-8 w-auto object-contain md:hidden"
           />
         )}
       </Link>

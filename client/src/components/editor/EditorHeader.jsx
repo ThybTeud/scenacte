@@ -13,6 +13,8 @@ import {
   Loader2,
   WifiOff,
   ChartPie,
+  ChartColumn,
+  ChartNoAxesColumn,
   History,
   BookCheck,
   Download,
@@ -123,7 +125,7 @@ export function EditorHeader({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="secondary" size="icon" onClick={onOpenStats}>
-              <ChartPie className="h-4 w-4" />
+              <ChartColumn className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Statistiques</TooltipContent>
@@ -158,7 +160,8 @@ export function EditorHeader({
               Exporter
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Exporter</TooltipContent>
+          {/* Masquade du tooltip car doublon avec le texte du bouton. A SUPPRIMER PLUS TARD */}
+          {/* <TooltipContent>Exporter</TooltipContent> */}
         </Tooltip>
         <Minus className="h-6 w-6 shrink-0 rotate-90" />
       </div>

@@ -88,7 +88,7 @@ export default function ExportModal({
 
                             {/* Bouton Mise en page */}
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 className="w-full justify-between"
                                 onClick={handleOpenLayoutModal}
                             >

@@ -19,7 +19,7 @@ export default function DeletePlayModal({ isOpen, onClose, onConfirm, isLoading,
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
             Annuler
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
