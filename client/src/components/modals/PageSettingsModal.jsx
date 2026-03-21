@@ -137,7 +137,7 @@ export default function PageSettingsModal({
 
                 <DialogFooter>
                     <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => onOpenChange(false)}
                         disabled={isSaving}
                     >

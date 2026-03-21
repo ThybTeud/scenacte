@@ -267,7 +267,7 @@ export default function ProfilePage() {
                             </div>
                             {/* TODO: Implémenter l'export des données côté backend */}
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 disabled
                                 title="Fonctionnalité à venir"
                             >

@@ -5,20 +5,18 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-    "border-2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:shadow-brutal-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-brutal-active active:translate-x-0.5 active:translate-y-0.5",
+    "border-2 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground focus-visible:z-10 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
     {
         variants: {
             variant: {
                 default:
-                    "bg-primary text-primary-foreground hover:bg-primary/90",
+                    "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
                 destructive:
-                    "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-                outline:
-                    "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+                    "bg-destructive text-white hover:bg-destructive-hover active:bg-destructive-active dark:bg-destructive/60",
                 secondary:
-                    "bg-white text-secondary-foreground hover:bg-secondary/80",
-                ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 border-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:shadow-none active:translate-x-0 active:translate-y-0",
-                link: "text-primary underline-offset-4 hover:underline border-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:shadow-none active:translate-x-0 active:translate-y-0",
+                    "bg-white text-secondary-foreground hover:bg-surface-hover active:bg-surface-active",
+                ghost: "border-none hover:bg-surface-hover hover:text-secondary-foreground active:bg-surface-active dark:hover:bg-accent/50",
+                link: "border-none text-primary underline-offset-4 hover:underline",
             },
             size: {
                 default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -28,10 +26,19 @@ const buttonVariants = cva(
                 "icon-sm": "size-8",
                 "icon-lg": "size-10",
             },
+            depth: {
+                flat: "",
+                raised: "shadow-brutal hover:shadow-brutal-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-brutal-active active:translate-x-0.5 active:translate-y-0.5",
+            },
         },
+        compoundVariants: [
+            { variant: "ghost", depth: "raised", className: "shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:shadow-none active:translate-x-0 active:translate-y-0" },
+            { variant: "link", depth: "raised", className: "shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:shadow-none active:translate-x-0 active:translate-y-0" },
+        ],
         defaultVariants: {
             variant: "default",
             size: "default",
+            depth: "flat",
         },
     }
 );
@@ -40,6 +47,7 @@ function Button({
     className,
     variant = "default",
     size = "default",
+    depth = "flat",
     asChild = false,
     ...props
 }) {
@@ -50,7 +58,8 @@ function Button({
             data-slot="button"
             data-variant={variant}
             data-size={size}
-            className={cn(buttonVariants({ variant, size, className }))}
+            data-depth={depth}
+            className={cn(buttonVariants({ variant, size, depth, className }))}
             {...props}
         />
     );

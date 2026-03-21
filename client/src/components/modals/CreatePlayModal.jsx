@@ -56,7 +56,7 @@ export default function CreatePlayModal({ isOpen, onClose, onSubmit, isLoading }
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading || !title.trim()}>

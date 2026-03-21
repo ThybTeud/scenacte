@@ -145,7 +145,7 @@ export function VersionsSidebar({ isOpen, onClose, playId, onRestore }) {
                     )}
 
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       className="w-full"
                       onClick={() => openRestoreDialog(version)}

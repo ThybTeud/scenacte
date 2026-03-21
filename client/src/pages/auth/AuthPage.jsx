@@ -129,7 +129,7 @@ export default function AuthPage() {
                   réinitialisation.
                 </p>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full"
                   onClick={() => {
                     setShowForgotPassword(false);
@@ -344,7 +344,7 @@ export default function AuthPage() {
       </Card>
 
       {/* Lien mode test */}
-      <Button className="text-center mt-8 w-full max-w-md shadow-brutal" >
+      <Button depth="raised" className="text-center mt-8 w-full max-w-md" >
         <Link
           to="/test"
         >
