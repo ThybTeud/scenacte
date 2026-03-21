@@ -137,7 +137,7 @@ export default function EditorSettingsModal({ open, onOpenChange }) {
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="secondary" onClick={() => onOpenChange(false)}>
                         Annuler
                     </Button>
                     <Button onClick={handleSave}>

@@ -19,20 +19,17 @@ const syntaxButtons = [
   {
     label: "#",
     formatType: "heading1",
-    className:
-      "bg-primary font-bold hover:bg-primary/90 border-2 border-border",
+    className: "bg-primary font-bold hover:bg-primary/90",
   },
   {
     label: "@",
     formatType: "personnage",
-    className:
-      "bg-blue-600 font-bold hover:bg-blue-700 border-2 border-border",
+    className: "bg-blue-600 font-bold hover:bg-blue-700",
   },
   {
     label: "()",
     formatType: "didascalie",
-    className:
-      "bg-gray-600 italic hover:bg-gray-700 border-2 border-border",
+    className: "bg-gray-600 italic hover:bg-gray-700",
   },
 ];
 
@@ -56,8 +53,9 @@ export function SyntaxBar({
             key={btn.formatType}
             variant="secondary"
             size="icon"
+            depth="raised"
             onClick={() => onToggleFormat(btn.formatType)}
-            className={`text-primary-foreground text-sm shadow-brutal ${btn.className}`}
+            className={`text-primary-foreground text-sm ${btn.className}`}
           >
             {btn.label}
           </Button>
@@ -70,18 +68,20 @@ export function SyntaxBar({
           <Button
             variant="secondary"
             size="icon"
+            depth="raised"
             onClick={onUndo}
             disabled={!canUndo}
-            className="border-2 border-border rounded-r-none border-r shadow-brutal"
+            className="rounded-r-none border-r"
           >
             <Undo2 className="h-4 w-4" />
           </Button>
           <Button
             variant="secondary"
             size="icon"
+            depth="raised"
             onClick={onRedo}
             disabled={!canRedo}
-            className="border-2 border-border rounded-l-none border-l shadow-brutal"
+            className="rounded-l-none border-l"
           >
             <Redo2 className="h-4 w-4" />
           </Button>
@@ -91,7 +91,7 @@ export function SyntaxBar({
             <Button
               variant="secondary"
               size="icon"
-              className="border-2 border-border shadow-brutal"
+              depth="raised"
             >
               <MoreVertical className="h-4 w-4" />
             </Button>

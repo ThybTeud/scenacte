@@ -9,7 +9,7 @@ export function CreatePlayCard({ onClick }) {
       onClick={onClick}
     >
       <CardContent className="flex flex-col items-center justify-center flex-1 gap-3">
-        <Button variant="outline" size="icon" className="rounded-full">
+        <Button variant="secondary" size="icon" className="rounded-full">
           <Plus className="h-4 w-4" />
         </Button>
         <p className="text-sm text-muted-foreground text-center">

@@ -217,7 +217,7 @@ export default function BugReportModal({ isOpen, onClose }) {
               {!screenshot ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   onClick={captureScreen}
                   disabled={isSubmitting}
                   className="w-full"
@@ -257,7 +257,7 @@ export default function BugReportModal({ isOpen, onClose }) {
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
             >

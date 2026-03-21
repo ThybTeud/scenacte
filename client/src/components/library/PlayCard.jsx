@@ -53,17 +53,17 @@ export function PlayCard({ play, onOpen, onExport, onRename, onDelete, onVersion
           
           {/* Button Group : Exporter + Dropdown */}
           <div className="flex">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="rounded-sm rounded-r-none border-r-0 px-4 py-2"
+            <Button
+              size="sm"
+              variant="secondary"
+              className="rounded-r-none border-r px-4 py-2"
               onClick={() => onExport?.(play)}
             >
               <Download className="h-4 w-4" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="rounded-sm rounded-l-none px-4 py-2 leading-12 w-4">
+                <Button size="sm" variant="secondary" className="rounded-l-none border-l px-4 py-2 leading-12 w-4">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
