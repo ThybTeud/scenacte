@@ -45,7 +45,7 @@ export function EditorWorkspace({
                 <span className="font-bold uppercase font-heading">Éditeur</span>
                 {!showPreview && (
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="icon"
                     className="hidden md:flex"
                     onClick={() => setShowPreview(true)}

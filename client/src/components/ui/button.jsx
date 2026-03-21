@@ -16,7 +16,7 @@ const buttonVariants = cva(
                 secondary:
                     "bg-white text-secondary-foreground hover:bg-surface-hover active:bg-surface-active",
                 ghost: "border-none hover:bg-surface-hover hover:text-secondary-foreground active:bg-surface-active dark:hover:bg-accent/50",
-                link: "border-none text-primary underline-offset-4 hover:underline",
+                link: "border-none text-primary underline-offset-4 hover:underline hover:decoration-2 active:decoration-4 hover:text-primary-hover active:text-primary-active",
             },
             size: {
                 default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -28,7 +28,7 @@ const buttonVariants = cva(
             },
             depth: {
                 flat: "",
-                raised: "shadow-brutal hover:shadow-brutal-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-brutal-active active:translate-x-0.5 active:translate-y-0.5",
+                raised: "shadow-brutal hover:shadow-brutal-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-brutal-active active:translate-x-0.5 active:translate-y-0.5 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0",
             },
         },
         compoundVariants: [
