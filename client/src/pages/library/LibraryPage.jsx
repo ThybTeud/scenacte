@@ -4,17 +4,10 @@ import { storageService } from "@/services/storage.service";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { PlaysPagination } from "@/components/ui/Pagination";
-import { Search, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { SearchSortBar } from "@/components/library/SearchSortBar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { PlayCard } from "@/components/library/PlayCard";
@@ -175,77 +168,21 @@ export default function LibraryPage() {
     const showCreateCard = !isSearching && (isLastPage && isGridIncomplete)
 
     return (
-        <div className="flex flex-col min-h-dvh bg-surface-muted">
+        <div className="flex flex-col min-h-dvh bg-surface-strong">
             <AppHeader />
             <main className="flex-1 p-6">
                     {/* Actions row */}
                     <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-                        {/* Recherche + Filtres */}
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 flex-1 min-w-0">
-                            <div className="relative w-full sm:w-80 sm:max-w-sm">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    type="search"
-                                    placeholder="Rechercher une pièce..."
-                                    className="pl-9 w-full"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex gap-4">
-                                {/* Filtre BROUILLON désactivé pour le moment. */}
-                                {/* <Select
-                                    value={filters.status || "all"}
-                                    onValueChange={(value) =>
-                                        setFilters((prev) => ({ ...prev, status: value === "all" ? "" : value }))
-                                    }
-                                >
-                                    <SelectTrigger className="w-[140px]">
-                                        <SelectValue placeholder="Statut" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Tous</SelectItem>
-                                        <SelectItem value="draft">Brouillon</SelectItem>
-                                        <SelectItem value="completed">Terminé</SelectItem>
-                                        <SelectItem value="archived">Archivé</SelectItem>
-                                    </SelectContent>
-                                </Select> */}
-
-                                <Select
-                                    value={filters.sortBy}
-                                    onValueChange={(value) =>
-                                        setFilters((prev) => ({ ...prev, sortBy: value }))
-                                    }
-                                >
-                                    <SelectTrigger className="w-48">
-                                        <SelectValue placeholder="Trier par" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="updated_at">Dernière modification</SelectItem>
-                                        <SelectItem value="created_at">Date de création</SelectItem>
-                                        <SelectItem value="title">Titre</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <Select
-                                    value={filters.sortOrder}
-                                    onValueChange={(value) =>
-                                        setFilters((prev) => ({ ...prev, sortOrder: value }))
-                                    }
-                                >
-                                    <SelectTrigger className="w-32">
-                                        <SelectValue placeholder="Ordre" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="desc">Décroissant</SelectItem>
-                                        <SelectItem value="asc">Croissant</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                        <SearchSortBar
+                            searchTerm={searchTerm}
+                            onSearchChange={setSearchTerm}
+                            sortBy={filters.sortBy}
+                            sortOrder={filters.sortOrder}
+                            onSortChange={(changes) => setFilters((prev) => ({ ...prev, ...changes }))}
+                        />
 
                         {/* CTA */}
-                        <Button className="w-full sm:w-auto shrink-0" onClick={() => setShowCreateModal(true)}>
+                        <Button variant="default" depth="raised" className="w-full sm:w-auto shrink-0" onClick={() => setShowCreateModal(true)}>
                             <Plus className="h-4 w-4 mr-2" />
                             Nouvelle pièce
                         </Button>
