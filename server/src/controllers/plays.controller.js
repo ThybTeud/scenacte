@@ -18,21 +18,15 @@ import { logger } from '../utils/logger.js';
 
 /**
  * GET /api/plays
- * Liste des pièces de l'utilisateur connecté (paginée)
+ * Liste des pièces de l'utilisateur connecté
+ * Sans page/limit : retourne toutes les pièces (tri/pagination côté client)
+ * Avec page/limit : retourne une page (rétrocompatibilité)
  */
 export async function listPlays(req, res, next) {
   try {
-    const { page = 1, limit = 20, status } = req.query;
+    const { status } = req.query;
     const userId = req.user.id;
-
-    // Validation de la pagination
-    const paginationValidation = validatePagination(page, limit);
-    if (!paginationValidation.valid) {
-      throw new ValidationError(paginationValidation.message);
-    }
-
-    const validatedPage = paginationValidation.page;
-    const validatedLimit = paginationValidation.limit;
+    const hasPagination = req.query.page !== undefined || req.query.limit !== undefined;
 
     // Construction du filtre
     let whereClause = 'WHERE p.user_id = $1';
@@ -49,55 +43,89 @@ export async function listPlays(req, res, next) {
       paramIndex++;
     }
 
-    // Requête pour récupérer les pièces avec stats (statistics embarquées en JSONB)
-    const playsQuery = `
+    // Colonnes communes
+    const selectClause = `
       SELECT
         p.id, p.title, p.subtitle, p.status, p.content_version,
         p.created_at, p.updated_at, p.last_edited_at,
         p.statistics
       FROM plays p
       ${whereClause}
-      ORDER BY p.last_edited_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
+      ORDER BY p.last_edited_at DESC`;
 
-    queryParams.push(validatedLimit, (validatedPage - 1) * validatedLimit);
+    let playsResult;
+    let total;
 
-    // Requête pour le total
-    const countQuery = `SELECT COUNT(*) FROM plays p ${whereClause}`;
-    const countParams = queryParams.slice(0, status ? 2 : 1);
+    if (hasPagination) {
+      // Mode paginé (rétrocompatibilité)
+      const { page = 1, limit = 20 } = req.query;
+      const paginationValidation = validatePagination(page, limit);
+      if (!paginationValidation.valid) {
+        throw new ValidationError(paginationValidation.message);
+      }
 
-    const [playsResult, countResult] = await Promise.all([
-      pool.query(playsQuery, queryParams),
-      pool.query(countQuery, countParams)
-    ]);
+      const validatedPage = paginationValidation.page;
+      const validatedLimit = paginationValidation.limit;
 
-    const plays = playsResult.rows.map(row => ({
-      id: row.id,
-      title: row.title,
-      subtitle: row.subtitle,
-      status: row.status,
-      contentVersion: row.content_version,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      lastEditedAt: row.last_edited_at,
-      statistics: row.statistics && Object.keys(row.statistics).length > 0 ? row.statistics : null
-    }));
+      const playsQuery = `${selectClause} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+      queryParams.push(validatedLimit, (validatedPage - 1) * validatedLimit);
 
-    const total = parseInt(countResult.rows[0].count, 10);
+      const countQuery = `SELECT COUNT(*) FROM plays p ${whereClause}`;
+      const countParams = queryParams.slice(0, status ? 2 : 1);
+
+      const [pResult, countResult] = await Promise.all([
+        pool.query(playsQuery, queryParams),
+        pool.query(countQuery, countParams)
+      ]);
+
+      playsResult = pResult;
+      total = parseInt(countResult.rows[0].count, 10);
+
+      const plays = playsResult.rows.map(mapPlayRow);
+
+      return res.json({
+        plays,
+        pagination: {
+          page: validatedPage,
+          limit: validatedLimit,
+          total,
+          totalPages: Math.ceil(total / validatedLimit)
+        }
+      });
+    }
+
+    // Mode complet (sans pagination) — une seule requête
+    playsResult = await pool.query(selectClause, queryParams);
+    total = playsResult.rows.length;
+
+    const plays = playsResult.rows.map(mapPlayRow);
 
     res.json({
       plays,
       pagination: {
-        page: validatedPage,
-        limit: validatedLimit,
+        page: 1,
+        limit: total,
         total,
-        totalPages: Math.ceil(total / validatedLimit)
+        totalPages: 1
       }
     });
   } catch (error) {
     next(error);
   }
+}
+
+function mapPlayRow(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    subtitle: row.subtitle,
+    status: row.status,
+    contentVersion: row.content_version,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    lastEditedAt: row.last_edited_at,
+    statistics: row.statistics && Object.keys(row.statistics).length > 0 ? row.statistics : null
+  };
 }
 
 /**
