@@ -182,14 +182,14 @@ export const PdfPreview = forwardRef(function PdfPreview(
             background: #d4d4d4;
         }
         .pagedjs_pages {
-            transform: scale(${effectiveScale});
-            transform-origin: top center;
+            zoom: ${effectiveScale};
+            margin: 0 auto;
             padding: 16px 0;
         }
         .pagedjs_page {
             background: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 16px;
+            margin: 0 auto 16px;
         }
     }
 `;
