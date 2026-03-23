@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -55,10 +56,12 @@ export default function ExportModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 className="max-w-[calc(100%-2rem)] sm:max-w-5xl h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
-                aria-describedby={undefined}
             >
                 <DialogHeader className="px-6 py-4 border-b shrink-0">
                     <DialogTitle>Exporter la piece</DialogTitle>
+                    <DialogDescription>
+                        Prévisualisez et téléchargez votre pièce au format PDF.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="flex flex-1 min-h-0 overflow-hidden">

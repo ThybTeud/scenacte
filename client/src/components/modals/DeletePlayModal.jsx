@@ -8,9 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export default function DeletePlayModal({ isOpen, onClose, onConfirm, isLoading, playTitle }) {
+export default function DeletePlayModal({ open, onOpenChange, onConfirm, isLoading, playTitle }) {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Supprimer la pièce</DialogTitle>
@@ -19,7 +19,7 @@ export default function DeletePlayModal({ isOpen, onClose, onConfirm, isLoading,
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+          <Button variant="secondary" onClick={onOpenChange} disabled={isLoading}>
             Annuler
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>

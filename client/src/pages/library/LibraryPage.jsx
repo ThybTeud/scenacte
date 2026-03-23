@@ -13,8 +13,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { PlayCard } from "@/components/library/PlayCard";
 import { CreatePlayCard } from "@/components/library/CreatePlayCard";
-import { CreatePlayModal, DeletePlayModal, RenamePlayModal, ExportModal } from "@/components/modals";
-import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
+import { CreatePlayModal, DeletePlayModal, RenamePlayModal, ExportModal, VersionHistoryModal } from "@/components/modals";
 
 const PLAYS_PER_PAGE = 20;
 
@@ -272,15 +271,15 @@ export default function LibraryPage() {
             <AppFooter />
 
             <CreatePlayModal
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+                open={showCreateModal}
+                onOpenChange={() => setShowCreateModal(false)}
                 onSubmit={handleCreatePlay}
                 isLoading={isSubmitting}
             />
 
             <DeletePlayModal
-                isOpen={showDeleteModal}
-                onClose={() => {
+                open={showDeleteModal}
+                onOpenChange={() => {
                     setShowDeleteModal(false);
                     setSelectedPlay(null);
                 }}
@@ -290,8 +289,8 @@ export default function LibraryPage() {
             />
 
             <RenamePlayModal
-                isOpen={showRenameModal}
-                onClose={() => {
+                open={showRenameModal}
+                onOpenChange={() => {
                     setShowRenameModal(false);
                     setSelectedPlay(null);
                 }}
@@ -301,8 +300,8 @@ export default function LibraryPage() {
             />
 
             <VersionHistoryModal
-                isOpen={showVersionsModal}
-                onClose={() => {
+                open={showVersionsModal}
+                onOpenChange={() => {
                     setShowVersionsModal(false);
                     setSelectedPlay(null);
                 }}

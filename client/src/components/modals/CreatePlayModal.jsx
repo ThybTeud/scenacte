@@ -4,22 +4,23 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-export default function CreatePlayModal({ isOpen, onClose, onSubmit, isLoading }) {
+export default function CreatePlayModal({ open, onOpenChange, onSubmit, isLoading }) {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!open) {
       setTitle("");
       setSubtitle("");
     }
-  }, [isOpen]);
+  }, [open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,10 +29,13 @@ export default function CreatePlayModal({ isOpen, onClose, onSubmit, isLoading }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Créer une pièce</DialogTitle>
+          <DialogDescription>
+            Donnez un titre et un sous-titre optionnel à votre pièce.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -56,7 +60,7 @@ export default function CreatePlayModal({ isOpen, onClose, onSubmit, isLoading }
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
+            <Button type="button" variant="secondary" onClick={onOpenChange} disabled={isLoading}>
               Annuler
             </Button>
             <Button type="submit" disabled={isLoading || !title.trim()}>

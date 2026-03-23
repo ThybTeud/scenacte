@@ -28,12 +28,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
  * Modal d'historique des versions d'une pièce.
  * Permet de consulter et restaurer les versions précédentes.
  *
- * @param {boolean} isOpen - Contrôle l'affichage du modal
- * @param {Function} onClose - Callback de fermeture
+ * @param {boolean} open - Contrôle l'affichage du modal
+ * @param {Function} onOpenChange - Callback de fermeture
  * @param {Object} play - Pièce dont on affiche l'historique
  * @param {Function} onRestore - Callback après restauration réussie
  */
-export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }) {
+export default function VersionHistoryModal({ open, onOpenChange, play, onRestore }) {
   const [versions, setVersions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
@@ -43,10 +43,10 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
 
   // Recharge les versions à l'ouverture ou au changement de page
   useEffect(() => {
-    if (isOpen && play?.id) {
+    if (open && play?.id) {
       fetchVersions();
     }
-  }, [isOpen, play?.id, pagination.page]);
+  }, [open, play?.id, pagination.page]);
 
   /** Récupère les versions paginées depuis l'API */
   const fetchVersions = async () => {
@@ -76,7 +76,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
       setShowRestoreDialog(false);
       setSelectedVersion(null);
       onRestore?.();
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la restauration');
     } finally {
@@ -118,7 +118,7 @@ export default function VersionHistoryModal({ isOpen, onClose, play, onRestore }
   return (
     <>
       {/* Modal principal - Liste des versions */}
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Historique des versions</DialogTitle>

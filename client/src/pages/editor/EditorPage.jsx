@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { EditorHeader } from "@/components/editor/EditorHeader";
 import { usePlayParsing } from "@/hooks/usePlayParsing";
 import { PlayParser } from "@/utils/playParser";
-import EditorSettingsModal from "@/components/modals/EditorSettingsModal";
-import PageSettingsModal from "@/components/modals/PageSettingsModal";
-import ExportModal from "@/components/modals/ExportModal";
-import VersionHistoryModal from "@/components/modals/VersionHistoryModal";
-import StatsModal from "@/components/modals/StatsModal";
+import {
+  EditorSettingsModal,
+  PageSettingsModal,
+  ExportModal,
+  VersionHistoryModal,
+  StatsModal,
+} from "@/components/modals";
 import { getPreset } from "@/config/template-presets";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
@@ -597,16 +599,16 @@ export default function EditorPage() {
 
       {/* Modal Statistiques */}
       <StatsModal
-        isOpen={showStatsModal}
-        onClose={() => setShowStatsModal(false)}
+        open={showStatsModal}
+        onOpenChange={() => setShowStatsModal(false)}
         statistics={statistics}
         playTitle={play?.title}
       />
 
       {/* Modal Historique des versions */}
       <VersionHistoryModal
-        isOpen={showVersionsModal}
-        onClose={() => setShowVersionsModal(false)}
+        open={showVersionsModal}
+        onOpenChange={() => setShowVersionsModal(false)}
         play={play}
         onRestore={fetchPlay}
       />
