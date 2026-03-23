@@ -27,7 +27,7 @@ export function SearchSortBar({ searchTerm, onSearchChange, sortBy, sortOrder, o
     return (
         <div
             className={cn(
-                "flex items-center border-2 border-input rounded-sm bg-white overflow-hidden",
+                "flex items-center border-2 border-input rounded-sm bg-white overflow-hidden shadow-brutal",
                 "transition-[color,box-shadow]",
                 "focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/25",
                 "w-full sm:max-w-sm"
