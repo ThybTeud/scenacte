@@ -17,19 +17,25 @@ const PAGE_WIDTHS = {
  * @param {string} [props.pageFormat='A5'] - Format de page (A4 ou A5)
  * @param {string} props.presetId - ID du preset à utiliser
  * @param {Function} [props.onPagesRendered] - Callback avec le nombre de pages
+ * @param {number|null} [props.zoomScale] - Scale manuel (null = auto fit-to-width)
+ * @param {Function} [props.onPageChange] - Callback avec la page courante au scroll
+ * @param {Function} [props.onFitScaleComputed] - Callback avec la valeur du fit-to-width calculé
  */
 export const PdfPreview = forwardRef(function PdfPreview(
-    { htmlContent, playTitle, playSubtitle, pageFormat = 'A5', presetId, onPagesRendered },
+    { htmlContent, playTitle, playSubtitle, pageFormat = 'A5', presetId, onPagesRendered, zoomScale, onPageChange, onFitScaleComputed },
     ref
 ) {
     const containerRef = useRef(null);
     const internalRef = useRef(null);
     const iframeRef = ref || internalRef;
     const [isLoading, setIsLoading] = useState(true);
-    const [scale, setScale] = useState(1);
+    const [fitScale, setFitScale] = useState(1);
+    const observerRef = useRef(null);
+
+    const effectiveScale = zoomScale ?? fitScale;
 
     // Calcul du scale pour fit-to-width
-    const updateScale = useCallback(() => {
+    const updateFitScale = useCallback(() => {
         if (!containerRef.current) return;
 
         const containerWidth = containerRef.current.clientWidth;
@@ -38,20 +44,63 @@ export const PdfPreview = forwardRef(function PdfPreview(
         const availableWidth = containerWidth - padding;
         const newScale = Math.min(1, availableWidth / pageWidth);
 
-        setScale(newScale);
-    }, [pageFormat]);
+        setFitScale(newScale);
+        onFitScaleComputed?.(newScale);
+    }, [pageFormat, onFitScaleComputed]);
 
     // Observer le resize du conteneur
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
-        const resizeObserver = new ResizeObserver(updateScale);
+        const resizeObserver = new ResizeObserver(updateFitScale);
         resizeObserver.observe(container);
-        updateScale();
+        updateFitScale();
 
         return () => resizeObserver.disconnect();
-    }, [updateScale]);
+    }, [updateFitScale]);
+
+    // Setup IntersectionObserver pour tracker la page courante
+    const setupPageObserver = useCallback((iframe) => {
+        if (!onPageChange) return;
+
+        const contentWindow = iframe.contentWindow;
+        const contentDocument = iframe.contentDocument;
+        if (!contentWindow || !contentDocument) return;
+
+        // Disconnect previous observer
+        observerRef.current?.disconnect();
+
+        const pages = contentDocument.querySelectorAll(".pagedjs_page");
+        if (!pages.length) return;
+
+        const visibilityMap = new Map();
+
+        const observer = new contentWindow.IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    visibilityMap.set(entry.target, entry.intersectionRatio);
+                }
+
+                let maxRatio = 0;
+                let mostVisiblePage = 0;
+                visibilityMap.forEach((ratio, target) => {
+                    if (ratio > maxRatio) {
+                        maxRatio = ratio;
+                        mostVisiblePage = Array.from(pages).indexOf(target);
+                    }
+                });
+
+                if (maxRatio > 0) {
+                    onPageChange(mostVisiblePage + 1);
+                }
+            },
+            { threshold: [0, 0.25, 0.5, 0.75, 1] }
+        );
+
+        pages.forEach((page) => observer.observe(page));
+        observerRef.current = observer;
+    }, [onPageChange]);
 
     // Injection du HTML et gestion PagedJS
     useEffect(() => {
@@ -75,7 +124,8 @@ export const PdfPreview = forwardRef(function PdfPreview(
             const pages = iframe.contentDocument?.querySelectorAll(".pagedjs_page");
             onPagesRendered?.(pages?.length || 0);
             setIsLoading(false);
-            updateScale();
+            updateFitScale();
+            setupPageObserver(iframe);
         };
 
         const handleIframeLoad = () => {
@@ -107,8 +157,9 @@ export const PdfPreview = forwardRef(function PdfPreview(
             pagedReadyTarget?.removeEventListener("pagedjs-ready", handlePagedReady);
             clearTimeout(timeoutId);
             URL.revokeObjectURL(blobUrl);
+            observerRef.current?.disconnect();
         };
-    }, [htmlContent, playTitle, playSubtitle, pageFormat, presetId, onPagesRendered, updateScale]);
+    }, [htmlContent, playTitle, playSubtitle, pageFormat, presetId, onPagesRendered, updateFitScale, setupPageObserver]);
 
     // Injection du style de scale dans l'iframe
     useEffect(() => {
@@ -127,17 +178,22 @@ export const PdfPreview = forwardRef(function PdfPreview(
 
         styleEl.textContent = `
     @media screen {
+        html {
+            background: #d4d4d4;
+        }
         .pagedjs_pages {
-            transform: scale(${scale});
+            transform: scale(${effectiveScale});
             transform-origin: top center;
+            padding: 16px 0;
         }
         .pagedjs_page {
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
             margin-bottom: 16px;
         }
     }
 `;
-    }, [scale, isLoading]);
+    }, [effectiveScale, isLoading]);
 
     return (
         <div ref={containerRef} className="relative h-full w-full overflow-y-auto">
