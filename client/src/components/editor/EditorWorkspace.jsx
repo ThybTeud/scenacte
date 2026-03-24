@@ -18,8 +18,12 @@ export function EditorWorkspace({
   content,
   onContentChange,
   onCursorChange,
+  onEditorScroll,
   preset,
   htmlContent,
+  previewScrollRef,
+  scrollContainerRef,
+  onLineClick,
 }) {
   const [showEditorHelp, setShowEditorHelp] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
@@ -59,6 +63,7 @@ export function EditorWorkspace({
                 value={content}
                 onChange={onContentChange}
                 onCursorChange={onCursorChange}
+                onScroll={onEditorScroll}
                 characters={characters}
               />
             </div>
@@ -67,6 +72,9 @@ export function EditorWorkspace({
               preset={preset}
               htmlContent={htmlContent}
               onClose={() => setShowPreview(false)}
+              previewScrollRef={previewScrollRef}
+              scrollContainerRef={scrollContainerRef}
+              onLineClick={onLineClick}
             />
           )}
           </div>

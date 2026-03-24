@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 
 /**
  * Renders HTML content + CSS inside a Shadow DOM to achieve
@@ -12,17 +12,37 @@ import { useRef, useEffect } from "react";
  *   innerHTML assignment below.
  * @param {string} [props.layout] - Value set on data-layout (e.g. "centered", "inline")
  * @param {string} [props.className] - CSS classes applied to the host <div>
+ * @param {function} [props.onLineClick] - Callback appelé avec le numéro de ligne (0-indexed)
+ *   quand l'utilisateur clique sur un élément de la preview.
  */
-export default function ShadowPreview({ css, htmlContent, layout, className }) {
+const ShadowPreview = forwardRef(function ShadowPreview(
+  { css, htmlContent, layout, className, onLineClick },
+  ref
+) {
   const hostRef = useRef(null);
   const shadowRef = useRef(null);
+  // Ref vers le callback pour éviter de re-créer le listener si le callback change
+  const onLineClickRef = useRef(onLineClick);
 
+  useEffect(() => {
+    onLineClickRef.current = onLineClick;
+  }, [onLineClick]);
+
+  // Création du shadow root + listener clic (une seule fois)
   useEffect(() => {
     if (hostRef.current && !shadowRef.current) {
       shadowRef.current = hostRef.current.attachShadow({ mode: "open" });
+
+      shadowRef.current.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-line]");
+        if (el && onLineClickRef.current) {
+          onLineClickRef.current(parseInt(el.dataset.line, 10));
+        }
+      });
     }
   }, []);
 
+  // Mise à jour du contenu
   useEffect(() => {
     const shadow = shadowRef.current;
     if (!shadow) return;
@@ -37,5 +57,37 @@ export default function ShadowPreview({ css, htmlContent, layout, className }) {
     `;
   }, [css, htmlContent, layout]);
 
+  /**
+   * Scrolle la preview pour montrer l'élément le plus proche de lineNumber.
+   * @param {number} lineNumber - Numéro de ligne 0-indexed
+   * @param {HTMLElement} scrollContainer - Le conteneur scrollable parent
+   */
+  useImperativeHandle(ref, () => ({
+    scrollToLine: (lineNumber, scrollContainer) => {
+      const shadow = shadowRef.current;
+      if (!shadow || !scrollContainer) return;
+
+      const elements = [...shadow.querySelectorAll("[data-line]")];
+      if (elements.length === 0) return;
+
+      // Trouver l'élément avec data-line <= lineNumber (le plus proche par dessous)
+      let best = elements[0];
+      for (const el of elements) {
+        if (parseInt(el.dataset.line, 10) <= lineNumber) best = el;
+        else break;
+      }
+
+      const top =
+        best.getBoundingClientRect().top -
+        scrollContainer.getBoundingClientRect().top +
+        scrollContainer.scrollTop -
+        24;
+
+      scrollContainer.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    },
+  }));
+
   return <div ref={hostRef} className={className} />;
-}
+});
+
+export default ShadowPreview;

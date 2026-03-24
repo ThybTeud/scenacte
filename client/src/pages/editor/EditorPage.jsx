@@ -76,12 +76,11 @@ export default function EditorPage() {
   // Instance du parser (créée une seule fois)
   const parser = useMemo(() => new PlayParser(), []);
 
-  // Hook pour le scroll synchronisé
+  // Hook pour le scroll synchronisé (éditeur → preview, unidirectionnel)
   const {
-    editorScrollRef,
     previewScrollRef,
+    scrollContainerRef,
     handleEditorScroll,
-    handlePreviewScroll,
   } = useSyncScroll();
 
   // Hook versioning
@@ -457,6 +456,14 @@ export default function EditorPage() {
   }, []);
 
   /**
+   * Clic sur un élément de la preview → positionne le curseur dans l'éditeur
+   * @param {number} lineNumber - Numéro de ligne 0-indexed (issu de data-line)
+   */
+  const handlePreviewLineClick = useCallback((lineNumber) => {
+    editorRef.current?.scrollToLine(lineNumber + 1); // scrollToLine attend du 1-indexed
+  }, []);
+
+  /**
    * Ouvre le modal de mise en page
    */
   const handleOpenLayoutModal = useCallback(() => {
@@ -554,8 +561,12 @@ export default function EditorPage() {
         content={content}
         onContentChange={handleContentChange}
         onCursorChange={handleCursorChange}
+        onEditorScroll={handleEditorScroll}
         preset={preset}
         htmlContent={htmlContent}
+        previewScrollRef={previewScrollRef}
+        scrollContainerRef={scrollContainerRef}
+        onLineClick={handlePreviewLineClick}
       />
 
       <SyntaxBar
