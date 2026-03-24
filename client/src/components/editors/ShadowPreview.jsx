@@ -51,7 +51,7 @@ const ShadowPreview = forwardRef(function ShadowPreview(
       <style>
         ${css}
         [data-line] { cursor: pointer; transition: background-color 0.1s ease; }
-        [data-line]:not(span):hover { background-color: oklch(71.2% 0.194 13.428 / 0.07); }
+        [data-line]:not(span):hover:not(:has([data-line]:hover)) { background-color: oklch(71.2% 0.194 13.428 / 0.07); }
       </style>
       <div class="play-root" data-layout="${layout || ""}">
         ${htmlContent || ""}
