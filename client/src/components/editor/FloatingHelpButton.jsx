@@ -7,30 +7,34 @@ const SYNTAX_ITEMS = [
   {
     marker: "#",
     label: "Acte",
+    formatType: "heading1",
     colorClass: "text-[oklch(58.6%_0.253_17.585)]",
     fontClass: "font-semibold",
   },
   {
     marker: "##",
     label: "Scène",
+    formatType: "heading2",
     colorClass: "text-[oklch(58.6%_0.253_17.585)]",
     fontClass: "font-semibold",
   },
   {
     marker: "@",
     label: "Personnage",
+    formatType: "personnage",
     colorClass: "text-blue",
     fontClass: "font-semibold",
   },
   {
     marker: "( )",
     label: "Didascalie",
+    formatType: "didascalie",
     colorClass: "text-gray",
     fontClass: "italic",
   },
 ];
 
-export function FloatingHelpButton() {
+export function FloatingHelpButton({ onToggleFormat }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
 
@@ -49,9 +53,14 @@ export function FloatingHelpButton() {
             <p className="text-xs font-bold uppercase tracking-wide mb-2 font-heading">
               Syntaxe
             </p>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {SYNTAX_ITEMS.map((item) => (
-                <div key={item.marker} className="flex items-center gap-2">
+                <button
+                  key={item.marker}
+                  type="button"
+                  onClick={() => onToggleFormat(item.formatType)}
+                  className="flex items-center gap-2 w-full rounded-sm px-1.5 py-1 transition-colors hover:bg-surface-hover active:bg-surface-active"
+                >
                   <code
                     className={`font-editor text-sm min-w-8 text-right ${item.colorClass} ${item.fontClass}`}
                   >
@@ -60,7 +69,7 @@ export function FloatingHelpButton() {
                   <span className="text-xs text-muted-foreground">
                     {item.label}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>

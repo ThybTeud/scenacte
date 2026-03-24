@@ -570,7 +570,7 @@ export default function EditorPage() {
         onOpenExport={handleOpenExport}
       />
 
-      <FloatingHelpButton />
+      <FloatingHelpButton onToggleFormat={handleToggleFormat} />
 
       {/* Modal Editeur */}
       <EditorSettingsModal
