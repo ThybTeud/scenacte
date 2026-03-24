@@ -19,6 +19,7 @@ import {
 import { getPreset } from "@/config/template-presets";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
+import { FloatingHelpButton } from "@/components/editor/FloatingHelpButton";
 
 export default function EditorPage() {
   const { id } = useParams();
@@ -568,6 +569,8 @@ export default function EditorPage() {
         onOpenPageSettings={handleOpenLayoutModal}
         onOpenExport={handleOpenExport}
       />
+
+      <FloatingHelpButton />
 
       {/* Modal Editeur */}
       <EditorSettingsModal
