@@ -15,6 +15,7 @@ import {
 import { BaseHeader } from "@/components/layout/BaseHeader";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
+import { FloatingHelpButton } from "@/components/editor/FloatingHelpButton";
 import { StatsModal, PageSettingsModal } from "@/components/modals";
 import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
 
@@ -158,6 +159,10 @@ export default function TestEditorPage() {
     updateUndoRedoState();
   }, [updateUndoRedoState]);
 
+  const handlePreviewLineClick = useCallback((lineNumber) => {
+    editorRef.current?.scrollToLine(lineNumber + 1);
+  }, []);
+
   const handleSettingsChange = useCallback(({ paperSize: newPaperSize, presetId: newPresetId }) => {
     if (newPaperSize) setPaperSize(newPaperSize);
     if (newPresetId) setPresetId(newPresetId);
@@ -219,8 +224,12 @@ export default function TestEditorPage() {
         content={content}
         onContentChange={handleContentChange}
         onCursorChange={handleCursorChange}
+        onEditorScroll={handleEditorScroll}
         preset={preset}
         htmlContent={htmlContent}
+        previewScrollRef={previewScrollRef}
+        scrollContainerRef={scrollContainerRef}
+        onLineClick={handlePreviewLineClick}
       />
 
       <SyntaxBar
@@ -234,6 +243,8 @@ export default function TestEditorPage() {
         onOpenPageSettings={() => setShowPageSettingsModal(true)}
         onOpenExport={null}
       />
+
+      <FloatingHelpButton onToggleFormat={handleToggleFormat} showBugReport={false} />
 
       {/* Modals */}
       <PageSettingsModal
