@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { User, LogOut, UserRound, Bug } from "lucide-react";
-import BugReportModal from "@/components/modals/BugReportModal";
+import { BugReportModal } from "@/components/modals";
 import { getInitialsFromEmail } from "@/utils/userUtils";
 
 export function HeaderUserMenu({ user, onLogout }) {
@@ -34,8 +34,8 @@ export function HeaderUserMenu({ user, onLogout }) {
           </Avatar>
         </Button>
         <BugReportModal
-          isOpen={showBugReport}
-          onClose={() => setShowBugReport(false)}
+          open={showBugReport}
+          onOpenChange={() => setShowBugReport(false)}
         />
       </>
     );

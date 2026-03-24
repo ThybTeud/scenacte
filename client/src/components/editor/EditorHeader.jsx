@@ -75,7 +75,7 @@ export function EditorHeader({
               </Button>
               {!isSaving && hasUnsavedChanges && (
                 <div
-                  className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-sidebar"
+                  className="absolute top-1 right-1 h-3 aspect-square rounded-full bg-primary border-sidebar"
                   title="Modifications non versionnées"
                 />
               )}

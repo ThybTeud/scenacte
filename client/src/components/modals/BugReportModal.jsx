@@ -27,7 +27,7 @@ const CATEGORIES = [
   { id: "autre", label: "Autre" },
 ];
 
-export default function BugReportModal({ isOpen, onClose }) {
+export default function BugReportModal({ open, onOpenChange }) {
   const { user } = useAuth();
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
@@ -45,14 +45,14 @@ export default function BugReportModal({ isOpen, onClose }) {
 
   // Reset form when modal closes
   useEffect(() => {
-    if (!isOpen) {
+    if (!open) {
       setDescription("");
       setCategories([]);
       setEmail("");
       setScreenshot(null);
       setError("");
     }
-  }, [isOpen]);
+  }, [open]);
 
   const handleCategoryToggle = (categoryId) => {
     setCategories((prev) =>
@@ -125,7 +125,7 @@ export default function BugReportModal({ isOpen, onClose }) {
       });
 
       toast.success("Merci pour votre signalement !");
-      onClose();
+      onOpenChange();
     } catch (err) {
       setError(err.message || "Une erreur est survenue");
       toast.error("Erreur lors de l'envoi du signalement");
@@ -138,8 +138,8 @@ export default function BugReportModal({ isOpen, onClose }) {
     description.trim() && categories.length > 0 && (user || email);
 
   return (
-    <Dialog open={isOpen && !isCapturing} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open && !isCapturing} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Signaler un bug</DialogTitle>
           <DialogDescription>
@@ -258,7 +258,7 @@ export default function BugReportModal({ isOpen, onClose }) {
             <Button
               type="button"
               variant="secondary"
-              onClick={onClose}
+              onClick={onOpenChange}
               disabled={isSubmitting}
             >
               Annuler
