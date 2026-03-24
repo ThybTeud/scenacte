@@ -30,8 +30,13 @@ export function astToHTML(ast) {
       case NodeType.SECTION:
         return `<div class="acte-container"><h1 class="acte" data-line="${node.position.start}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
 
-      case NodeType.SUBSECTION:
-        return `<div class="scene-container"><h2 class="scene" data-line="${node.position.start}">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+      case NodeType.SUBSECTION: {
+        const characters = extractSceneCharacters(node);
+        const charListHTML = characters.length > 0
+          ? `<p class="scene-personnages" data-line="${node.position.start}">${characters.map(c => escapeHTML(c)).join(', ')}</p>`
+          : '';
+        return `<div class="scene-container"><h2 class="scene" data-line="${node.position.start}">${escapeHTML(node.value)}</h2>${charListHTML}${childrenHTML}</div>`;
+      }
 
       case NodeType.SPEECH:
         return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}" data-line="${node.position.start}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
@@ -59,6 +64,25 @@ export function astToHTML(ast) {
   };
 
   return renderNode(ast);
+}
+
+/**
+ * Extrait les personnages uniques d'un nœud scène (ordre de première apparition)
+ * @param {ASTNode} node - Nœud SUBSECTION
+ * @returns {string[]} - Noms des personnages
+ */
+function extractSceneCharacters(node) {
+  const characters = [];
+  const seen = new Set();
+  const walk = (n) => {
+    if (n.type === NodeType.SPEECH && !seen.has(n.attributes.speaker)) {
+      seen.add(n.attributes.speaker);
+      characters.push(n.attributes.speaker);
+    }
+    if (n.children) n.children.forEach(walk);
+  };
+  walk(node);
+  return characters;
 }
 
 /**
