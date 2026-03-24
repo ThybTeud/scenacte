@@ -563,6 +563,7 @@ export default function EditorPage() {
         onCursorChange={handleCursorChange}
         onEditorScroll={handleEditorScroll}
         preset={preset}
+        paperFormatId={paperSize}
         htmlContent={htmlContent}
         previewScrollRef={previewScrollRef}
         scrollContainerRef={scrollContainerRef}

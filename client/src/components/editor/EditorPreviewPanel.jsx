@@ -7,6 +7,7 @@ import { generatePresetCSS } from "@/config/template-presets";
 
 export function EditorPreviewPanel({
   preset,
+  paperFormatId,
   htmlContent,
   onClose,
   previewScrollRef,
@@ -34,7 +35,7 @@ export function EditorPreviewPanel({
           <div className="border-r-2 border-dashed border-gray-300" />
           <ShadowPreview
             ref={previewScrollRef}
-            css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset))}`}
+            css={`${shadowPreviewCSS}\n${adaptForShadow(generatePresetCSS(preset, paperFormatId))}`}
             htmlContent={htmlContent}
             layout={preset.layout}
             className="w-full bg-white overflow-auto px-8 py-2"

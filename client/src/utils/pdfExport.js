@@ -15,6 +15,7 @@ export { baseCSS };
  * @param {string} params.playTitle - Titre de la piece
  * @param {string} [params.playSubtitle] - Sous-titre de la piece
  * @param {string} params.presetId - ID du preset à utiliser
+ * @param {string} [params.paperFormatId='A5'] - ID du format papier (A4 ou A5)
  * @returns {string} - HTML complet pour le PDF
  */
 export function generatePdfHtml({
@@ -22,9 +23,10 @@ export function generatePdfHtml({
   playTitle,
   playSubtitle,
   presetId,
+  paperFormatId = 'A5',
 }) {
   const preset = getPreset(presetId);
-  const presetCSS = generatePresetCSS(preset);
+  const presetCSS = generatePresetCSS(preset, paperFormatId);
   const layout = preset.layout;
 
   // Extraire la police du preset pour l'import Google Fonts
