@@ -249,7 +249,8 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
             onScroll({ firstVisibleLine });
           }
         }),
-        EditorView.lineWrapping // Active le retour à la ligne automatique
+        EditorView.lineWrapping, // Active le retour à la ligne automatique
+        EditorView.scrollMargins.of(() => ({ bottom: 80 })) // Espace sous le curseur lors de la frappe
       ]
     });
 
