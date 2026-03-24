@@ -4,11 +4,7 @@ export const playsService = {
   async listPlays(params = {}) {
     const queryParams = new URLSearchParams();
 
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
     if (params.status) queryParams.append('status', params.status);
-    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
     const queryString = queryParams.toString();
     return api.get(`/plays${queryString ? `?${queryString}` : ''}`);

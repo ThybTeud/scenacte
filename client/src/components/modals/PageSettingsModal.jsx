@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { ChoiceCard } from "@/components/ui/choice-card";
 import { DEFAULT_PRESETS } from "@/config/template-presets";
 
 // === DATA ===
@@ -24,25 +23,6 @@ const PRESETS = Object.entries(DEFAULT_PRESETS).map(([id, preset]) => ({
     id,
     ...preset,
 }));
-
-// === CHOICE CARD ===
-
-function ChoiceCard({ selected, onClick, children, className }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-lg border p-3 text-center transition-colors",
-                "hover:bg-accent hover:text-accent-foreground",
-                selected && "border-primary bg-primary/5 ring-1 ring-primary",
-                className
-            )}
-        >
-            {children}
-        </button>
-    );
-}
 
 // === MODAL ===
 
@@ -103,7 +83,7 @@ export default function PageSettingsModal({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="space-y-6">
                     {/* Format papier (désactivé car défini par le preset) */}
                     <div className="space-y-3 opacity-60">
                         <Label>Format</Label>
@@ -144,14 +124,7 @@ export default function PageSettingsModal({
                         Annuler
                     </Button>
                     <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Enregistrement...
-                            </>
-                        ) : (
-                            "Enregistrer"
-                        )}
+                        {isSaving ? "Enregistrement..." : "Enregistrer"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

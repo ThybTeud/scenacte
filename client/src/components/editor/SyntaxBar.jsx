@@ -22,6 +22,11 @@ const syntaxButtons = [
     className: "bg-primary font-bold hover:bg-primary/90",
   },
   {
+    label: "##",
+    formatType: "heading2",
+    className: "bg-primary font-bold hover:bg-primary/90",
+  },
+  {
     label: "@",
     formatType: "personnage",
     className: "bg-blue-600 font-bold hover:bg-blue-700",

@@ -15,8 +15,7 @@ import {
 import { BaseHeader } from "@/components/layout/BaseHeader";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
-import StatsModal from "@/components/modals/StatsModal";
-import PageSettingsModal from "@/components/modals/PageSettingsModal";
+import { StatsModal, PageSettingsModal } from "@/components/modals";
 import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
 
 export default function TestEditorPage() {
@@ -247,8 +246,8 @@ export default function TestEditorPage() {
       />
 
       <StatsModal
-        isOpen={showStatsModal}
-        onClose={() => setShowStatsModal(false)}
+        open={showStatsModal}
+        onOpenChange={() => setShowStatsModal(false)}
         statistics={statistics}
         playTitle="Essai"
       />

@@ -26,16 +26,16 @@ const statItems = [
 /**
  * Modal de statistiques détaillées de la pièce ouverte.
  *
- * @param {boolean} isOpen - Contrôle l'affichage du modal
- * @param {Function} onClose - Callback de fermeture
+ * @param {boolean} open - Contrôle l'affichage du modal
+ * @param {Function} onOpenChange - Callback de fermeture
  * @param {Object} statistics - Statistiques calculées depuis l'AST
  * @param {string} playTitle - Titre de la pièce
  */
-export default function StatsModal({ isOpen, onClose, statistics, playTitle }) {
+export default function StatsModal({ open, onOpenChange, statistics, playTitle }) {
   const safeStats = statistics || {};
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Statistiques</DialogTitle>
