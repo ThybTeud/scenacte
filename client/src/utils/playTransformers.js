@@ -27,8 +27,17 @@ export function astToHTML(ast) {
       case NodeType.ROOT:
         return `<div class="play-root">${childrenHTML}</div>`;
 
-      case NodeType.SECTION:
-        return `<div class="acte-container"><h1 class="acte" data-line="${node.position.start}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+      case NodeType.SECTION: {
+        const hasSubsections = node.children && node.children.some(c => c.type === NodeType.SUBSECTION);
+        let sectionCharListHTML = '';
+        if (!hasSubsections) {
+          const characters = extractSceneCharacters(node);
+          sectionCharListHTML = characters.length > 0
+            ? `<p class="scene-personnages" data-line="${node.position.start}">${characters.map(c => escapeHTML(c)).join(', ')}</p>`
+            : '';
+        }
+        return `<div class="acte-container"><h1 class="acte" data-line="${node.position.start}">${escapeHTML(node.value)}</h1>${sectionCharListHTML}${childrenHTML}</div>`;
+      }
 
       case NodeType.SUBSECTION: {
         const characters = extractSceneCharacters(node);
