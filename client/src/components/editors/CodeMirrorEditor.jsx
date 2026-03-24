@@ -90,6 +90,7 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
       '.cm-content': {
         padding: '16px',
         paddingLeft: '0',
+        paddingBottom: '10vh',
         minHeight: '100%'
       },
       '.cm-line': {
@@ -240,19 +241,16 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
             onCursorChange(line);
           }
 
-          // Notifier le scroll
-          if (update.view.scrollDOM && onScroll) {
+          // Notifier le scroll uniquement quand le viewport change réellement
+          if (update.viewportChanged && onScroll) {
             const scrollDOM = update.view.scrollDOM;
-            const scrollInfo = {
-              top: scrollDOM.scrollTop,
-              height: scrollDOM.scrollHeight,
-              clientHeight: scrollDOM.clientHeight,
-              percentage: scrollDOM.scrollTop / (scrollDOM.scrollHeight - scrollDOM.clientHeight)
-            };
-            onScroll(scrollInfo);
+            const topPos = update.view.lineBlockAtHeight(scrollDOM.scrollTop).from;
+            const firstVisibleLine = update.view.state.doc.lineAt(topPos).number - 1;
+            onScroll({ firstVisibleLine });
           }
         }),
-        EditorView.lineWrapping // Active le retour à la ligne automatique
+        EditorView.lineWrapping, // Active le retour à la ligne automatique
+        EditorView.scrollMargins.of(() => ({ bottom: 80 })) // Espace sous le curseur lors de la frappe
       ]
     });
 

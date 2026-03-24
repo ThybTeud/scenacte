@@ -47,8 +47,7 @@ export default function TestEditorPage() {
 
   const preset = useMemo(() => getPreset(presetId), [presetId]);
 
-  const { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll } =
-    useSyncScroll();
+  const { previewScrollRef, scrollContainerRef, handleEditorScroll } = useSyncScroll();
 
   const characters = useMemo(() => structure?.personnages || [], [structure?.personnages]);
 
