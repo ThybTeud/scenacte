@@ -241,8 +241,8 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
             onCursorChange(line);
           }
 
-          // Notifier le scroll avec la première ligne visible (0-indexed)
-          if (update.view.scrollDOM && onScroll) {
+          // Notifier le scroll uniquement quand le viewport change réellement
+          if (update.viewportChanged && onScroll) {
             const scrollDOM = update.view.scrollDOM;
             const topPos = update.view.lineBlockAtHeight(scrollDOM.scrollTop).from;
             const firstVisibleLine = update.view.state.doc.lineAt(topPos).number - 1;
