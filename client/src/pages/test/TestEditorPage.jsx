@@ -20,7 +20,6 @@ import { StatsModal, PageSettingsModal } from "@/components/modals";
 import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
 
 export default function TestEditorPage() {
-  document.title = "Scenacte — Mode test";
 
   const [content, setContent] = useState(SAMPLE_PLAY);
   const [presetId, setPresetId] = useState("classique");
