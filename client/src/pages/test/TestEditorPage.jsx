@@ -17,7 +17,7 @@ import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
 import { FloatingHelpButton } from "@/components/editor/FloatingHelpButton";
 import { StatsModal, PageSettingsModal } from "@/components/modals";
-import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
+import { ChartColumn, BookCheck, Download, Dot, Minus } from "lucide-react";
 
 export default function TestEditorPage() {
 
@@ -171,8 +171,8 @@ export default function TestEditorPage() {
     <div className="flex flex-col h-dvh bg-surface-strong">
       <BaseHeader user={null} onLogout={null} compactLogo>
         <Dot className="h-6 w-6 shrink-0" />
-        <Badge variant="secondary" className="text-xs shrink-0">
-          Mode test
+        <Badge variant="secondary" className="text-xl shrink-0">
+          Pièce d'essai sans connexion
         </Badge>
 
         <div className="flex-1" />
@@ -181,7 +181,7 @@ export default function TestEditorPage() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="secondary" size="icon" onClick={() => setShowStatsModal(true)}>
-                <ChartPie className="h-4 w-4" />
+                <ChartColumn className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Statistiques</TooltipContent>
