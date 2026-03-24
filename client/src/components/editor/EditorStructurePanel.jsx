@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function EditorStructurePanel({
   structure,
@@ -15,20 +16,20 @@ export function EditorStructurePanel({
       <div className="px-6 h-16 bg-surface-muted border-b-2 border-border flex items-center justify-between">
         <div className="font-bold uppercase font-heading">Structure</div>
       </div>
-      <div className="flex-1 overflow-auto p-4 bg-white">
-        <div className="mb-4">
-          <div className="font-semibold uppercase text-sm mb-2">Sommaire</div>
-          <div className="space-y-2 text-xs">
+      <div className="flex flex-col flex-1 min-h-0 p-4 bg-white">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-gray font-semibold font-heading mb-1.5">Sommaire</div>
+          <div className="space-y-1 text-xs">
             {isBeforeStructure && (
-              <div className="h-0.5 bg-act rounded-full" />
+              <div className="border-l-[3px] border-l-act h-2" />
             )}
             {structure?.orphanScenes?.map((scene, sceneIndex) => (
               <button
                 key={`orphan-${sceneIndex}`}
-                className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-act-muted ${
+                className={`w-full text-left pl-2 pr-2 py-1 rounded-r-sm hover:bg-act-muted transition-colors ${
                   activeOrphanSceneIndex === sceneIndex
-                    ? "bg-act text-white font-semibold"
-                    : ""
+                    ? "border-l-[3px] border-l-act font-semibold"
+                    : "border-l-[3px] border-l-transparent"
                 }`}
                 onClick={() => onSectionClick(scene.position)}
               >
@@ -36,27 +37,27 @@ export function EditorStructurePanel({
               </button>
             ))}
             {structure?.items?.map((acte, acteIndex) => (
-              <div key={acteIndex} className="space-y-1">
+              <div key={acteIndex} className="space-y-0.5">
                 <button
-                  className={`w-full text-left px-2 py-1 rounded hover:bg-act-muted clamp-1 ${
+                  className={`w-full text-left px-2 py-1 rounded-r-sm hover:bg-act-muted line-clamp-1 transition-colors ${
                     activeActeIndex === acteIndex
                       ? activeSceneIndex === -1
-                        ? "bg-act text-white font-semibold"
-                        : "bg-act-light font-semibold"
-                      : ""
+                        ? "border-l-[3px] border-l-act font-semibold"
+                        : "border-l-[3px] border-l-act-light font-medium"
+                      : "border-l-[3px] border-l-transparent"
                   }`}
                   onClick={() => onSectionClick(acte.position)}
                 >
                   {acte.value || `Acte ${acteIndex + 1}`}
                 </button>
-                <div className="ml-2 space-y-1">
+                <div className="ml-4">
                   {acte.scenes?.map((scene, sceneIndex) => (
                     <button
                       key={sceneIndex}
-                      className={`w-full text-left pl-2 pr-2 py-1 rounded hover:bg-act-muted ${
+                      className={`w-full text-left pl-2 pr-2 py-1 rounded-r-sm hover:bg-act-muted transition-colors ${
                         activeActeIndex === acteIndex && activeSceneIndex === sceneIndex
-                          ? "bg-act text-white font-semibold"
-                          : ""
+                          ? "border-l-[3px] border-l-act font-semibold"
+                          : "border-l-[3px] border-l-act-muted"
                       }`}
                       onClick={() => onSectionClick(scene.position)}
                     >
@@ -69,19 +70,24 @@ export function EditorStructurePanel({
           </div>
         </div>
 
-        <div>
-          <div className="font-semibold uppercase text-sm mb-2">Personnages</div>
-          <div className="space-y-1">
-            {characters.map((character, index) => (
-              <button
-                key={character || index}
-                className="w-full text-left px-2 py-1 font-editor font-semibold text-sm text-character hover:bg-character-muted rounded"
-                onClick={() => onCharacterClick(character)}
-              >
-                @{character}
-              </button>
-            ))}
-          </div>
+        <Separator className="my-3 bg-surface-base" />
+
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <div className="text-[11px] uppercase tracking-wider text-gray font-semibold font-heading mb-1.5">Personnages</div>
+          <ScrollArea className="flex-1">
+            <div className="space-y-0.5">
+              {characters.map((character, index) => (
+                <button
+                  key={character || index}
+                  className="w-full text-left px-2 py-1 font-editor text-sm hover:bg-character-muted rounded-sm transition-colors truncate"
+                  onClick={() => onCharacterClick(character)}
+                >
+                  <span className="text-character font-bold">@</span>
+                  <span className="font-medium">{character}</span>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
