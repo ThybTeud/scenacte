@@ -12,7 +12,7 @@ export function EditorStructurePanel({
   onCharacterClick,
 }) {
   return (
-    <div className="hidden md:flex md:flex-col w-48 shrink-0 h-full overflow-hidden border-2 border-border rounded-sm shadow-brutal">
+    <div className="hidden md:flex md:flex-col w-48 shrink-0 max-h-full self-start overflow-hidden border-2 border-border rounded-sm shadow-brutal">
       <div className="px-6 h-16 bg-surface-muted border-b-2 border-border flex items-center justify-between">
         <div className="font-bold uppercase font-heading">Structure</div>
       </div>
@@ -82,8 +82,8 @@ export function EditorStructurePanel({
                   className="w-full text-left px-2 py-1 font-editor text-sm hover:bg-character-muted rounded-sm transition-colors truncate"
                   onClick={() => onCharacterClick(character)}
                 >
-                  <span className="text-character font-bold">@</span>
-                  <span className="font-medium">{character}</span>
+                  <span className="text-character font-bold">@{character}</span>
+                  {/* <span className="font-medium"></span> */}
                 </button>
               ))}
             </div>
