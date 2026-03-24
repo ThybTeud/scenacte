@@ -28,13 +28,13 @@ export function astToHTML(ast) {
         return `<div class="play-root">${childrenHTML}</div>`;
 
       case NodeType.SECTION:
-        return `<div class="acte-container" data-line="${node.position.start}"><h1 class="acte">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+        return `<div class="acte-container"><h1 class="acte" data-line="${node.position.start}">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
 
       case NodeType.SUBSECTION:
-        return `<div class="scene-container" data-line="${node.position.start}"><h2 class="scene">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+        return `<div class="scene-container"><h2 class="scene" data-line="${node.position.start}">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
 
       case NodeType.SPEECH:
-        return `<div class="personnage-container" data-line="${node.position.start}"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
+        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}" data-line="${node.position.start}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
 
       case NodeType.STAGE_DIRECTION: {
         const dtype = node.attributes.directionType || 'between';
