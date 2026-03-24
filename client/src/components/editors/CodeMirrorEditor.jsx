@@ -90,7 +90,7 @@ const CodeMirrorEditorComponent = forwardRef(function CodeMirrorEditor({ value =
       '.cm-content': {
         padding: '16px',
         paddingLeft: '0',
-        paddingBottom: '30vh',
+        paddingBottom: '10vh',
         minHeight: '100%'
       },
       '.cm-line': {
