@@ -108,6 +108,16 @@
   }
 }
 
+/* Page de distribution dédiée */
+@page cast-page {
+  @bottom-center {
+    content: none;
+  }
+  @top-center {
+    content: none;
+  }
+}
+
 /* === STYLES DE BASE === */
 
 /* Reset et base */
@@ -160,6 +170,44 @@ p {
   font-size: calc(var(--font-size-body) * 1.5);
   font-style: italic;
   color: var(--color-subtitle);
+}
+
+/* === PAGE DE DISTRIBUTION === */
+
+.cast-page {
+  page: cast-page;
+  break-after: page;
+  padding-top: 20%;
+  text-align: center;
+}
+
+.cast-page h2.cast-title {
+  font-size: calc(var(--font-size-body) * 1.4);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1pt;
+  margin-bottom: 2em;
+}
+
+.cast-list {
+  list-style: none;
+  padding: 0;
+}
+
+.cast-item {
+  font-size: var(--font-size-body);
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+  margin-bottom: 0.6em;
+}
+
+.cast-empty {
+  font-size: var(--font-size-body);
+  font-style: italic;
+  color: var(--color-subtitle);
+  max-width: 80%;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 /* === CONTENU THÉÂTRAL === */
