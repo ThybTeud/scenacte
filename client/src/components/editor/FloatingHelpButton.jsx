@@ -34,9 +34,9 @@ const SYNTAX_ITEMS = [
   },
 ];
 
-export function FloatingHelpButton({ onToggleFormat }) {
+export function FloatingHelpButton({ onToggleFormat, showBugReport = true }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showBugReport, setShowBugReport] = useState(false);
+  const [showBugReportModal, setShowBugReportModal] = useState(false);
 
   return (
     <>
@@ -75,24 +75,26 @@ export function FloatingHelpButton({ onToggleFormat }) {
           </div>
 
           {/* Bouton bug (à droite) */}
-          <div
-            className={`absolute bottom-0 left-full ml-2 transition-all duration-200 ease-out origin-bottom-left ${
-              isOpen
-                ? "opacity-100 scale-100 translate-x-0"
-                : "opacity-0 scale-95 -translate-x-1 pointer-events-none"
-            }`}
-          >
-            <Button
-              variant="secondary"
-              size="sm"
-              depth="raised"
-              onClick={() => setShowBugReport(true)}
-              className="whitespace-nowrap"
+          {showBugReport && (
+            <div
+              className={`absolute bottom-0 left-full ml-2 transition-all duration-200 ease-out origin-bottom-left ${
+                isOpen
+                  ? "opacity-100 scale-100 translate-x-0"
+                  : "opacity-0 scale-95 -translate-x-1 pointer-events-none"
+              }`}
             >
-              <Bug className="h-4 w-4" />
-              Signaler un bug
-            </Button>
-          </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                depth="raised"
+                onClick={() => setShowBugReportModal(true)}
+                className="whitespace-nowrap"
+              >
+                <Bug className="h-4 w-4" />
+                Signaler un bug
+              </Button>
+            </div>
+          )}
 
           {/* Bouton déclencheur */}
           <Button
@@ -108,10 +110,12 @@ export function FloatingHelpButton({ onToggleFormat }) {
         </div>
       </div>
 
-      <BugReportModal
-        open={showBugReport}
-        onOpenChange={setShowBugReport}
-      />
+      {showBugReport && (
+        <BugReportModal
+          open={showBugReportModal}
+          onOpenChange={setShowBugReportModal}
+        />
+      )}
     </>
   );
 }

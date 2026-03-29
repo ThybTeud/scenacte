@@ -28,6 +28,7 @@ export default function EditorPage() {
 
   const [play, setPlay] = useState(null);
   const [lastSavedContent, setLastSavedContent] = useState("");
+  const [lastSavedTitle, setLastSavedTitle] = useState("");
 
   // État du document
   const [content, setContent] = useState("");
@@ -118,6 +119,7 @@ export default function EditorPage() {
       const rawContent = response.play.rawContent || "";
       setContent(rawContent);
       setLastSavedContent(rawContent);
+      setLastSavedTitle(response.play.title || "");
       setHasUnsavedChanges(false);
 
       // Charger les settings de mise en page
@@ -156,6 +158,7 @@ export default function EditorPage() {
 
         await storageService.savePlay(id, saveData);
         setLastSavedContent(content);
+        setLastSavedTitle(play.title);
         setHasUnsavedChanges(false);
 
         // Afficher le toast seulement pour les sauvegardes manuelles
@@ -405,8 +408,8 @@ export default function EditorPage() {
    * Sauvegarde automatique après 2 secondes d'inactivité
    */
   useEffect(() => {
-    // Ne pas déclencher l'auto-save si le contenu n'a pas changé
-    if (content === lastSavedContent || !play) {
+    // Ne pas déclencher l'auto-save si ni le contenu ni le titre n'ont changé
+    if ((content === lastSavedContent && play?.title === lastSavedTitle) || !play) {
       return;
     }
 
@@ -426,7 +429,7 @@ export default function EditorPage() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [content, lastSavedContent, savePlay, play]);
+  }, [content, lastSavedContent, lastSavedTitle, savePlay, play]);
 
   /**
    * Insérer un nom de personnage dans l'éditeur
@@ -563,6 +566,7 @@ export default function EditorPage() {
         onCursorChange={handleCursorChange}
         onEditorScroll={handleEditorScroll}
         preset={preset}
+        paperFormatId={paperSize}
         htmlContent={htmlContent}
         previewScrollRef={previewScrollRef}
         scrollContainerRef={scrollContainerRef}

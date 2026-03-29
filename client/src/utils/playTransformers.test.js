@@ -106,6 +106,79 @@ describe('astToHTML', () => {
     });
   });
 
+  describe('liste des personnages (distribution)', () => {
+    it('affiche les personnages présents dans la scène', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n@JEAN\nBonjour\n@MARIE\nSalut')));
+      const list = dom.querySelector('p.scene-personnages');
+
+      expect(list).not.toBeNull();
+      expect(list.textContent).toBe('JEAN, MARIE');
+    });
+
+    it('respecte l\'ordre de première apparition', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n@MARIE\nBonjour\n@JEAN\nSalut\n@THOMAS\nHé')));
+      const list = dom.querySelector('p.scene-personnages');
+
+      expect(list.textContent).toBe('MARIE, JEAN, THOMAS');
+    });
+
+    it('n\'affiche pas de doublons si un personnage parle plusieurs fois', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n@JEAN\nBonjour\n@MARIE\nSalut\n@JEAN\nComment ça va ?')));
+      const list = dom.querySelector('p.scene-personnages');
+
+      expect(list.textContent).toBe('JEAN, MARIE');
+    });
+
+    it('n\'affiche pas de liste si la scène n\'a pas de personnage', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n(Un jardin)')));
+      const list = dom.querySelector('p.scene-personnages');
+
+      expect(list).toBeNull();
+    });
+
+    it('affiche une liste distincte par scène', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n@JEAN\nBonjour\n##Scène 2\n@MARIE\nSalut')));
+      const lists = dom.querySelectorAll('p.scene-personnages');
+
+      expect(lists).toHaveLength(2);
+      expect(lists[0].textContent).toBe('JEAN');
+      expect(lists[1].textContent).toBe('MARIE');
+    });
+
+    it('place la liste juste après le titre de scène', () => {
+      const dom = toDOM(astToHTML(parser.parse('##Scène 1\n@JEAN\nBonjour')));
+      const scene = dom.querySelector('h2.scene');
+      const nextSibling = scene.nextElementSibling;
+
+      expect(nextSibling.classList.contains('scene-personnages')).toBe(true);
+    });
+
+    it('affiche la distribution sur un heading1 sans heading2', () => {
+      const dom = toDOM(astToHTML(parser.parse('#Tableau 1\n@JEAN\nBonjour\n@MARIE\nSalut')));
+      const list = dom.querySelector('.acte-container > p.scene-personnages');
+
+      expect(list).not.toBeNull();
+      expect(list.textContent).toBe('JEAN, MARIE');
+    });
+
+    it('n\'affiche PAS la distribution sur un heading1 qui contient des heading2', () => {
+      const dom = toDOM(astToHTML(parser.parse('#Acte I\n##Scène 1\n@JEAN\nBonjour\n##Scène 2\n@MARIE\nSalut')));
+      const acteList = dom.querySelector('.acte-container > p.scene-personnages');
+      const sceneLists = dom.querySelectorAll('.scene-container > p.scene-personnages');
+
+      expect(acteList).toBeNull();
+      expect(sceneLists).toHaveLength(2);
+    });
+
+    it('place la liste juste après le titre de heading1 sans heading2', () => {
+      const dom = toDOM(astToHTML(parser.parse('#Tableau 1\n@JEAN\nBonjour')));
+      const h1 = dom.querySelector('h1.acte');
+      const nextSibling = h1.nextElementSibling;
+
+      expect(nextSibling.classList.contains('scene-personnages')).toBe(true);
+    });
+  });
+
   describe('échappement HTML', () => {
     it('échappe les caractères spéciaux dans les titres de section', () => {
       const dom = toDOM(astToHTML(parser.parse('#Acte <I> & "II"')));

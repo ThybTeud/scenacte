@@ -20,6 +20,7 @@ export function EditorWorkspace({
   onCursorChange,
   onEditorScroll,
   preset,
+  paperFormatId,
   htmlContent,
   previewScrollRef,
   scrollContainerRef,
@@ -70,6 +71,7 @@ export function EditorWorkspace({
           {showPreview && (
             <EditorPreviewPanel
               preset={preset}
+              paperFormatId={paperFormatId}
               htmlContent={htmlContent}
               onClose={() => setShowPreview(false)}
               previewScrollRef={previewScrollRef}

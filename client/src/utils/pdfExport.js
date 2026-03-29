@@ -15,22 +15,48 @@ export { baseCSS };
  * @param {string} params.playTitle - Titre de la piece
  * @param {string} [params.playSubtitle] - Sous-titre de la piece
  * @param {string} params.presetId - ID du preset à utiliser
+ * @param {string} [params.paperFormatId='A5'] - ID du format papier (A4 ou A5)
  * @returns {string} - HTML complet pour le PDF
  */
+/**
+ * Extrait les noms de personnages uniques depuis le HTML généré par astToHTML
+ * (ordre de première apparition, via les attributs data-name sur h3.personnage)
+ * @param {string} htmlContent
+ * @returns {string[]}
+ */
+function extractCharactersFromHTML(htmlContent) {
+  const seen = new Set();
+  const characters = [];
+  for (const match of htmlContent.matchAll(/data-name="([^"]+)"/g)) {
+    const name = match[1];
+    if (!seen.has(name)) {
+      seen.add(name);
+      characters.push(name);
+    }
+  }
+  return characters;
+}
+
 export function generatePdfHtml({
   htmlContent,
   playTitle,
   playSubtitle,
   presetId,
+  paperFormatId = 'A5',
 }) {
   const preset = getPreset(presetId);
-  const presetCSS = generatePresetCSS(preset);
+  const presetCSS = generatePresetCSS(preset, paperFormatId);
   const layout = preset.layout;
 
   // Extraire la police du preset pour l'import Google Fonts
   const fontFamily = preset.variables['--font-body']?.match(/'([^']+)'/)?.[1];
   const fontImport = fontFamily ? fontFamily.replace(/ /g, '+') : 'Crimson+Text';
   const googleFontsUrl = `https://fonts.googleapis.com/css2?family=${fontImport}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+
+  const characters = extractCharactersFromHTML(htmlContent);
+  const castPageContent = characters.length > 0
+    ? `<ul class="cast-list">${characters.map(c => `<li class="cast-item">${escapeHtml(c)}</li>`).join('')}</ul>`
+    : `<p class="cast-empty">La pièce n'a aucun personnage. Vous pouvez désactiver la section "Distribution" dans les paramètres.</p>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -46,6 +72,10 @@ export function generatePdfHtml({
   <section class="title-page">
     <h1>${escapeHtml(playTitle || '')}</h1>
     ${playSubtitle ? `<p class="subtitle">${escapeHtml(playSubtitle)}</p>` : ''}
+  </section>
+  <section class="cast-page">
+    <h2 class="cast-title">Distribution</h2>
+    ${castPageContent}
   </section>
   <section class="play-content">
     <div class="play-root" data-layout="${layout}">
