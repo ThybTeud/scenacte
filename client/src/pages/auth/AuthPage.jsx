@@ -187,7 +187,7 @@ export default function AuthPage() {
   // Main Auth View
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface-base">
-      <Card className="w-full max-w-md border-border shadow-brutal">
+      <Card className="w-full max-w-md gap-4 border-border shadow-brutal">
         <CardHeader className="text-center">
           <CardTitle>
             <img src="/logo_long.png" alt="Scenacte" className="h-10 mx-auto" />
@@ -198,7 +198,7 @@ export default function AuthPage() {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full"
+            className="w-full gap-4"
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Connexion</TabsTrigger>
@@ -326,7 +326,7 @@ export default function AuthPage() {
           </Tabs>
 
           {/* Legal links */}
-          <div className="mt-6 pt-4 border-t">
+          <div className="mt-4 pt-3 border-t">
             <nav className="flex flex-wrap justify-center items-center gap-2 text-xs text-muted-foreground">
               <Link
                 to="/legal/legal"
