@@ -213,6 +213,8 @@ export default function AuthPage() {
                   <Input
                     id="login-email"
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder="vous@exemple.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
@@ -226,6 +228,8 @@ export default function AuthPage() {
                     <Input
                       id="login-password"
                       type={showPassword ? "text" : "password"}
+                      name="password"
+                      autoComplete="current-password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
@@ -264,6 +268,8 @@ export default function AuthPage() {
                   <Input
                     id="register-email"
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder="vous@exemple.com"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
@@ -277,6 +283,8 @@ export default function AuthPage() {
                     <Input
                       id="register-password"
                       type={showPassword ? "text" : "password"}
+                      name="password"
+                      autoComplete="new-password"
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       required
@@ -300,6 +308,8 @@ export default function AuthPage() {
                   <Input
                     id="register-confirm"
                     type={showPassword ? "text" : "password"}
+                    name="confirm-password"
+                    autoComplete="new-password"
                     value={registerConfirm}
                     onChange={(e) => setRegisterConfirm(e.target.value)}
                     required
