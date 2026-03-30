@@ -69,9 +69,6 @@ Scenacte ne dépose aucun cookie sur votre navigateur.
 
 Aucun cookie publicitaire ou de tracking.
 
-### Google Fonts
-Les polices de caractères sont chargées depuis les serveurs de Google (fonts.googleapis.com). Cette opération transmet votre adresse IP à Google lors du chargement de la page, sur la base de notre intérêt légitime à proposer une interface soignée. Politique de confidentialité Google : https://policies.google.com/privacy
-
 ## 8. Propriété de vos œuvres
 
 **Vous restez l'unique propriétaire de vos créations.**
@@ -82,7 +79,6 @@ Scenacte dispose uniquement d'une licence technique pour stocker, afficher et ex
 | Service | Finalité | Données transmises | Politique |
 |---------|----------|-------------------|-----------|
 | Google OAuth | Authentification (optionnel) | Email, photo de profil, ID Google | https://policies.google.com/privacy |
-| Google Fonts | Affichage des polices | Adresse IP | https://policies.google.com/privacy |
 | Render.com | Hébergement | Données de l'application | https://render.com/privacy |
 | Resend | Envoi d'emails transactionnels | Adresse email | https://resend.com/privacy |
 

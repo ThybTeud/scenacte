@@ -42,7 +42,7 @@ Scenacte ne dépose aucun cookie sur votre navigateur. L'authentification repose
 - Framework backend : Express.js
 - Export PDF : PagedJS
 - Authentification sociale : Google OAuth2
-- Polices (CDN) : Google Fonts
+- Polices : Inter, Space Grotesk, Crimson Text, Source Code Pro, Fira Code, EB Garamond (auto-hébergées via @fontsource)
 - Typographies : Inter, Space Grotesk, Crimson Text, Fira Code
 
 ## Droit applicable
