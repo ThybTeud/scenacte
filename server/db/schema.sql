@@ -5,8 +5,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  username TEXT UNIQUE,
+  password_hash TEXT,
+  provider VARCHAR(50) NOT NULL DEFAULT 'local',
+  provider_id VARCHAR(255),
+  avatar_url TEXT,
   password_updated_at TIMESTAMP DEFAULT NOW(),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -67,6 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_plays_statistics_gin ON plays USING gin(statistic
 CREATE INDEX IF NOT EXISTS idx_play_history_statistics_gin ON play_history USING gin(statistics);
 CREATE INDEX IF NOT EXISTS idx_export_templates_user_id ON export_templates(user_id);
 CREATE INDEX IF NOT EXISTS idx_export_templates_system ON export_templates(user_id) WHERE user_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS users_provider_provider_id_idx ON users(provider, provider_id) WHERE provider_id IS NOT NULL;
 
 -- Table bug_reports
 CREATE TABLE IF NOT EXISTS bug_reports (

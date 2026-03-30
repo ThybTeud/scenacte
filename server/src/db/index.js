@@ -55,6 +55,11 @@ const prisma = {
         return camelizeRow(res.rows[0]);
       }
 
+      if (where.provider && where.providerId) {
+        const res = await query('SELECT * FROM users WHERE provider = $1 AND provider_id = $2 LIMIT 1', [where.provider, where.providerId]);
+        return camelizeRow(res.rows[0]);
+      }
+
       return null;
     },
 
@@ -132,8 +137,38 @@ const prisma = {
     },
 
     async create({ data } = {}) {
-      const text = `INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *`;
-      const values = [data.email, data.username, data.passwordHash];
+      const columns = ['email'];
+      const placeholders = ['$1'];
+      const values = [data.email];
+      let i = 2;
+
+      if (data.username !== undefined) {
+        columns.push('username');
+        placeholders.push(`$${i++}`);
+        values.push(data.username);
+      }
+      if (data.passwordHash !== undefined) {
+        columns.push('password_hash');
+        placeholders.push(`$${i++}`);
+        values.push(data.passwordHash);
+      }
+      if (data.provider !== undefined) {
+        columns.push('provider');
+        placeholders.push(`$${i++}`);
+        values.push(data.provider);
+      }
+      if (data.providerId !== undefined) {
+        columns.push('provider_id');
+        placeholders.push(`$${i++}`);
+        values.push(data.providerId);
+      }
+      if (data.avatarUrl !== undefined) {
+        columns.push('avatar_url');
+        placeholders.push(`$${i++}`);
+        values.push(data.avatarUrl);
+      }
+
+      const text = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`;
       const res = await query(text, values);
       return camelizeRow(res.rows[0]);
     },

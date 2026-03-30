@@ -12,6 +12,7 @@ import ServerStatusBanner from './components/ServerStatusBanner';
 // Pages
 import AuthPage from './pages/auth/AuthPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import OAuthCallbackPage from './pages/auth/OAuthCallbackPage';
 import LibraryPage from './pages/library/LibraryPage';
 import EditorPage from './pages/editor/EditorPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -63,6 +64,7 @@ function App() {
               <Route path="/register" element={<AuthPage />} />
               <Route path="/forgot-password" element={<AuthPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
               {/* Mode test — public, sans auth, 100% client-side */}
               <Route path="/test" element={<TestEditorPage />} />

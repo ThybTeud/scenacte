@@ -5,13 +5,14 @@ import {
   validateEmail,
   validatePassword
 } from '../utils/validation.js';
-import { 
-  BadRequestError, 
-  UnauthorizedError, 
+import {
+  BadRequestError,
+  UnauthorizedError,
   ConflictError,
-  ValidationError 
+  ValidationError
 } from '../middleware/errorHandler.js';
 import { sendWelcomeEmail, sendPasswordResetEmail } from '../services/email.service.js';
+import { config } from '../config/env.js';
 
 // Utilise le client pg via src/db/index.js
 
@@ -105,6 +106,11 @@ export async function login(req, res, next) {
 
     if (!user) {
       throw new UnauthorizedError('Email ou mot de passe incorrect');
+    }
+
+    // Les comptes OAuth n'ont pas de mot de passe
+    if (!user.passwordHash) {
+      throw new UnauthorizedError('Ce compte utilise une connexion Google. Utilisez le bouton "Continuer avec Google".');
     }
 
     // Vérification du mot de passe
@@ -281,6 +287,16 @@ export async function resetPassword(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+/**
+ * GET /api/auth/google/callback
+ * Callback Google OAuth2 — génère un JWT et redirige vers le frontend
+ * req.user est injecté par passport après la stratégie Google
+ */
+export function googleCallback(req, res) {
+  const token = generateToken({ userId: req.user.id, email: req.user.email });
+  res.redirect(`${config.client.url}/auth/callback?token=${token}`);
 }
 
 /**
