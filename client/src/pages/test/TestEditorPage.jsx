@@ -15,11 +15,11 @@ import {
 import { BaseHeader } from "@/components/layout/BaseHeader";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { SyntaxBar } from "@/components/editor/SyntaxBar";
+import { FloatingHelpButton } from "@/components/editor/FloatingHelpButton";
 import { StatsModal, PageSettingsModal } from "@/components/modals";
-import { ChartPie, BookCheck, Download, Dot, Minus } from "lucide-react";
+import { ChartColumn, BookCheck, Download, Dot, Minus } from "lucide-react";
 
 export default function TestEditorPage() {
-  document.title = "Scenacte — Mode test";
 
   const [content, setContent] = useState(SAMPLE_PLAY);
   const [presetId, setPresetId] = useState("classique");
@@ -47,8 +47,7 @@ export default function TestEditorPage() {
 
   const preset = useMemo(() => getPreset(presetId), [presetId]);
 
-  const { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll } =
-    useSyncScroll();
+  const { previewScrollRef, scrollContainerRef, handleEditorScroll } = useSyncScroll();
 
   const characters = useMemo(() => structure?.personnages || [], [structure?.personnages]);
 
@@ -159,6 +158,10 @@ export default function TestEditorPage() {
     updateUndoRedoState();
   }, [updateUndoRedoState]);
 
+  const handlePreviewLineClick = useCallback((lineNumber) => {
+    editorRef.current?.scrollToLine(lineNumber + 1);
+  }, []);
+
   const handleSettingsChange = useCallback(({ paperSize: newPaperSize, presetId: newPresetId }) => {
     if (newPaperSize) setPaperSize(newPaperSize);
     if (newPresetId) setPresetId(newPresetId);
@@ -168,8 +171,8 @@ export default function TestEditorPage() {
     <div className="flex flex-col h-dvh bg-surface-strong">
       <BaseHeader user={null} onLogout={null} compactLogo>
         <Dot className="h-6 w-6 shrink-0" />
-        <Badge variant="secondary" className="text-xs shrink-0">
-          Mode test
+        <Badge variant="secondary" className="text-xl shrink-0">
+          Pièce d'essai sans connexion
         </Badge>
 
         <div className="flex-1" />
@@ -178,7 +181,7 @@ export default function TestEditorPage() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="secondary" size="icon" onClick={() => setShowStatsModal(true)}>
-                <ChartPie className="h-4 w-4" />
+                <ChartColumn className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Statistiques</TooltipContent>
@@ -220,8 +223,13 @@ export default function TestEditorPage() {
         content={content}
         onContentChange={handleContentChange}
         onCursorChange={handleCursorChange}
+        onEditorScroll={handleEditorScroll}
         preset={preset}
+        paperFormatId={paperSize}
         htmlContent={htmlContent}
+        previewScrollRef={previewScrollRef}
+        scrollContainerRef={scrollContainerRef}
+        onLineClick={handlePreviewLineClick}
       />
 
       <SyntaxBar
@@ -235,6 +243,8 @@ export default function TestEditorPage() {
         onOpenPageSettings={() => setShowPageSettingsModal(true)}
         onOpenExport={null}
       />
+
+      <FloatingHelpButton onToggleFormat={handleToggleFormat} showBugReport={false} />
 
       {/* Modals */}
       <PageSettingsModal

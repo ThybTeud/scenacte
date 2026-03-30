@@ -114,6 +114,7 @@ export const PdfPreview = forwardRef(function PdfPreview(
             playTitle,
             playSubtitle,
             presetId,
+            paperFormatId: pageFormat,
         });
 
         let timeoutId;

@@ -10,14 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ChoiceCard } from "@/components/ui/choice-card";
-import { DEFAULT_PRESETS } from "@/config/template-presets";
+import { DEFAULT_PRESETS, PAPER_FORMATS } from "@/config/template-presets";
 
 // === DATA ===
 
-const FORMATS = [
-    { id: "A5", label: "A5", dimensions: "148 x 210 mm" },
-    { id: "A4", label: "A4", dimensions: "210 x 297 mm" },
-];
+const FORMATS = Object.entries(PAPER_FORMATS).map(([id, f]) => ({
+    id, label: f.label, dimensions: f.dimensions,
+}));
 
 const PRESETS = Object.entries(DEFAULT_PRESETS).map(([id, preset]) => ({
     id,
@@ -46,10 +45,6 @@ export default function PageSettingsModal({
 
     const handlePresetChange = (presetId) => {
         setSelectedPresetId(presetId);
-        const preset = DEFAULT_PRESETS[presetId];
-        if (preset?.pageFormat) {
-            setPaperSize(preset.pageFormat);
-        }
     };
 
     const handleSave = async () => {
@@ -84,14 +79,22 @@ export default function PageSettingsModal({
                 </DialogHeader>
 
                 <div className="space-y-6">
-                    {/* Format papier (désactivé car défini par le preset) */}
-                    <div className="space-y-3 opacity-60">
+                    {/* Format papier */}
+                    <div className="space-y-3">
                         <Label>Format</Label>
-                        <div className="rounded-lg border p-3 bg-muted/30 text-center">
-                            <span className="font-medium">A5</span>
-                            <span className="text-xs text-muted-foreground block">
-                                Défini par le preset
-                            </span>
+                        <div className="grid grid-cols-2 gap-3">
+                            {FORMATS.map((format) => (
+                                <ChoiceCard
+                                    key={format.id}
+                                    selected={paperSize === format.id}
+                                    onClick={() => setPaperSize(format.id)}
+                                >
+                                    <span className="font-medium">{format.label}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {format.dimensions}
+                                    </span>
+                                </ChoiceCard>
+                            ))}
                         </div>
                     </div>
 

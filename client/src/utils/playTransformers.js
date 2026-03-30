@@ -27,25 +27,39 @@ export function astToHTML(ast) {
       case NodeType.ROOT:
         return `<div class="play-root">${childrenHTML}</div>`;
 
-      case NodeType.SECTION:
-        return `<div class="acte-container"><h1 class="acte">${escapeHTML(node.value)}</h1>${childrenHTML}</div>`;
+      case NodeType.SECTION: {
+        const hasSubsections = node.children && node.children.some(c => c.type === NodeType.SUBSECTION);
+        let sectionCharListHTML = '';
+        if (!hasSubsections) {
+          const characters = extractSceneCharacters(node);
+          sectionCharListHTML = characters.length > 0
+            ? `<p class="scene-personnages" data-line="${node.position.start}">${characters.map(c => escapeHTML(c)).join(', ')}</p>`
+            : '';
+        }
+        return `<div class="acte-container"><h1 class="acte" data-line="${node.position.start}">${escapeHTML(node.value)}</h1>${sectionCharListHTML}${childrenHTML}</div>`;
+      }
 
-      case NodeType.SUBSECTION:
-        return `<div class="scene-container"><h2 class="scene">${escapeHTML(node.value)}</h2>${childrenHTML}</div>`;
+      case NodeType.SUBSECTION: {
+        const characters = extractSceneCharacters(node);
+        const charListHTML = characters.length > 0
+          ? `<p class="scene-personnages" data-line="${node.position.start}">${characters.map(c => escapeHTML(c)).join(', ')}</p>`
+          : '';
+        return `<div class="scene-container"><h2 class="scene" data-line="${node.position.start}">${escapeHTML(node.value)}</h2>${charListHTML}${childrenHTML}</div>`;
+      }
 
       case NodeType.SPEECH:
-        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
+        return `<div class="personnage-container"><h3 class="personnage" data-name="${escapeHTML(node.attributes.speaker)}" data-line="${node.position.start}">${escapeHTML(node.attributes.speaker)}</h3>${childrenHTML}</div>`;
 
       case NodeType.STAGE_DIRECTION: {
         const dtype = node.attributes.directionType || 'between';
         if (dtype === 'intra') {
-          return `<span class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</span>`;
+          return `<span class="didascalie" data-type="${dtype}" data-line="${node.position.start}">${escapeHTML(node.value)}</span>`;
         }
-        return `<p class="didascalie" data-type="${dtype}">${escapeHTML(node.value)}</p>`;
+        return `<p class="didascalie" data-type="${dtype}" data-line="${node.position.start}">${escapeHTML(node.value)}</p>`;
       }
 
       case NodeType.LINE:
-        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}">${childrenHTML}</p>`;
+        return `<p class="dialogue" data-speaker="${escapeHTML(node.attributes.speaker)}" data-line="${node.position.start}">${childrenHTML}</p>`;
 
       case NodeType.LINE_BREAK:
         return '<br>';
@@ -59,6 +73,25 @@ export function astToHTML(ast) {
   };
 
   return renderNode(ast);
+}
+
+/**
+ * Extrait les personnages uniques d'un nœud scène (ordre de première apparition)
+ * @param {ASTNode} node - Nœud SUBSECTION
+ * @returns {string[]} - Noms des personnages
+ */
+function extractSceneCharacters(node) {
+  const characters = [];
+  const seen = new Set();
+  const walk = (n) => {
+    if (n.type === NodeType.SPEECH && !seen.has(n.attributes.speaker)) {
+      seen.add(n.attributes.speaker);
+      characters.push(n.attributes.speaker);
+    }
+    if (n.children) n.children.forEach(walk);
+  };
+  walk(node);
+  return characters;
 }
 
 /**

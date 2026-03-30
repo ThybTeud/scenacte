@@ -1,72 +1,36 @@
 import { useRef, useCallback } from 'react';
 
 /**
- * Hook personnalisé pour synchroniser le scroll entre deux éléments
+ * Hook pour synchroniser le scroll de l'éditeur vers la preview (unidirectionnel).
  *
- * @returns {Object} - { editorScrollRef, previewScrollRef, handleEditorScroll, handlePreviewScroll }
+ * Stratégie : quand l'éditeur scroll, on identifie la première ligne visible
+ * et on demande à la preview de scroller vers l'élément correspondant.
+ *
+ * @returns {Object} - { previewScrollRef, scrollContainerRef, handleEditorScroll }
  */
 export function useSyncScroll() {
-  const editorScrollRef = useRef(null);
+  // Ref vers l'instance ShadowPreview (expose scrollToLine)
   const previewScrollRef = useRef(null);
-  const isScrollingEditor = useRef(false);
-  const isScrollingPreview = useRef(false);
-  const editorScrollTimeout = useRef(null);
-  const previewScrollTimeout = useRef(null);
+  // Ref vers le conteneur scrollable de la preview (le div overflow-auto)
+  const scrollContainerRef = useRef(null);
 
   /**
-   * Gère le scroll de l'éditeur et synchronise avec le preview
+   * Appelé à chaque scroll de l'éditeur.
+   * @param {Object} scrollInfo - { firstVisibleLine: number } (0-indexed)
    */
-  const handleEditorScroll = useCallback((scrollInfo) => {
-    // Éviter les boucles infinies
-    if (isScrollingPreview.current) {
-      return;
+  const handleEditorScroll = useCallback(({ firstVisibleLine }) => {
+    if (
+      previewScrollRef.current &&
+      scrollContainerRef.current &&
+      firstVisibleLine !== undefined
+    ) {
+      previewScrollRef.current.scrollToLine(firstVisibleLine, scrollContainerRef.current);
     }
-
-    isScrollingEditor.current = true;
-
-    // Synchroniser le preview
-    if (previewScrollRef.current && scrollInfo.percentage !== undefined) {
-      previewScrollRef.current.scrollToPercentage(scrollInfo.percentage);
-    }
-
-    // Réinitialiser le flag après un court délai
-    if (editorScrollTimeout.current) {
-      clearTimeout(editorScrollTimeout.current);
-    }
-    editorScrollTimeout.current = setTimeout(() => {
-      isScrollingEditor.current = false;
-    }, 100);
-  }, []);
-
-  /**
-   * Gère le scroll du preview et synchronise avec l'éditeur
-   */
-  const handlePreviewScroll = useCallback((scrollInfo) => {
-    // Éviter les boucles infinies
-    if (isScrollingEditor.current) {
-      return;
-    }
-
-    isScrollingPreview.current = true;
-
-    // Synchroniser l'éditeur
-    if (editorScrollRef.current && scrollInfo.percentage !== undefined) {
-      editorScrollRef.current.scrollToPercentage(scrollInfo.percentage);
-    }
-
-    // Réinitialiser le flag après un court délai
-    if (previewScrollTimeout.current) {
-      clearTimeout(previewScrollTimeout.current);
-    }
-    previewScrollTimeout.current = setTimeout(() => {
-      isScrollingPreview.current = false;
-    }, 100);
   }, []);
 
   return {
-    editorScrollRef,
     previewScrollRef,
+    scrollContainerRef,
     handleEditorScroll,
-    handlePreviewScroll
   };
 }

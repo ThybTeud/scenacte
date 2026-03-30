@@ -49,6 +49,7 @@ export default function TemplateLab() {
       playTitle: "Pièce de test",
       playSubtitle: "Template Lab",
       presetId: selectedPresetId,
+      paperFormatId: 'A5',
     });
 
     doc.open();
