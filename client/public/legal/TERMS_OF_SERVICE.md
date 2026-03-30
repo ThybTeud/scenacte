@@ -1,6 +1,6 @@
 # Conditions Générales d'Utilisation - Scenacte
 
-**Version 1.0 - Janvier 2026**
+**Version 1.1 - Mars 2026**
 
 ## 1. Objet
 
@@ -29,7 +29,8 @@ L'offre est actuellement gratuite et sans limitation.
 
 ## 5. Compte utilisateur
 
-Vous êtes responsable de la confidentialité de vos identifiants.
+Vous êtes responsable de la confidentialité de vos identifiants. Vous pouvez créer un compte avec une adresse email et un mot de passe, ou via votre compte Google. En cas de connexion via Google, les conditions d'utilisation de Google s'appliquent également : https://policies.google.com/terms
+
 La suppression de compte entraîne l'effacement définitif de vos données sous 30 jours.
 
 ## 6. Propriété intellectuelle
@@ -52,7 +53,7 @@ Scenacte est fourni "en l'état". Nous recommandons de conserver des copies loca
 
 ## 9. Données personnelles
 
-Voir notre [Politique de Confidentialité](/privacy).
+Voir notre [Politique de Confidentialité](/legal/privacy).
 
 ## 10. Modifications
 
