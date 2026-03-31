@@ -27,14 +27,13 @@ Les œuvres créées par les utilisateurs restent leur propriété exclusive.
 ## Données personnelles
 
 Conformément au RGPD, vous disposez de droits sur vos données personnelles.
-Consultez notre [Politique de Confidentialité](/privacy) pour plus d'informations.
+Consultez notre [Politique de Confidentialité](/legal/privacy) pour plus d'informations.
 
 Contact : contact@scenacte.fr
 
-## Cookies
+## Cookies et stockage local
 
-Ce site utilise uniquement des cookies techniques essentiels au fonctionnement du service.
-Aucun cookie publicitaire ou de tracking n'est utilisé.
+Scenacte ne dépose aucun cookie sur votre navigateur. L'authentification repose sur un token JWT stocké dans le localStorage. Aucun cookie publicitaire ou de tracking n'est utilisé.
 
 ## Crédits
 
@@ -42,6 +41,8 @@ Aucun cookie publicitaire ou de tracking n'est utilisé.
 - Framework frontend : React
 - Framework backend : Express.js
 - Export PDF : PagedJS
+- Authentification sociale : Google OAuth2
+- Polices : Inter, Space Grotesk, Crimson Text, Source Code Pro, Fira Code, EB Garamond (auto-hébergées via @fontsource)
 - Typographies : Inter, Space Grotesk, Crimson Text, Fira Code
 
 ## Droit applicable

@@ -100,6 +100,20 @@ const env = cleanEnv(process.env, {
     example: 'http://localhost:5173'
   }),
 
+  // OAuth2 (optionnel — uniquement requis si Google OAuth est activé)
+  GOOGLE_CLIENT_ID: str({
+    desc: 'Google OAuth2 Client ID',
+    default: ''
+  }),
+  GOOGLE_CLIENT_SECRET: str({
+    desc: 'Google OAuth2 Client Secret',
+    default: ''
+  }),
+  OAUTH_CALLBACK_URL: str({
+    desc: 'URL de callback OAuth2 (ex: https://scenacte.fr/api/auth/google/callback)',
+    default: ''
+  }),
+
   // Limits
   MAX_CONTENT_SIZE_MB: str({
     desc: 'Maximum content size in MB',
@@ -139,5 +153,11 @@ export const config = {
   limits: {
     maxContentSizeMB: parseInt(env.MAX_CONTENT_SIZE_MB, 10),
     maxContentSizeBytes: parseInt(env.MAX_CONTENT_SIZE_MB, 10) * 1024 * 1024
+  },
+
+  oauth: {
+    googleClientId: env.GOOGLE_CLIENT_ID,
+    googleClientSecret: env.GOOGLE_CLIENT_SECRET,
+    callbackUrl: env.OAUTH_CALLBACK_URL
   }
 };
