@@ -61,9 +61,11 @@ export function AuthProvider({ children }) {
     setUser((prev) => ({ ...prev, ...userData }));
   }, []);
 
-  const loginWithToken = useCallback((token) => {
+  const loginWithToken = useCallback(async (token) => {
     localStorage.setItem('token', token);
+    const response = await authService.getCurrentUser();
     setToken(token);
+    setUser(response.user);
   }, []);
 
   const value = useMemo(() => ({
