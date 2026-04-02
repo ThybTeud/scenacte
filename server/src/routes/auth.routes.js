@@ -5,10 +5,13 @@ import {
   forgotPassword,
   resetPassword,
   validateResetToken,
-  getCurrentUser
+  getCurrentUser,
+  googleCallback
 } from '../controllers/auth.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+import passport from '../config/passport.js';
+import { config } from '../config/env.js';
 
 const router = express.Router();
 
@@ -58,5 +61,28 @@ router.post('/reset-password', authLimiter, resetPassword);
  * Requiert: Authorization header avec Bearer token
  */
 router.get('/me', authMiddleware, getCurrentUser);
+
+/**
+ * GET /api/auth/google
+ * Redirige vers la page de consentement Google
+ */
+router.get('/google', (req, res, next) => {
+  if (!config.oauth.googleClientId) {
+    return res.status(503).json({ error: 'Google OAuth non configuré' });
+  }
+  passport.authenticate('google', { scope: ['email', 'profile'], session: false })(req, res, next);
+});
+
+/**
+ * GET /api/auth/google/callback
+ * Callback Google → génère JWT → redirige frontend
+ */
+router.get('/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: `${config.client.url}/login?error=oauth`,
+  }),
+  googleCallback
+);
 
 export default router;

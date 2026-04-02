@@ -1,90 +1,105 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreVertical, Pencil, History, Trash2, ExternalLink, Download, SquarePen } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Pencil, History, Trash2, Download } from "lucide-react";
 
 const formatDate = (date) => {
-  const dateObj = date instanceof Date ? date : new Date(date)
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(dateObj)
-}
+  const d = date instanceof Date ? date : new Date(date);
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(d);
+};
 
-export function PlayCard({ play, onOpen, onExport, onRename, onDelete, onVersions }) {
-  const { title, subtitle, updatedAt, charactersCount, scenesCount, repliquesCount } = play
+export function PlayCard({
+  play,
+  onOpen,
+  onExport,
+  onRename,
+  onDelete,
+  onVersions,
+}) {
+  const { title, updatedAt, charactersCount, scenesCount, repliquesCount } =
+    play;
 
   return (
-    <Card className="flex flex-col h-53 gap-0 p-2 rounded-sm border-border shadow-brutal">
-      <CardHeader className="flex-1 gap-0 p-2">
-        <CardTitle className="text-base font-semibold line-clamp-2">{title}</CardTitle>
-        {subtitle && (
-          <CardDescription className="line-clamp-1">{subtitle}</CardDescription>
-        )}
-        <p className="text-xs text-muted-foreground pt-2">
-          {formatDate(updatedAt)}
-        </p>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-between gap-2 px-2">
-        {/* Stats */}
-        <div className="flex justify-between py-2">
-          <div className="text-center">
-            <p className="text-xl font-semibold text-act">{scenesCount ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Scènes</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-semibold text-muted-foreground">{repliquesCount ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Répliques</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-semibold text-character">{charactersCount ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Personnages</p>
-          </div>
+    <Card className="gap-0 py-0 border-black shadow-brutal">
+      {/* ZONE 1 — Titre + date */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-md font-semibold truncate leading-snug">{title}</p>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 items-center justify-between pb-2">
-          <Button size="sm" className="flex-1 px-4 py-2 leading-12 rounded-sm" onClick={() => onOpen?.(play)}>
-            {/* <SquarePen className="h-4 w-4" /> */}
-            Ouvrir
+      {/* ZONE 2 — Stats */}
+      <div className="px-4 pb-4 space-y-3">
+        <p className="text-xs text-muted-foreground tracking-wide">
+          {scenesCount ?? 0} scènes&ensp;·&ensp;{repliquesCount ?? 0}{" "}
+          répl.&ensp;·&ensp;{charactersCount ?? 0} pers.
+        </p>
+        <p className="text-[11px] text-muted-foreground/50 shrink-0 whitespace-nowrap pt-0.5">
+            {formatDate(updatedAt)}
+          </p>
+      </div>
+
+      {/* ZONE 3 — Actions : bouton Ouvrir + button group collé */}
+      <div className="flex gap-2 px-4 pb-4 pt-4 border-t border-border">
+        <Button
+          variant="default"
+          className="flex-1"
+          onClick={() => onOpen?.(play)}
+        >
+          Ouvrir
+        </Button>
+
+        {/* Button group collé : Download + Menu contextuel */}
+        <div className="flex">
+          <Button
+            variant="secondary"
+            className="border-r rounded-r-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              onExport?.(play);
+            }}
+            aria-label="Exporter"
+          >
+            <Download className="h-4 w-4" />
           </Button>
-          
-          {/* Button Group : Exporter + Dropdown */}
-          <div className="flex">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="rounded-r-none border-r px-4 py-2"
-              onClick={() => onExport?.(play)}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="secondary" className="rounded-l-none border-l px-4 py-2 leading-12 w-4">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onRename?.(play)}>
-                  <Pencil className="h-4 w-4" />
-                  Renommer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onVersions?.(play)}>
-                  <History className="h-4 w-4" />
-                  Versions
-                </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => onDelete?.(play)}>
-                  <Trash2 className="h-4 w-4" />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                className="border-l rounded-l-none"
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Plus d'options"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onRename?.(play)}>
+                <Pencil className="h-4 w-4" /> Renommer
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onVersions?.(play)}>
+                <History className="h-4 w-4" /> Versions
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => onDelete?.(play)}
+              >
+                <Trash2 className="h-4 w-4" /> Supprimer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </CardContent>
+      </div>
     </Card>
-  )
+  );
 }

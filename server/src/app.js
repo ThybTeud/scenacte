@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { config } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import routes from "./routes/index.js";
+import passport from "./config/passport.js";
 
 // Pour obtenir __dirname en ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -38,8 +39,8 @@ app.use(
                 // Styles : même domaine + inline (nécessaire pour React et CodeMirror)
                 styleSrc: ["'self'", "'unsafe-inline'"],
 
-                // Images : même domaine + data URIs (base64) + blobs (pour les previews)
-                imgSrc: ["'self'", "data:", "blob:"],
+                // Images : même domaine + data URIs (base64) + blobs + avatars Google
+                imgSrc: ["'self'", "data:", "blob:", "https://lh3.googleusercontent.com"],
 
                 // Connexions (fetch, XHR, WebSocket) : uniquement vers notre API
                 connectSrc: ["'self'"],
@@ -121,6 +122,9 @@ app.use(
         maxAge: 86400, // 24 heures
     })
 );
+
+// Passport — initialisation sans sessions (JWT uniquement)
+app.use(passport.initialize());
 
 // Body parser - Parse JSON et URL-encoded
 app.use(express.json({ limit: `${config.limits.maxContentSizeMB}mb` }));
