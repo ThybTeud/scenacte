@@ -198,8 +198,9 @@ export default function LibraryPage() {
         <div className="flex flex-col min-h-dvh bg-surface-strong">
             <AppHeader />
             <main className="flex-1 p-6">
+                <div className="max-w-6xl mx-auto">
                     {/* Actions row */}
-                    <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
                         <SearchSortBar
                             searchTerm={searchTerm}
                             onSearchChange={setSearchTerm}
@@ -209,7 +210,7 @@ export default function LibraryPage() {
                         />
 
                         {/* CTA */}
-                        <Button variant="default" depth="raised" className="w-full sm:w-auto shrink-0" onClick={() => setShowCreateModal(true)}>
+                        <Button variant="default" depth="raised" className="w-full md:w-auto shrink-0" onClick={() => setShowCreateModal(true)}>
                             <Plus className="h-4 w-4 mr-2" />
                             Nouvelle pièce
                         </Button>
@@ -217,7 +218,7 @@ export default function LibraryPage() {
 
                     {/* Loading State */}
                     {isLoading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {[...Array(8)].map((_, i) => (
                                 <div key={i} className="space-y-3">
                                     <Skeleton className="h-[120px] w-full rounded-lg" />
@@ -242,7 +243,7 @@ export default function LibraryPage() {
                     ) : (
                         /* Grid */
                         <>
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {paginatedPlays.map((play) => (
                                     <PlayCard
                                     key={play.id}
@@ -255,7 +256,7 @@ export default function LibraryPage() {
                                     />
                                 ))}
                                 {showCreateCard && (
-                                    <CreatePlayCard onClick={() => setShowCreateModal(true)} />
+                                    <CreatePlayCard className="hidden md:block" onClick={() => setShowCreateModal(true)} />
                                 )}
                             </div>
 
@@ -267,6 +268,7 @@ export default function LibraryPage() {
                             />
                         </>
                     )}
+                    </div>
                 </main>
             <AppFooter />
 

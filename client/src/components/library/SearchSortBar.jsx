@@ -30,7 +30,7 @@ export function SearchSortBar({ searchTerm, onSearchChange, sortBy, sortOrder, o
                 "flex items-center border-2 border-input rounded-sm bg-white overflow-hidden shadow-brutal",
                 "transition-[color,box-shadow]",
                 "focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/25",
-                "w-full sm:max-w-sm"
+                "w-full md:max-w-sm"
             )}
         >
             <Search className="ml-3 h-4 w-4 text-muted-foreground shrink-0" />
